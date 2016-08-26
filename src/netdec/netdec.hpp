@@ -45,7 +45,7 @@ class Process {
 
 
 typedef std::shared_ptr<Process> ProcPtr;
-typedef int pid;
+typedef int eid;
 
 class Observer {
  public:
@@ -61,8 +61,8 @@ class Observer {
   void stop();
 
   // Manage process to handle traffic event.
-  pid exec(const std::string& event_name, ProcPtr ptr);
-  void quit(pid proc_id);
+  eid bind(const std::string& event_name, ProcPtr ptr);
+  void unbind(eid entry_id);
 };
 
 }   // namespace netdec
