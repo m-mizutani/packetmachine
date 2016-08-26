@@ -34,16 +34,28 @@
 namespace netdec {
 namespace Exception {
 
-class TypeError : public std::exception {
+// Exception::Error is base exception of netdec.
+// Exception classes of netdec should inherit Exception::Error
+// if there is no special reason.
+
+class Error : public std::exception {
  private:
   std::string errmsg_;
  public:
-  explicit TypeError(const std::string &errmsg) : errmsg_(errmsg) {}
-  virtual ~TypeError() throw() {}
+  explicit Error(const std::string &errmsg) : errmsg_(errmsg) {}
+  virtual ~Error() throw() {}
   virtual const char* what() const throw() {
     return this->errmsg_.c_str();
   }
 };
+
+// ConfigError for invalid preparation.
+
+class ConfigError : public Error {
+ public:
+  explicit ConfigError(const std::string &errmsg) : Error(errmsg) {}
+};
+
 
 }   // namespace Exception
 }   // namespace netdec
