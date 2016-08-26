@@ -35,6 +35,8 @@
 
 namespace netdec {
 
+class Capture;
+
 class Process {
  public:
   Process();
@@ -48,6 +50,9 @@ typedef std::shared_ptr<Process> ProcPtr;
 typedef int eid;
 
 class Observer {
+ private:
+  Capture *cap_;
+
  public:
   Observer();
   ~Observer();

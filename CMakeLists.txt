@@ -35,6 +35,8 @@ ENDIF()
 
 FILE(GLOB BASESRCS
 	"src/netdec.cc"
+	"src/capture.cc"
+	"src/capture.hpp"
 )
 FILE(GLOB HEADERS
   "src/netdec/netdec.hpp"

@@ -24,29 +24,13 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "./netdec/netdec.hpp"
-#include "./capture.hpp"
+#ifndef __NETDEC_COMMON_HPP__
+#define __NETDEC_COMMON_HPP__
 
 namespace netdec {
 
-Process::Process() {
-}
-
-Process::~Process() {
-}
-
-
-Observer::Observer() : cap_(nullptr) {
-}
-
-Observer::~Observer() {
-}
-
-void Observer::add_device(const std::string &dev_name) {
-}
-
-void Observer::add_pcapfile(const std::string &file_path) {
-}
-
+typedef uint8_t byte_t;
 
 }   // namespace netdec
+
+#endif   // __NETDEC_COMMON_HPP__

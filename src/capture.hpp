@@ -24,29 +24,56 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "./netdec/netdec.hpp"
-#include "./capture.hpp"
+#ifndef __NETDEC_CAPTURE_HPP__
+#define __NETDEC_CAPTURE_HPP__
+
+#include <string>
+#include <pcap.h>
+#include "./netdec/common.hpp"
 
 namespace netdec {
 
-Process::Process() {
-}
+// Capture is wrapper of capturing packet from device and pcap file.
+// In order to abstract data source.
 
-Process::~Process() {
-}
+class Capture {
+ public:
+  Capture() {}
+  virtual ~Capture() {};
+  
+  virtual int read(byte_t *buf, int buf_len, int* cap_len) = 0;
+  virtual bool ready() const = 0;
+};
+
+// Device is wrapper of libpcap packet capture because threre is a plan to
+// replace libpcap with other packet capture mechanism such as netmap.
+
+class Device : public Capture {
+ private:
+  std::string dev_name_;
+  
+ public:
+  explicit Device(const std::string& dev_name);
+  ~Device();
+
+  int read(byte_t *buf, int buf_len, int* cap_len);
+  bool ready() const;
+};
 
 
-Observer::Observer() : cap_(nullptr) {
-}
+class PcapFile : public Capture {
+ private:
+  std::string file_path_;
+  pcap_t *pd_;
+  
+ public:
+  explicit PcapFile(const std::string& file_path);
+  ~PcapFile();
 
-Observer::~Observer() {
-}
-
-void Observer::add_device(const std::string &dev_name) {
-}
-
-void Observer::add_pcapfile(const std::string &file_path) {
-}
-
+  int read(byte_t *buf, int buf_len, int* cap_len);
+  bool ready() const;
+};
 
 }   // namespace netdec
+
+#endif   // __NETDEC_CAPTURE_HPP__
