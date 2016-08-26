@@ -36,8 +36,12 @@ ENDIF()
 FILE(GLOB BASESRCS
 	"src/netdec.cc"
 )
+FILE(GLOB HEADERS
+  "src/netdec/netdec.hpp"
+  "src/netdec/exception.hpp"
+  "src/netdec/property.hpp"
+)
 FILE(GLOB TESTSRCS "test/*.cc")
-FILE(GLOB HEADERS "src/netdec/*.hpp")
 
 ADD_LIBRARY(netdec SHARED ${BASESRCS})
 IF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
