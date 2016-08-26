@@ -27,8 +27,9 @@
 #ifndef __NETDEC_CAPTURE_HPP__
 #define __NETDEC_CAPTURE_HPP__
 
-#include <string>
 #include <pcap.h>
+#include <string>
+
 #include "./netdec/common.hpp"
 
 namespace netdec {
@@ -37,12 +38,21 @@ namespace netdec {
 // In order to abstract data source.
 
 class Capture {
+ private:
+  std::string error_;
+
  public:
   Capture() {}
-  virtual ~Capture() {};
-  
+  virtual ~Capture() {}
+
   virtual int read(byte_t *buf, int buf_len, int* cap_len) = 0;
   virtual bool ready() const = 0;
+  const std::string& error() const {
+    return this->error_;
+  }
+
+  bool start();
+  bool stop();
 };
 
 // Device is wrapper of libpcap packet capture because threre is a plan to
@@ -51,7 +61,7 @@ class Capture {
 class Device : public Capture {
  private:
   std::string dev_name_;
-  
+
  public:
   explicit Device(const std::string& dev_name);
   ~Device();
@@ -65,7 +75,7 @@ class PcapFile : public Capture {
  private:
   std::string file_path_;
   pcap_t *pd_;
-  
+
  public:
   explicit PcapFile(const std::string& file_path);
   ~PcapFile();

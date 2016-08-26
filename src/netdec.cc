@@ -40,12 +40,40 @@ Observer::Observer() : cap_(nullptr) {
 }
 
 Observer::~Observer() {
+  delete this->cap_;
 }
 
 void Observer::add_device(const std::string &dev_name) {
 }
 
 void Observer::add_pcapfile(const std::string &file_path) {
+  if (this->cap_) {
+    throw Exception::ConfigError("data source has been configured");
+  }
+
+  Capture *cap = new PcapFile(file_path);
+  if (!cap->ready()) {
+    const std::string msg = cap->error();
+    delete cap;
+    throw Exception::ConfigError(msg);
+  }
+
+  this->cap_ = cap;
+}
+
+void Observer::start() {
+  this->cap_->start();
+}
+
+void Observer::stop() {
+  this->cap_->stop();
+}
+
+eid Observer::bind(const std::string& event_name, ProcPtr ptr) {
+  return 0;
+}
+
+void Observer::unbind(eid entry_id) {
 }
 
 

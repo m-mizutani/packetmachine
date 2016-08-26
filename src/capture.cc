@@ -28,6 +28,18 @@
 
 namespace netdec {
 
+
+bool Capture::start() {
+  // TODO(m-mizutani): implement
+  return false;
+}
+
+bool Capture::stop() {
+  // TODO(m-mizutani): implement
+  return false;
+}
+
+
 Device::Device(const std::string &dev_name) :
     dev_name_(dev_name) {
   // TODO(m-mizutani): implement
