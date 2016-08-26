@@ -27,23 +27,44 @@
 #ifndef __NETDEC_HPP__
 #define __NETDEC_HPP__
 
+#include <memory>
+#include <string>
+
 #include "./exception.hpp"
+#include "./property.hpp"
 
 namespace netdec {
-  class Observer {
-    Observer();
-    ~Observer();
 
-    // Configure data source
-    void add_device(const std::string& dev_name);
-    void add_pcapfile(const std::string& file_path);
+class Process {
+ public:
+  Process();
+  ~Process();
 
-    // Contorl capture & packet decodeing
-    void start();
-    void stop();
+  virtual void recieve(const Property& prop) = 0;
+};
 
-    
-  };
+
+typedef std::shared_ptr<Process> ProcPtr;
+typedef int pid;
+
+class Observer {
+ public:
+  Observer();
+  ~Observer();
+
+  // Configure data source.
+  void add_device(const std::string& dev_name);
+  void add_pcapfile(const std::string& file_path);
+
+  // Contorl capture & packet decodeing.
+  void start();
+  void stop();
+
+  // Manage process to handle traffic event.
+  pid exec(const std::string& event_name, ProcPtr ptr);
+  void quit(pid proc_id);
+};
+
 }   // namespace netdec
 
 #endif   // __NETDEC_HPP__

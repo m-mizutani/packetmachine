@@ -27,5 +27,5 @@
 #include <netdec/netdec.hpp>
 
 namespace netdec {
-  
+
 }   // namespace netdec

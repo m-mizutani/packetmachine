@@ -24,28 +24,15 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __NETDEC_EXCEPTION_HPP
-#define __NETDEC_EXCEPTION_HPP
+#ifndef __NETDEC_PROPERTY_HPP
+#define __NETDEC_PROPERTY_HPP
 
-#include <exception>
-#include <sstream>
-#include <string>
 
 namespace netdec {
-namespace Exception {
 
-class TypeError : public std::exception {
- private:
-  std::string errmsg_;
- public:
-  explicit TypeError(const std::string &errmsg) : errmsg_(errmsg) {}
-  virtual ~TypeError() throw() {}
-  virtual const char* what() const throw() {
-    return this->errmsg_.c_str();
-  }
+class Property {
 };
 
-}   // namespace Exception
-}   // namespace netdec
+}    // namespace netdec
 
-#endif    // __NETDEC_EXCEPTION_HPP
+#endif    // __NETDEC_PROPERTY_HPP
