@@ -52,6 +52,7 @@ typedef int eid;
 class Machine {
  private:
   Capture *cap_;
+  static void reciever(Capture *cap, int i);
 
  public:
   Machine();
@@ -63,7 +64,7 @@ class Machine {
 
   // Contorl capture & packet decodeing.
   void start();
-  void stop();
+  void shutdown();
 
   bool bind(const std::string& event_name, ProcPtr ptr);
 };

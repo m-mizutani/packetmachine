@@ -35,14 +35,6 @@ Capture::Capture() : ready_(false) {
 Capture::~Capture() {
 }
 
-bool Capture::start() {
-  return false;
-}
-
-bool Capture::stop() {
-  // TODO(m-mizutani): implement
-  return false;
-}
 
 
 Device::Device(const std::string &dev_name) :

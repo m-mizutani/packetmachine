@@ -26,6 +26,7 @@
 
 #include "./packetmachine.hpp"
 #include "./capture.hpp"
+#include "./packet.hpp"
 
 namespace pm {
 
@@ -62,11 +63,12 @@ void Machine::add_pcapfile(const std::string &file_path) {
 }
 
 void Machine::start() {
-  this->cap_->start();
+  Packet pkt;
 }
 
-void Machine::stop() {
-  this->cap_->stop();
+
+
+void Machine::shutdown() {
 }
 
 bool Machine::bind(const std::string& event_name, ProcPtr ptr) {

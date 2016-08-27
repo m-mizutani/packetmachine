@@ -60,9 +60,6 @@ class Capture {
 
   bool ready() const { return this->ready_; }
   const std::string& error() const { return this->error_; }
-
-  bool start();
-  bool stop();
 };
 
 // Device is wrapper of libpcap packet capture because threre is a plan to
