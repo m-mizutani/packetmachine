@@ -65,9 +65,7 @@ class Machine {
   void start();
   void stop();
 
-  // Manage process to handle traffic event.
-  eid bind(const std::string& event_name, ProcPtr ptr);
-  void unbind(eid entry_id);
+  bool bind(const std::string& event_name, ProcPtr ptr);
 };
 
 }   // namespace pm

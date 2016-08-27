@@ -69,11 +69,8 @@ void Machine::stop() {
   this->cap_->stop();
 }
 
-eid Machine::bind(const std::string& event_name, ProcPtr ptr) {
-  return 0;
-}
-
-void Machine::unbind(eid entry_id) {
+bool Machine::bind(const std::string& event_name, ProcPtr ptr) {
+  return false;
 }
 
 
