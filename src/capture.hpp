@@ -34,22 +34,32 @@
 
 namespace pm {
 
+class Packet;
+
 // Capture is wrapper of capturing packet from device and pcap file.
 // In order to abstract data source.
 
 class Capture {
  private:
   std::string error_;
+  bool ready_;
+
+ protected:
+  void set_error(const std::string& error) {
+    this->error_ = error;
+  }
+  void set_ready(bool ready) {
+    this->ready_ = ready;
+  }
 
  public:
-  Capture() {}
-  virtual ~Capture() {}
+  Capture();
+  virtual ~Capture();
 
-  virtual int read(byte_t *buf, int buf_len, int* cap_len) = 0;
-  virtual bool ready() const = 0;
-  const std::string& error() const {
-    return this->error_;
-  }
+  virtual int read(Packet *pkt) = 0;
+
+  bool ready() const { return this->ready_; }
+  const std::string& error() const { return this->error_; }
 
   bool start();
   bool stop();
@@ -66,8 +76,7 @@ class Device : public Capture {
   explicit Device(const std::string& dev_name);
   ~Device();
 
-  int read(byte_t *buf, int buf_len, int* cap_len);
-  bool ready() const;
+  int read(Packet *pkt);
 };
 
 
@@ -80,8 +89,7 @@ class PcapFile : public Capture {
   explicit PcapFile(const std::string& file_path);
   ~PcapFile();
 
-  int read(byte_t *buf, int buf_len, int* cap_len);
-  bool ready() const;
+  int read(Packet *pkt);
 };
 
 }   // namespace pm

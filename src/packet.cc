@@ -24,15 +24,48 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __PACKETMACHINE_COMMON_HPP__
-#define __PACKETMACHINE_COMMON_HPP__
 
-#include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "./packet.hpp"
 
 namespace pm {
 
-typedef uint8_t byte_t;
+Packet::Packet() : buf_len_(0), buf_(nullptr) {
+}
+
+Packet::~Packet() {
+  if (this->buf_) {
+    ::free(this->buf_);
+  }
+}
+
+bool Packet::store(const byte_t* data, uint64_t len) {
+  if (this->buf_ == nullptr || this->buf_len_ < len) {
+    // need memory allocation.
+    this->buf_ = reinterpret_cast<byte_t*>(::realloc(this->buf_, len));
+
+    if (this->buf_ == nullptr) {
+      // memory allocation error.
+      return false;
+    }
+
+    this->buf_len_ = len;
+  }
+
+  ::memcpy(this->buf_, data, len);
+  this->len_ = len;
+  return true;
+}
+
+void Packet::set_cap_len(unsigned int cap_len) {
+  this->cap_len_ = static_cast<uint64_t>(cap_len);
+}
+
+void Packet::set_tv(const timeval& tv) {
+  this->tv_.tv_sec  = tv.tv_sec;
+  this->tv_.tv_usec = tv.tv_usec;
+}
 
 }   // namespace pm
-
-#endif   // __PACKETMACHINE_COMMON_HPP__

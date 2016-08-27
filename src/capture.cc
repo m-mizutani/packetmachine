@@ -25,12 +25,17 @@
  */
 
 #include "./capture.hpp"
+#include "./packet.hpp"
 
 namespace pm {
 
+Capture::Capture() : ready_(false) {
+}
+
+Capture::~Capture() {
+}
 
 bool Capture::start() {
-  // TODO(m-mizutani): implement
   return false;
 }
 
@@ -49,14 +54,9 @@ Device::~Device() {
   // TODO(m-mizutani): implement
 }
 
-int Device::read(byte_t *buf, int buf_len, int *cap_len) {
+int Device::read(Packet* pkt) {
   // TODO(m-mizutani): implement
   return 0;
-}
-
-bool Device::ready() const {
-  // TODO(m-mizutani): to be fix
-  return false;
 }
 
 
@@ -64,20 +64,52 @@ bool Device::ready() const {
 PcapFile::PcapFile(const std::string &file_path) :
     file_path_(file_path),
     pd_(nullptr) {
+  char errbuf[PCAP_ERRBUF_SIZE];
+  this->pd_ = ::pcap_open_offline(this->file_path_.c_str(), errbuf);
+
+  if (this->pd_ == nullptr) {
+    this->set_error(errbuf);
+  } else {
+    this->set_ready(true);
+  }
 }
 
 PcapFile::~PcapFile() {
-  // TODO(m-mizutani): implement
+  pcap_close(this->pd_);
 }
 
-int PcapFile::read(byte_t *buf, int buf_len, int *cap_len) {
-  // TODO(m-mizutani): implement
-  return 0;
-}
+int PcapFile::read(Packet* pkt) {
+  struct pcap_pkthdr* pkthdr;
+  const u_char* data;
 
-bool PcapFile::ready() const {
-  // TODO(m-mizutani): to be fix
-  return false;
+  if (!this->ready()) {
+    this->set_error("pcap is not ready");
+    return -1;
+  }
+
+  int rc = ::pcap_next_ex(this->pd_, &pkthdr, &data);
+
+  if (rc == 1) {
+    // the packet was read without problems.
+    if (pkt->store(data, pkthdr->caplen) == false) {
+      this->set_error("memory allocation error");
+      return -1;
+    }
+
+    pkt->set_cap_len(pkthdr->caplen);
+    pkt->set_tv(pkthdr->ts);
+
+    return 1;
+  } else if (rc == 0) {
+    // packets are being read from a live capture and the timeout expired.
+    return 0;
+  } else {
+    // an error occurred.
+    char* e = pcap_geterr(this->pd_);
+    this->set_error(e);
+    this->set_ready(false);
+    return -1;
+  }
 }
 
 

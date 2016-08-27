@@ -24,15 +24,34 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __PACKETMACHINE_COMMON_HPP__
-#define __PACKETMACHINE_COMMON_HPP__
+#ifndef __PACKETMACHINE_PACKET_HPP__
+#define __PACKETMACHINE_PACKET_HPP__
 
-#include <stdint.h>
+#include <sys/time.h>
+#include "./packetmachine/common.hpp"
 
 namespace pm {
 
-typedef uint8_t byte_t;
+// Packet is to store captured packet data(raw data, captured length,
+// actual packet length, timestamp).
+
+class Packet {
+ private:
+  uint64_t len_;       // actual captured data length.
+  uint64_t cap_len_;   // length this packet.
+  uint64_t buf_len_;   // allocated buffer length.
+  byte_t *buf_;        // buffer memory pointer.
+  struct timeval tv_;  // timestamp of packet arrived.
+
+ public:
+  Packet();
+  ~Packet();
+
+  bool store(const byte_t* data, uint64_t len);
+  void set_cap_len(unsigned int cap_len_);
+  void set_tv(const timeval& tv);
+};
 
 }   // namespace pm
 
-#endif   // __PACKETMACHINE_COMMON_HPP__
+#endif   // __PACKETMACHINE_PACKET_HPP__
