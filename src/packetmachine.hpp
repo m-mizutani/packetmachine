@@ -24,61 +24,52 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "./capture.hpp"
+#ifndef __PACKETMACHINE_HPP__
+#define __PACKETMACHINE_HPP__
+
+#include <memory>
+#include <string>
+
+#include "./packetmachine/exception.hpp"
+#include "./packetmachine/property.hpp"
 
 namespace pm {
 
+class Capture;
 
-bool Capture::start() {
-  // TODO(m-mizutani): implement
-  return false;
-}
+class Process {
+ public:
+  Process();
+  ~Process();
 
-bool Capture::stop() {
-  // TODO(m-mizutani): implement
-  return false;
-}
-
-
-Device::Device(const std::string &dev_name) :
-    dev_name_(dev_name) {
-  // TODO(m-mizutani): implement
-}
-
-Device::~Device() {
-  // TODO(m-mizutani): implement
-}
-
-int Device::read(byte_t *buf, int buf_len, int *cap_len) {
-  // TODO(m-mizutani): implement
-  return 0;
-}
-
-bool Device::ready() const {
-  // TODO(m-mizutani): to be fix
-  return false;
-}
+  virtual void recieve(const Property& prop) = 0;
+};
 
 
+typedef std::shared_ptr<Process> ProcPtr;
+typedef int eid;
 
-PcapFile::PcapFile(const std::string &file_path) :
-    file_path_(file_path),
-    pd_(nullptr) {
-}
+class Observer {
+ private:
+  Capture *cap_;
 
-PcapFile::~PcapFile() {
-  // TODO(m-mizutani): implement
-}
+ public:
+  Observer();
+  ~Observer();
 
-int PcapFile::read(byte_t *buf, int buf_len, int *cap_len) {
-  // TODO(m-mizutani): implement
-  return 0;
-}
+  // Configure data source.
+  void add_device(const std::string& dev_name);
+  void add_pcapfile(const std::string& file_path);
 
-bool PcapFile::ready() const {
-  // TODO(m-mizutani): to be fix
-  return false;
-}
+  // Contorl capture & packet decodeing.
+  void start();
+  void stop();
 
+  // Manage process to handle traffic event.
+  eid bind(const std::string& event_name, ProcPtr ptr);
+  void unbind(eid entry_id);
+};
 
-}  // namespace pm
+}   // namespace pm
+
+#endif   // __PACKETMACHINE_HPP__

@@ -24,61 +24,40 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "./capture.hpp"
+#ifndef __PACKETMACHINE_EXCEPTION_HPP
+#define __PACKETMACHINE_EXCEPTION_HPP
+
+#include <exception>
+#include <sstream>
+#include <string>
 
 namespace pm {
+namespace Exception {
+
+// Exception::Error is base exception of packetmachine.
+// Exception classes of packetmachine should inherit Exception::Error
+// if there is no special reason.
+
+class Error : public std::exception {
+ private:
+  std::string errmsg_;
+ public:
+  explicit Error(const std::string &errmsg) : errmsg_(errmsg) {}
+  virtual ~Error() throw() {}
+  virtual const char* what() const throw() {
+    return this->errmsg_.c_str();
+  }
+};
+
+// ConfigError for invalid preparation.
+
+class ConfigError : public Error {
+ public:
+  explicit ConfigError(const std::string &errmsg) : Error(errmsg) {}
+};
 
 
-bool Capture::start() {
-  // TODO(m-mizutani): implement
-  return false;
-}
+}   // namespace Exception
+}   // namespace pm
 
-bool Capture::stop() {
-  // TODO(m-mizutani): implement
-  return false;
-}
-
-
-Device::Device(const std::string &dev_name) :
-    dev_name_(dev_name) {
-  // TODO(m-mizutani): implement
-}
-
-Device::~Device() {
-  // TODO(m-mizutani): implement
-}
-
-int Device::read(byte_t *buf, int buf_len, int *cap_len) {
-  // TODO(m-mizutani): implement
-  return 0;
-}
-
-bool Device::ready() const {
-  // TODO(m-mizutani): to be fix
-  return false;
-}
-
-
-
-PcapFile::PcapFile(const std::string &file_path) :
-    file_path_(file_path),
-    pd_(nullptr) {
-}
-
-PcapFile::~PcapFile() {
-  // TODO(m-mizutani): implement
-}
-
-int PcapFile::read(byte_t *buf, int buf_len, int *cap_len) {
-  // TODO(m-mizutani): implement
-  return 0;
-}
-
-bool PcapFile::ready() const {
-  // TODO(m-mizutani): to be fix
-  return false;
-}
-
-
-}  // namespace pm
+#endif    // __PACKETMACHINE_EXCEPTION_HPP

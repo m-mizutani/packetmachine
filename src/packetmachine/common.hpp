@@ -24,61 +24,13 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "./capture.hpp"
+#ifndef __PACKETMACHINE_COMMON_HPP__
+#define __PACKETMACHINE_COMMON_HPP__
 
 namespace pm {
 
+typedef uint8_t byte_t;
 
-bool Capture::start() {
-  // TODO(m-mizutani): implement
-  return false;
-}
+}   // namespace pm
 
-bool Capture::stop() {
-  // TODO(m-mizutani): implement
-  return false;
-}
-
-
-Device::Device(const std::string &dev_name) :
-    dev_name_(dev_name) {
-  // TODO(m-mizutani): implement
-}
-
-Device::~Device() {
-  // TODO(m-mizutani): implement
-}
-
-int Device::read(byte_t *buf, int buf_len, int *cap_len) {
-  // TODO(m-mizutani): implement
-  return 0;
-}
-
-bool Device::ready() const {
-  // TODO(m-mizutani): to be fix
-  return false;
-}
-
-
-
-PcapFile::PcapFile(const std::string &file_path) :
-    file_path_(file_path),
-    pd_(nullptr) {
-}
-
-PcapFile::~PcapFile() {
-  // TODO(m-mizutani): implement
-}
-
-int PcapFile::read(byte_t *buf, int buf_len, int *cap_len) {
-  // TODO(m-mizutani): implement
-  return 0;
-}
-
-bool PcapFile::ready() const {
-  // TODO(m-mizutani): to be fix
-  return false;
-}
-
-
-}  // namespace pm
+#endif   // __PACKETMACHINE_COMMON_HPP__

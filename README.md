@@ -1,4 +1,4 @@
-NetDec
+PacketMachine
 =====================
 
 
@@ -6,7 +6,7 @@ NetDec
 #include <iostream>
 #include <netdec/netdec.hpp>
 
-class Printer : public netdec::Reciever {
+class Printer : public pm::Process {
   void recv(const netdec::Property &p) {
     if (p.has("dns")) {
       std::cout << p["dns"] << std::endl;
@@ -15,15 +15,11 @@ class Printer : public netdec::Reciever {
 };
 
 int main(int argc, char *argv[]) {
-  netdec::Observer obs("eth0");
-	std::shared_ptr<Reciever> r_ptr(new Printer());
-  netdec::obj_id h_id = obs.install("dns.request", r_ptr);
+  pm::Machine m("eth0");
+	pm::ProcPtr ptr(new Printer());
+	m.bind("dns.request", ptr);
 
-  obs.start();
-  obs.wait(10.0); // wait 10 second
-  obs.stop();
-
-  // also delete Printer instance
-  obs.remove(h_id); 
+	m.start();
+	m.stop();
 }
 ```

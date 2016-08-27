@@ -24,61 +24,57 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "./packetmachine.hpp"
 #include "./capture.hpp"
 
 namespace pm {
 
-
-bool Capture::start() {
-  // TODO(m-mizutani): implement
-  return false;
+Process::Process() {
 }
 
-bool Capture::stop() {
-  // TODO(m-mizutani): implement
-  return false;
+Process::~Process() {
 }
 
 
-Device::Device(const std::string &dev_name) :
-    dev_name_(dev_name) {
-  // TODO(m-mizutani): implement
+Observer::Observer() : cap_(nullptr) {
 }
 
-Device::~Device() {
-  // TODO(m-mizutani): implement
+Observer::~Observer() {
+  delete this->cap_;
 }
 
-int Device::read(byte_t *buf, int buf_len, int *cap_len) {
-  // TODO(m-mizutani): implement
+void Observer::add_device(const std::string &dev_name) {
+}
+
+void Observer::add_pcapfile(const std::string &file_path) {
+  if (this->cap_) {
+    throw Exception::ConfigError("data source has been configured");
+  }
+
+  Capture *cap = new PcapFile(file_path);
+  if (!cap->ready()) {
+    const std::string msg = cap->error();
+    delete cap;
+    throw Exception::ConfigError(msg);
+  }
+
+  this->cap_ = cap;
+}
+
+void Observer::start() {
+  this->cap_->start();
+}
+
+void Observer::stop() {
+  this->cap_->stop();
+}
+
+eid Observer::bind(const std::string& event_name, ProcPtr ptr) {
   return 0;
 }
 
-bool Device::ready() const {
-  // TODO(m-mizutani): to be fix
-  return false;
+void Observer::unbind(eid entry_id) {
 }
 
 
-
-PcapFile::PcapFile(const std::string &file_path) :
-    file_path_(file_path),
-    pd_(nullptr) {
-}
-
-PcapFile::~PcapFile() {
-  // TODO(m-mizutani): implement
-}
-
-int PcapFile::read(byte_t *buf, int buf_len, int *cap_len) {
-  // TODO(m-mizutani): implement
-  return 0;
-}
-
-bool PcapFile::ready() const {
-  // TODO(m-mizutani): to be fix
-  return false;
-}
-
-
-}  // namespace pm
+}   // namespace pm

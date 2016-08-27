@@ -39,7 +39,7 @@ FILE(GLOB BASESRCS
 	"src/capture.hpp"
 )
 FILE(GLOB HEADERS
-  "src/packetmachine/packetmachine.hpp"
+  "src/packetmachine.hpp"
   "src/packetmachine/exception.hpp"
   "src/packetmachine/property.hpp"
 )

@@ -24,15 +24,15 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __NETDEC_CAPTURE_HPP__
-#define __NETDEC_CAPTURE_HPP__
+#ifndef __PACKETMACHINE_CAPTURE_HPP__
+#define __PACKETMACHINE_CAPTURE_HPP__
 
 #include <pcap.h>
 #include <string>
 
-#include "./netdec/common.hpp"
+#include "./packetmachine/common.hpp"
 
-namespace netdec {
+namespace pm {
 
 // Capture is wrapper of capturing packet from device and pcap file.
 // In order to abstract data source.
@@ -84,6 +84,6 @@ class PcapFile : public Capture {
   bool ready() const;
 };
 
-}   // namespace netdec
+}   // namespace pm
 
-#endif   // __NETDEC_CAPTURE_HPP__
+#endif   // __PACKETMACHINE_CAPTURE_HPP__
