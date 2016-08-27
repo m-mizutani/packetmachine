@@ -1,5 +1,5 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
-PROJECT(netdec)
+PROJECT(packetmachine)
 
 
 IF(NOT CMAKE_BUILD_TYPE)
@@ -17,7 +17,7 @@ ENDIF()
 
 
 SET(CMAKE_CXX_FLAGS_RELEASE "-Wall -O3 -std=c++0x")
-SET(CMAKE_CXX_FLAGS_DEBUG   "-Wall -O0 -std=c++0x -g -DNETDEC_DEBUG")
+SET(CMAKE_CXX_FLAGS_DEBUG   "-Wall -O0 -std=c++0x -g -DPACKETMACHINE_DEBUG")
 SET(CMAKE_SHARED_LINKER_FLAGS "-lpcap -dynamiclib")
 
 SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
@@ -34,28 +34,28 @@ ENDIF()
 # Build library
 
 FILE(GLOB BASESRCS
-	"src/netdec.cc"
+	"src/packetmachine.cc"
 	"src/capture.cc"
 	"src/capture.hpp"
 )
 FILE(GLOB HEADERS
-  "src/netdec/netdec.hpp"
-  "src/netdec/exception.hpp"
-  "src/netdec/property.hpp"
+  "src/packetmachine/packetmachine.hpp"
+  "src/packetmachine/exception.hpp"
+  "src/packetmachine/property.hpp"
 )
 FILE(GLOB TESTSRCS "test/*.cc")
 
-ADD_LIBRARY(netdec SHARED ${BASESRCS})
+ADD_LIBRARY(packetmachine SHARED ${BASESRCS})
 IF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-    TARGET_LINK_LIBRARIES(netdec pcap pthread rt)
+    TARGET_LINK_LIBRARIES(packetmachine pcap pthread rt)
 ELSE(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-    TARGET_LINK_LIBRARIES(netdec pcap pthread)
+    TARGET_LINK_LIBRARIES(packetmachine pcap pthread)
 ENDIF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 
-INSTALL(TARGETS netdec LIBRARY DESTINATION lib)
-INSTALL(FILES src/netdec.hpp DESTINATION include/)
-INSTALL(FILES ${HEADERS} DESTINATION include/netdec)
+INSTALL(TARGETS packetmachine LIBRARY DESTINATION lib)
+INSTALL(FILES src/packetmachine.hpp DESTINATION include/)
+INSTALL(FILES ${HEADERS} DESTINATION include/packetmachine)
 
 # 
-ADD_EXECUTABLE(netdec-test ${TESTSRCS})
-TARGET_LINK_LIBRARIES(netdec-test netdec)
+ADD_EXECUTABLE(packetmachine-test ${TESTSRCS})
+TARGET_LINK_LIBRARIES(packetmachine-test packetmachine)
