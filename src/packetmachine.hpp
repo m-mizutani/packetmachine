@@ -49,13 +49,13 @@ class Process {
 typedef std::shared_ptr<Process> ProcPtr;
 typedef int eid;
 
-class Observer {
+class Machine {
  private:
   Capture *cap_;
 
  public:
-  Observer();
-  ~Observer();
+  Machine();
+  ~Machine();
 
   // Configure data source.
   void add_device(const std::string& dev_name);

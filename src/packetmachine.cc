@@ -36,17 +36,17 @@ Process::~Process() {
 }
 
 
-Observer::Observer() : cap_(nullptr) {
+Machine::Machine() : cap_(nullptr) {
 }
 
-Observer::~Observer() {
+Machine::~Machine() {
   delete this->cap_;
 }
 
-void Observer::add_device(const std::string &dev_name) {
+void Machine::add_device(const std::string &dev_name) {
 }
 
-void Observer::add_pcapfile(const std::string &file_path) {
+void Machine::add_pcapfile(const std::string &file_path) {
   if (this->cap_) {
     throw Exception::ConfigError("data source has been configured");
   }
@@ -61,19 +61,19 @@ void Observer::add_pcapfile(const std::string &file_path) {
   this->cap_ = cap;
 }
 
-void Observer::start() {
+void Machine::start() {
   this->cap_->start();
 }
 
-void Observer::stop() {
+void Machine::stop() {
   this->cap_->stop();
 }
 
-eid Observer::bind(const std::string& event_name, ProcPtr ptr) {
+eid Machine::bind(const std::string& event_name, ProcPtr ptr) {
   return 0;
 }
 
-void Observer::unbind(eid entry_id) {
+void Machine::unbind(eid entry_id) {
 }
 
 

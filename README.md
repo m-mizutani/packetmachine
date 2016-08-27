@@ -4,7 +4,7 @@ PacketMachine
 
 ```cpp
 #include <iostream>
-#include <netdec/netdec.hpp>
+#include <packetmachine.hpp>
 
 class Printer : public pm::Process {
   void recv(const netdec::Property &p) {
