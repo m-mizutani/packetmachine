@@ -37,6 +37,8 @@ FILE(GLOB BASESRCS
 	"src/packetmachine.cc"
 	"src/capture.cc"
 	"src/capture.hpp"
+	"src/channel.cc"
+	"src/channel.hpp"	
 	"src/packet.cc"
 	"src/packet.hpp"
 )
