@@ -24,43 +24,10 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __PACKETMACHINE_CHANNEL_HPP__
-#define __PACKETMACHINE_CHANNEL_HPP__
+#include "./perf.hpp"
 
-#include <pthread.h>
-#include <vector>
-#include <deque>
-#include <atomic>
-
-namespace pm {
-
-class Packet;
-
-// Channel is thread-safe and high performance data channel between
-// packet capture thread and packet decoding thread.
-
-class Channel {
- private:
-  // std::vector<Packet*> array_;
-  std::deque<Packet*> queue_;
-  pthread_mutex_t mutex_;
-  std::atomic<bool> eos_;
-
- public:
-  Channel();
-  ~Channel();
-
-  // for packet capture thread.
-  Packet* retain_packet();
-  void push_packet(Packet *pkt);
-
-  // for packet decoding thread.
-  Packet* pull_packet();
-  void release_packet(Packet* pkt);
-
-  void close();
-};
-
-}   // namespace pm
-
-#endif   // __PACKETMACHINE_CHANNEL_HPP__
+int main(int argc, char* argv[]) {
+  // # global_pt_list_.run_perf_test();
+  PerfTestList::run_all_test();
+  return 0;
+}

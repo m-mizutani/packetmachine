@@ -48,6 +48,11 @@ FILE(GLOB HEADERS
   "src/packetmachine/property.hpp"
 )
 FILE(GLOB TESTSRCS "test/*.cc")
+FILE(GLOB PERFSRCS
+  "perf/main.cc"
+	"perf/perf.cc"
+	"perf/Channel.cc"
+)
 
 ADD_LIBRARY(packetmachine SHARED ${BASESRCS})
 IF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
@@ -60,6 +65,10 @@ INSTALL(TARGETS packetmachine LIBRARY DESTINATION lib)
 INSTALL(FILES src/packetmachine.hpp DESTINATION include/)
 INSTALL(FILES ${HEADERS} DESTINATION include/packetmachine)
 
-# 
+# Test binary
 ADD_EXECUTABLE(packetmachine-test ${TESTSRCS})
 TARGET_LINK_LIBRARIES(packetmachine-test packetmachine)
+
+# Performance check binary
+ADD_EXECUTABLE(packetmachine-perf ${PERFSRCS})
+TARGET_LINK_LIBRARIES(packetmachine-perf packetmachine)

@@ -28,6 +28,8 @@
 #include "./packet.hpp"
 #include "./channel.hpp"
 
+#include "./debug.hpp"
+
 namespace pm {
 
 Channel::Channel() : mutex_(PTHREAD_MUTEX_INITIALIZER), eos_(false) {
@@ -54,14 +56,20 @@ Packet* Channel::pull_packet() {
   rqtp.tv_sec = 0;
   rqtp.tv_nsec = 1000;
 
-  while (!pkt && this->eos_.load() == false) {
+  for (;;) {
     pthread_mutex_lock(&this->mutex_);
     if (this->queue_.size() > 0) {
       pkt = this->queue_.back();
       this->queue_.pop_back();
-      break;
     }
     pthread_mutex_unlock(&this->mutex_);
+
+    if (pkt || this->eos_.load()) {
+      break;
+    }
+
+    rqtp.tv_sec = 0;
+    rqtp.tv_nsec = 1000;
     nanosleep(&rqtp, &rmtp);
   }
 
@@ -70,6 +78,10 @@ Packet* Channel::pull_packet() {
 
 void Channel::release_packet(pm::Packet *pkt) {
   delete pkt;
+}
+
+void Channel::close() {
+  this->eos_ = true;
 }
 
 }    // namespace pm

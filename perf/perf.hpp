@@ -24,43 +24,46 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __PACKETMACHINE_CHANNEL_HPP__
-#define __PACKETMACHINE_CHANNEL_HPP__
+#ifndef __PACKETMACHINE_PERF_PERF_HPP
+#define __PACKETMACHINE_PERF_PERF_HPP
 
-#include <pthread.h>
+#include <sys/time.h>
 #include <vector>
-#include <deque>
-#include <atomic>
 
-namespace pm {
+class PerfTest;
 
-class Packet;
-
-// Channel is thread-safe and high performance data channel between
-// packet capture thread and packet decoding thread.
-
-class Channel {
+class PerfTestList {
  private:
-  // std::vector<Packet*> array_;
-  std::deque<Packet*> queue_;
-  pthread_mutex_t mutex_;
-  std::atomic<bool> eos_;
+  std::vector<PerfTest*> pt_list_;
+  void run_perf_test();
 
  public:
-  Channel();
-  ~Channel();
-
-  // for packet capture thread.
-  Packet* retain_packet();
-  void push_packet(Packet *pkt);
-
-  // for packet decoding thread.
-  Packet* pull_packet();
-  void release_packet(Packet* pkt);
-
-  void close();
+  PerfTestList() {
+  }
+  ~PerfTestList() {
+  }
+  void add_perf_test(PerfTest *pt);
+  static void run_all_test();
 };
 
-}   // namespace pm
+class StopWatch {
+ private:
+  struct timeval tv_begin, tv_end;
 
-#endif   // __PACKETMACHINE_CHANNEL_HPP__
+ public:
+  StopWatch() = default;
+  ~StopWatch() = default;
+
+  void start();
+  void stop();
+  float delta() const;
+};
+
+class PerfTest {
+ public:
+  PerfTest();
+  ~PerfTest() = default;
+  virtual void run() = 0;
+};
+
+#endif    // __PACKETMACHINE_PERF_PERF_HPP

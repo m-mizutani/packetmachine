@@ -24,43 +24,42 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __PACKETMACHINE_CHANNEL_HPP__
-#define __PACKETMACHINE_CHANNEL_HPP__
+#include "./perf.hpp"
 
-#include <pthread.h>
-#include <vector>
-#include <deque>
-#include <atomic>
+PerfTestList global_pt_list_ __attribute__((init_priority(101)));
 
-namespace pm {
+PerfTest::PerfTest() {
+  global_pt_list_.add_perf_test(this);
+}
 
-class Packet;
 
-// Channel is thread-safe and high performance data channel between
-// packet capture thread and packet decoding thread.
+void PerfTestList::add_perf_test(PerfTest *pt) {
+  this->pt_list_.push_back(pt);
+}
 
-class Channel {
- private:
-  // std::vector<Packet*> array_;
-  std::deque<Packet*> queue_;
-  pthread_mutex_t mutex_;
-  std::atomic<bool> eos_;
+void PerfTestList::run_perf_test() {
+  for (auto& pt : this->pt_list_) {
+    pt->run();
+  }
+}
 
- public:
-  Channel();
-  ~Channel();
+void PerfTestList::run_all_test() {
+  global_pt_list_.run_perf_test();
+}
 
-  // for packet capture thread.
-  Packet* retain_packet();
-  void push_packet(Packet *pkt);
 
-  // for packet decoding thread.
-  Packet* pull_packet();
-  void release_packet(Packet* pkt);
+void StopWatch::start() {
+  gettimeofday(&this->tv_begin, nullptr);
+}
 
-  void close();
-};
+void StopWatch::stop() {
+  gettimeofday(&this->tv_end, nullptr);
+}
 
-}   // namespace pm
-
-#endif   // __PACKETMACHINE_CHANNEL_HPP__
+float StopWatch::delta() const {
+  struct timeval tv;
+  timersub(&(this->tv_end), &(this->tv_begin), &tv);
+  float usec = static_cast<float>(tv.tv_usec);
+  float sec = static_cast<float>(tv.tv_sec);
+  return sec + (usec / 1000000);
+}
