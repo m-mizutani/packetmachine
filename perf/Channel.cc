@@ -96,11 +96,14 @@ class ChannelPerf : public PerfTest {
   }
 };
 
-ChannelPerf t1_(1000);
-ChannelPerf t2_(10000);
-ChannelPerf t3_(100000);
-ChannelPerf t4_(1000000);
-ChannelPerf t5_(10000000);
+ChannelPerf t1_(10000);
+ChannelPerf t2_(20000);
+ChannelPerf t3_(40000);
+ChannelPerf t4_(80000);
+ChannelPerf t5_(160000);
+ChannelPerf t6_(320000);
+ChannelPerf t7_(640000);
+
 
 
 
