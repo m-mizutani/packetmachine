@@ -24,7 +24,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <time.h>
+
+#include <unistd.h>
 #include "./packet.hpp"
 #include "./channel.hpp"
 
@@ -33,6 +34,7 @@
 namespace pm {
 
 Channel::Channel() : mutex_(PTHREAD_MUTEX_INITIALIZER), eos_(false) {
+  pthread_cond_init(&this->cond_, nullptr);
 }
 
 Channel::~Channel() {
@@ -46,31 +48,32 @@ Packet* Channel::retain_packet() {
 void Channel::push_packet(pm::Packet *pkt) {
   pthread_mutex_lock(&this->mutex_);
   this->queue_.push_front(pkt);
+  pthread_cond_signal(&this->cond_);
   pthread_mutex_unlock(&this->mutex_);
 }
 
 Packet* Channel::pull_packet() {
   Packet *pkt = nullptr;
 
-  struct timespec rqtp, rmtp;
-  rqtp.tv_sec = 0;
-  rqtp.tv_nsec = 1000;
-
   for (;;) {
     pthread_mutex_lock(&this->mutex_);
+
+    if (this->queue_.size() == 0 && !this->eos_.load()) {
+      pthread_cond_wait(&this->cond_, &this->mutex_);
+    }
+
     if (this->queue_.size() > 0) {
       pkt = this->queue_.back();
       this->queue_.pop_back();
     }
+
     pthread_mutex_unlock(&this->mutex_);
 
     if (pkt || this->eos_.load()) {
       break;
     }
 
-    rqtp.tv_sec = 0;
-    rqtp.tv_nsec = 1000;
-    nanosleep(&rqtp, &rmtp);
+    usleep(1);
   }
 
   return pkt;

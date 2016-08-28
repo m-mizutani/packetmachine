@@ -44,6 +44,7 @@ class Channel {
   // std::vector<Packet*> array_;
   std::deque<Packet*> queue_;
   pthread_mutex_t mutex_;
+  pthread_cond_t cond_;
   std::atomic<bool> eos_;
 
  public:
