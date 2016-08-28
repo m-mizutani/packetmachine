@@ -38,15 +38,13 @@
 class ChannelPerf : public PerfTest {
  public:
   struct Prop {
-    pm::Channel ch_;
+    pm::Channel *ch_;
     int count_;
   } prop_;
 
-  static const size_t COUNT = 1000000;
-
   static void* provider(void *obj) {
     Prop *p = static_cast<Prop*>(obj);
-    pm::Channel* ch = &(p->ch_);
+    pm::Channel* ch = p->ch_;
 
     pm::Packet *pkt;
 
@@ -54,14 +52,14 @@ class ChannelPerf : public PerfTest {
       pkt = ch->retain_packet();
       ch->push_packet(pkt);
     }
-
+    printf("sent: %d\n", p->count_);
     ch->close();
     return nullptr;
   }
 
   static void* consumer(void *obj) {
     Prop* p = static_cast<Prop*>(obj);
-    pm::Channel* ch = &(p->ch_);
+    pm::Channel* ch = p->ch_;
     pm::Packet *pkt;
     int c = 0;
 
@@ -69,6 +67,7 @@ class ChannelPerf : public PerfTest {
       c++;
       ch->release_packet(pkt);
     }
+    printf("recv: %d\n", c);
 
     return nullptr;
   }
@@ -76,6 +75,10 @@ class ChannelPerf : public PerfTest {
  public:
   explicit ChannelPerf(int count) {
     this->prop_.count_ = count;
+    this->prop_.ch_ = new pm::RingChannel();
+  }
+  ~ChannelPerf() {
+    delete this->prop_.ch_;
   }
 
   void run() {
@@ -96,7 +99,8 @@ class ChannelPerf : public PerfTest {
   }
 };
 
-ChannelPerf t7_(640000);
+ChannelPerf t1_(1000);
+ChannelPerf t7_(6400000);
 
 
 

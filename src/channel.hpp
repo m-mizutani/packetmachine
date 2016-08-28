@@ -41,25 +41,64 @@ class Packet;
 
 class Channel {
  private:
-  // std::vector<Packet*> array_;
-  std::deque<Packet*> queue_;
-  pthread_mutex_t mutex_;
-  pthread_cond_t cond_;
   std::atomic<bool> eos_;
 
  public:
   Channel();
-  ~Channel();
+  virtual ~Channel();
 
   // for packet capture thread.
-  Packet* retain_packet();
-  void push_packet(Packet *pkt);
+  virtual Packet* retain_packet() = 0;
+  virtual void push_packet(Packet *pkt) = 0;
 
   // for packet decoding thread.
-  Packet* pull_packet();
-  void release_packet(Packet* pkt);
+  virtual Packet* pull_packet() = 0;
+  virtual void release_packet(Packet* pkt) = 0;
 
   void close();
+  inline bool closed() const { return this->eos_.load(); }
+};
+
+class MutexChannel : public Channel {
+ private:
+  std::deque<Packet*> queue_;
+  pthread_mutex_t mutex_;
+  pthread_cond_t cond_;
+
+ public:
+  MutexChannel();
+  ~MutexChannel();
+
+  // for packet capture thread.
+  virtual Packet* retain_packet();
+  virtual void push_packet(Packet *pkt);
+
+  // for packet decoding thread.
+  virtual Packet* pull_packet();
+  virtual void release_packet(Packet* pkt);
+};
+
+class RingChannel : public Channel {
+ private:
+  std::atomic<uint32_t> push_idx_;
+  std::atomic<uint32_t> pull_idx_;
+  std::vector<Packet*> ring_;
+  uint32_t ring_size_;
+  inline uint32_t to_idx(uint32_t idx) {
+    return (idx >= this->ring_size_) ? 0 : idx;
+  }
+
+ public:
+  RingChannel();
+  ~RingChannel();
+
+  // for packet capture thread.
+  virtual Packet* retain_packet();
+  virtual void push_packet(Packet *pkt);
+
+  // for packet decoding thread.
+  virtual Packet* pull_packet();
+  virtual void release_packet(Packet* pkt);
 };
 
 }   // namespace pm
