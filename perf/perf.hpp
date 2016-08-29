@@ -56,7 +56,7 @@ class StopWatch {
 
   void start();
   void stop();
-  float delta() const;
+  double delta() const;
 };
 
 class PerfTest {

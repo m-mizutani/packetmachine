@@ -146,4 +146,62 @@ Packet* RingChannel::pull_packet() {
 }
 
 
+
+RingNoFreeChannel::RingNoFreeChannel() : push_idx_(0), pull_idx_(0),
+                                         ring_size_(4096),
+                                         push_wait_(0), pull_wait_(0) {
+  this->ring_.resize(this->ring_size_);
+  for (uint32_t i = 0; i < this->ring_size_; i++) {
+    this->ring_[i] = new Packet();
+  }
+}
+
+RingNoFreeChannel::~RingNoFreeChannel() {
+}
+
+Packet* RingNoFreeChannel::retain_packet() {
+  uint32_t n = to_idx(this->push_idx_ + 1);
+  return this->ring_[n];
+}
+
+void RingNoFreeChannel::release_packet(pm::Packet *pkt) {
+  // delete pkt;
+}
+
+
+void RingNoFreeChannel::push_packet(pm::Packet *pkt) {
+  uint32_t n = to_idx(this->push_idx_ + 1);
+
+  while (n == this->pull_idx_) {
+    this->push_wait_ += 1;
+    usleep(1);
+  }
+
+  this->ring_[n] = pkt;
+  this->push_idx_ = n;
+}
+
+Packet* RingNoFreeChannel::pull_packet() {
+  uint32_t n = this->pull_idx_ + 1;
+  if (n >= this->ring_size_) {
+    n = 0;
+  }
+
+  while (n == to_idx(this->push_idx_ + 1)) {
+    if (this->closed()) {
+      return nullptr;
+    }
+
+    this->pull_wait_ += 1;
+    usleep(1);
+  }
+
+  Packet *pkt = this->ring_[n];
+  this->pull_idx_ = n;
+
+  return pkt;
+}
+
+
+
 }    // namespace pm

@@ -56,10 +56,10 @@ void StopWatch::stop() {
   gettimeofday(&this->tv_end, nullptr);
 }
 
-float StopWatch::delta() const {
+double StopWatch::delta() const {
   struct timeval tv;
   timersub(&(this->tv_end), &(this->tv_begin), &tv);
-  float usec = static_cast<float>(tv.tv_usec);
-  float sec = static_cast<float>(tv.tv_sec);
+  double usec = static_cast<double>(tv.tv_usec);
+  double sec = static_cast<double>(tv.tv_sec);
   return sec + (usec / 1000000);
 }

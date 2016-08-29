@@ -75,7 +75,7 @@ class ChannelPerf : public PerfTest {
  public:
   explicit ChannelPerf(int count) {
     this->prop_.count_ = count;
-    this->prop_.ch_ = new pm::RingChannel();
+    this->prop_.ch_ = new pm::RingNoFreeChannel();
   }
   ~ChannelPerf() {
     delete this->prop_.ch_;
@@ -93,14 +93,13 @@ class ChannelPerf : public PerfTest {
     pthread_join(t2, nullptr);
     sw.stop();
 
-    float qps = static_cast<float>(this->prop_.count_) / sw.delta();
+    double qps = static_cast<double>(this->prop_.count_) / sw.delta();
 
-    printf("%d => %.6f\n", this->prop_.count_, qps);
+    printf("%d => %.6f (%f sec)\n", this->prop_.count_, qps, sw.delta());
   }
 };
 
-ChannelPerf t1_(1000);
-ChannelPerf t7_(6400000);
+ChannelPerf t7_(64000000);
 
 
 

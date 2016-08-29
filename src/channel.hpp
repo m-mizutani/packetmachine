@@ -101,6 +101,31 @@ class RingChannel : public Channel {
   virtual void release_packet(Packet* pkt);
 };
 
+class RingNoFreeChannel : public Channel {
+ private:
+  std::atomic<uint32_t> push_idx_;
+  std::atomic<uint32_t> pull_idx_;
+  std::vector<Packet*> ring_;
+  uint32_t ring_size_;
+  uint64_t push_wait_, pull_wait_;
+
+  inline uint32_t to_idx(uint32_t idx) {
+    return (idx >= this->ring_size_) ? 0 : idx;
+  }
+
+ public:
+  RingNoFreeChannel();
+  ~RingNoFreeChannel();
+
+  // for packet capture thread.
+  virtual Packet* retain_packet();
+  virtual void push_packet(Packet *pkt);
+
+  // for packet decoding thread.
+  virtual Packet* pull_packet();
+  virtual void release_packet(Packet* pkt);
+};
+
 }   // namespace pm
 
 #endif   // __PACKETMACHINE_CHANNEL_HPP__
