@@ -53,7 +53,12 @@ TEST(PcapFile, ng_no_such_file) {
 }
 
 TEST(PcapFile, ng_invalid_format) {
+  // Open file that is not a pcap format file.
   pm::PcapFile *pfile = new pm::PcapFile("./test/main.cc");
   ASSERT_FALSE(pfile->ready());
   EXPECT_EQ(pfile->error(), "unknown file format");
+
+  pm::Packet pkt;
+  EXPECT_EQ(pfile->read(&pkt), -1);
+  EXPECT_EQ(pfile->error(), "pcap is not ready");  
 }
