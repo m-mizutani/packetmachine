@@ -27,103 +27,92 @@
 #ifndef __PACKETMACHINE_CHANNEL_HPP__
 #define __PACKETMACHINE_CHANNEL_HPP__
 
-#include <pthread.h>
+#include <unistd.h>
 #include <vector>
-#include <deque>
 #include <atomic>
 
 namespace pm {
 
-class Packet;
-
 // Channel is thread-safe and high performance data channel between
 // packet capture thread and packet decoding thread.
 
+template <typename T>
 class Channel {
  private:
-  std::atomic<bool> eos_;
-
- public:
-  Channel();
-  virtual ~Channel();
-
-  // for packet capture thread.
-  virtual Packet* retain_packet() = 0;
-  virtual void push_packet(Packet *pkt) = 0;
-
-  // for packet decoding thread.
-  virtual Packet* pull_packet() = 0;
-  virtual void release_packet(Packet* pkt) = 0;
-
-  void close();
-  inline bool closed() const { return this->eos_.load(); }
-};
-
-class MutexChannel : public Channel {
- private:
-  std::deque<Packet*> queue_;
-  pthread_mutex_t mutex_;
-  pthread_cond_t cond_;
-
- public:
-  MutexChannel();
-  ~MutexChannel();
-
-  // for packet capture thread.
-  virtual Packet* retain_packet();
-  virtual void push_packet(Packet *pkt);
-
-  // for packet decoding thread.
-  virtual Packet* pull_packet();
-  virtual void release_packet(Packet* pkt);
-};
-
-class RingChannel : public Channel {
- private:
   std::atomic<uint32_t> push_idx_;
   std::atomic<uint32_t> pull_idx_;
-  std::vector<Packet*> ring_;
-  uint32_t ring_size_;
-  inline uint32_t to_idx(uint32_t idx) {
-    return (idx >= this->ring_size_) ? 0 : idx;
-  }
-
- public:
-  RingChannel();
-  ~RingChannel();
-
-  // for packet capture thread.
-  virtual Packet* retain_packet();
-  virtual void push_packet(Packet *pkt);
-
-  // for packet decoding thread.
-  virtual Packet* pull_packet();
-  virtual void release_packet(Packet* pkt);
-};
-
-class RingNoFreeChannel : public Channel {
- private:
-  std::atomic<uint32_t> push_idx_;
-  std::atomic<uint32_t> pull_idx_;
-  std::vector<Packet*> ring_;
+  std::vector<T*> ring_;
   uint32_t ring_size_;
   uint64_t push_wait_, pull_wait_;
+  bool eos_;
 
   inline uint32_t to_idx(uint32_t idx) {
     return (idx >= this->ring_size_) ? 0 : idx;
   }
 
  public:
-  RingNoFreeChannel();
-  ~RingNoFreeChannel();
+  Channel() : push_idx_(0), pull_idx_(0), ring_size_(4096),
+              push_wait_(0), pull_wait_(0), eos_(false) {
+    this->ring_.resize(this->ring_size_);
+    for (uint32_t i = 0; i < this->ring_size_; i++) {
+      this->ring_[i] = new T();
+    }
+  }
+  ~Channel() {
+  }
 
-  // for packet capture thread.
-  virtual Packet* retain_packet();
-  virtual void push_packet(Packet *pkt);
+  // for data capture thread.
+  T* retain() {
+    uint32_t n = to_idx(this->push_idx_ + 1);
+    return this->ring_[n];
+  }
 
-  // for packet decoding thread.
-  virtual Packet* pull_packet();
-  virtual void release_packet(Packet* pkt);
+  void push(T *data) {
+    uint32_t n = to_idx(this->push_idx_ + 1);
+
+    while (n == this->pull_idx_) {
+      this->push_wait_ += 1;
+      usleep(1);
+    }
+
+    this->ring_[n] = data;
+    this->push_idx_ = n;
+  }
+
+
+  // for data processing thread.
+  T* pull() {
+    uint32_t n = this->pull_idx_ + 1;
+    if (n >= this->ring_size_) {
+      n = 0;
+    }
+
+    while (n == to_idx(this->push_idx_ + 1)) {
+      if (this->closed()) {
+        return nullptr;
+      }
+
+      this->pull_wait_ += 1;
+      usleep(1);
+    }
+
+    T* pkt = this->ring_[n];
+    this->pull_idx_ = n;
+
+    return pkt;
+  }
+
+  void release(T* data) {
+    // pass
+  }
+
+  void close() {
+    this->eos_ = true;
+  }
+
+  bool closed() const {
+    return this->eos_;
+  }
 };
 
 }   // namespace pm
