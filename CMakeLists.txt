@@ -47,7 +47,11 @@ FILE(GLOB HEADERS
   "src/packetmachine/exception.hpp"
   "src/packetmachine/property.hpp"
 )
-FILE(GLOB TESTSRCS "test/*.cc")
+FILE(GLOB TESTSRCS
+  "test/gtest/gtest-all.cc"	
+  "test/*.cc"
+)
+
 FILE(GLOB PERFSRCS
   "perf/main.cc"
 	"perf/perf.cc"

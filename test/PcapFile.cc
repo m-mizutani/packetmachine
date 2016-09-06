@@ -24,14 +24,14 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "./gtest.h"
+#include "./gtest/gtest.h"
 #include "../src/capture.hpp"
 #include "../src/packet.hpp"
 
 TEST(PcapFile, ok) {
   pm::PcapFile *pfile = new pm::PcapFile("./test/data1.pcap");
   ASSERT_TRUE(pfile->ready());
-  
+
   pm::Packet pkt;
   int count = 0;
   while (0 <= (pfile->read(&pkt))) {
@@ -45,8 +45,9 @@ TEST(PcapFile, ok) {
 TEST(PcapFile, ng_no_such_file) {
   pm::PcapFile *pfile = new pm::PcapFile("./test/no_such_file.pcap");
   ASSERT_FALSE(pfile->ready());
-  EXPECT_EQ(pfile->error(), "./test/no_such_file.pcap: No such file or directory");
-  
+  EXPECT_EQ(pfile->error(),
+            "./test/no_such_file.pcap: No such file or directory");
+
   pm::Packet pkt;
   EXPECT_EQ(pfile->read(&pkt), -1);
   EXPECT_EQ(pfile->error(), "pcap is not ready");
@@ -60,5 +61,5 @@ TEST(PcapFile, ng_invalid_format) {
 
   pm::Packet pkt;
   EXPECT_EQ(pfile->read(&pkt), -1);
-  EXPECT_EQ(pfile->error(), "pcap is not ready");  
+  EXPECT_EQ(pfile->error(), "pcap is not ready");
 }
