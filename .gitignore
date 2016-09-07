@@ -4,3 +4,8 @@ Makefile
 bin/
 cmake_install.cmake
 lib/
+
+# X-code files
+CMakeScripts/
+packetmachine.build/
+packetmachine.xcodeproj/
