@@ -37,7 +37,7 @@ namespace pm {
 
 class Packet {
  private:
-  uint64_t len_;       // actual captured data length.
+  uint64_t len_;       // data length that program can see.
   uint64_t cap_len_;   // length this packet.
   uint64_t buf_len_;   // allocated buffer length.
   byte_t *buf_;        // buffer memory pointer.
@@ -50,6 +50,10 @@ class Packet {
   bool store(const byte_t* data, uint64_t len);
   void set_cap_len(unsigned int cap_len_);
   void set_tv(const timeval& tv);
+
+  uint64_t len() const { return this->len_; }
+  uint64_t cap_len() const { return this->cap_len_; }
+  const byte_t* buf() const { return this->buf_; }
 };
 
 }   // namespace pm

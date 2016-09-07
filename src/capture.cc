@@ -24,8 +24,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <assert.h>
 #include "./capture.hpp"
 #include "./packet.hpp"
+
+#include "./debug.hpp"
 
 namespace pm {
 
@@ -67,7 +70,9 @@ PcapFile::PcapFile(const std::string &file_path) :
 }
 
 PcapFile::~PcapFile() {
-  pcap_close(this->pd_);
+  if (this->pd_) {
+    pcap_close(this->pd_);
+  }
 }
 
 int PcapFile::read(Packet* pkt) {
@@ -95,12 +100,20 @@ int PcapFile::read(Packet* pkt) {
   } else if (rc == 0) {
     // packets are being read from a live capture and the timeout expired.
     return 0;
-  } else {
+  } else if (rc == -1) {
     // an error occurred.
     char* e = pcap_geterr(this->pd_);
+    printf("%d, %s\n", rc, e);
     this->set_error(e);
     this->set_ready(false);
     return -1;
+  } else if (rc == -2) {
+    // exit normaly.
+    this->set_ready(false);
+    return -1;
+  } else {
+    assert(0);   // invalid return code from pcap_next_ex.
+    return -3;
   }
 }
 

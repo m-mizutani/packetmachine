@@ -25,18 +25,26 @@
  */
 
 #include <pthread.h>
-#include "./gtest/gtest.h"
+#include <random>
 #include "../src/channel.hpp"
+#include "./gtest/gtest.h"
+
 
 namespace channel_test {
 
 class Data {
  public:
   int idx_;
+  int data_;
+  bool prime_;
 };
 
-struct Prop {
+class Prop {
+ public:
   pm::Channel<Data> *ch_;
+
+  int send_load_;
+  int recv_load_;
 
   // access from only provider
   int send_count_;
@@ -44,12 +52,28 @@ struct Prop {
   // access from only consumer
   int seq_mismatch_;
   int recv_count_;
-} prop_;
+
+  Prop(): ch_(nullptr), send_load_(0), recv_load_(0),
+          send_count_(0), seq_mismatch_(0), recv_count_(0) {
+  }
+  ~Prop() = default;
+};
+
+bool prime(int n) {
+  for (int i = 2; i < n; i++) {
+    if (n % i == 0) {
+      return false;
+    }
+  }
+
+  return true;
+}
 
 
 void* provider(void* obj) {
   Prop *p = static_cast<Prop*>(obj);
   pm::Channel<Data>* ch = p->ch_;
+  std::random_device rnd;
 
   Data *d;
   int idx = 1;
@@ -57,6 +81,12 @@ void* provider(void* obj) {
   for (size_t i = 0; i < p->send_count_; i++) {
     d = ch->retain();
     d->idx_ = idx;
+    d->data_ = rnd();
+
+    if (p->send_load_ > 0) {
+      d->prime_ = prime(d->data_ % p->send_load_);
+    }
+
     ch->push(d);
     idx++;
   }
@@ -74,6 +104,10 @@ void* consumer(void* obj) {
   int prev_idx = 0;
 
   while (nullptr != (d = ch->pull())) {
+    if (p->recv_load_ > 0) {
+      d->prime_ = prime(d->data_ % p->recv_load_);
+    }
+
     p->recv_count_ += 1;
     if (prev_idx + 1 != d->idx_) {
       p->seq_mismatch_++;
@@ -86,22 +120,64 @@ void* consumer(void* obj) {
 }
 
 TEST(Channel, ok) {
+  Prop p;
   const int count = 100000;
-  prop_.ch_ = new pm::Channel<Data>();
-  prop_.send_count_ = count;
-  prop_.seq_mismatch_ = 0;
-  prop_.recv_count_ = 0;
+  p.ch_ = new pm::Channel<Data>();
+  p.send_count_ = count;
 
   pthread_t t1, t2;
-  pthread_create(&t1, nullptr, provider, &prop_);
-  pthread_create(&t2, nullptr, consumer, &prop_);
+  pthread_create(&t1, nullptr, provider, &p);
+  pthread_create(&t2, nullptr, consumer, &p);
 
   pthread_join(t1, nullptr);
   pthread_join(t2, nullptr);
 
-  EXPECT_EQ(prop_.seq_mismatch_, 0);
-  EXPECT_EQ(prop_.recv_count_, count);
-  delete prop_.ch_;
+  EXPECT_EQ(p.seq_mismatch_, 0);
+  EXPECT_EQ(p.recv_count_, count);
+  delete p.ch_;
 }
+
+TEST(Channel, ok_slow_provider) {
+  Prop p;
+  const int count = 100000;
+  p.ch_ = new pm::Channel<Data>();
+  p.send_count_ = count;
+  p.send_load_ = 0xffff;
+
+  pthread_t t1, t2;
+  pthread_create(&t1, nullptr, provider, &p);
+  pthread_create(&t2, nullptr, consumer, &p);
+
+  pthread_join(t1, nullptr);
+  pthread_join(t2, nullptr);
+
+  EXPECT_EQ(p.seq_mismatch_, 0);
+  EXPECT_EQ(p.recv_count_, count);
+  printf("push_wait: %llu, pull_wait: %llu\n",
+         p.ch_->push_wait(), p.ch_->pull_wait());
+  delete p.ch_;
+}
+
+TEST(Channel, ok_slow_consumer) {
+  Prop p;
+  const int count = 100000;
+  p.ch_ = new pm::Channel<Data>();
+  p.send_count_ = count;
+  p.recv_load_ = 0xffff;
+
+  pthread_t t1, t2;
+  pthread_create(&t1, nullptr, provider, &p);
+  pthread_create(&t2, nullptr, consumer, &p);
+
+  pthread_join(t1, nullptr);
+  pthread_join(t2, nullptr);
+
+  EXPECT_EQ(p.seq_mismatch_, 0);
+  EXPECT_EQ(p.recv_count_, count);
+  printf("push_wait: %llu, pull_wait: %llu\n",
+         p.ch_->push_wait(), p.ch_->pull_wait());
+  delete p.ch_;
+}
+
 
 }    // namespace channel_test

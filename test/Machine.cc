@@ -24,58 +24,16 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __PACKETMACHINE_HPP__
-#define __PACKETMACHINE_HPP__
+#include "./gtest/gtest.h"
+#include "../src/packetmachine.hpp"
 
-#include <pthread.h>
-#include <memory>
-#include <string>
+namespace machine_test {
 
-#include "./packetmachine/exception.hpp"
-#include "./packetmachine/property.hpp"
+TEST(Machine, ok) {
+  pm::Machine *m = new pm::Machine();
+  m->add_pcapfile("./test/data1.pcap");
+  m->start();
+  m->join();
+}
 
-namespace pm {
-
-class Capture;
-
-class Process {
- public:
-  Process();
-  ~Process();
-
-  virtual void recieve(const Property& prop) = 0;
-};
-
-
-typedef std::shared_ptr<Process> ProcPtr;
-typedef int eid;
-
-class Input;
-class Kernel;
-
-class Machine {
- private:
-  Capture *cap_;
-  Input *input_;
-  Kernel *kernel_;
-  pthread_t input_th_, kernel_th_;
-
- public:
-  Machine();
-  ~Machine();
-
-  // Configure data source.
-  void add_device(const std::string& dev_name);
-  void add_pcapfile(const std::string& file_path);
-
-  // Contorl capture & packet decodeing.
-  void start();
-  void join();
-  void shutdown();
-
-  bool bind(const std::string& event_name, ProcPtr ptr);
-};
-
-}   // namespace pm
-
-#endif   // __PACKETMACHINE_HPP__
+}

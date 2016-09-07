@@ -27,9 +27,14 @@
 #ifndef __PACKETMACHINE_CHANNEL_HPP__
 #define __PACKETMACHINE_CHANNEL_HPP__
 
+#include <assert.h>
+
 #include <unistd.h>
 #include <vector>
 #include <atomic>
+
+
+#include "./debug.hpp"
 
 namespace pm {
 
@@ -39,6 +44,8 @@ namespace pm {
 template <typename T>
 class Channel {
  private:
+  static const bool DEBUG = false;
+
   std::atomic<uint32_t> push_idx_;
   std::atomic<uint32_t> pull_idx_;
   std::vector<T*> ring_;
@@ -46,8 +53,10 @@ class Channel {
   uint64_t push_wait_, pull_wait_;
   bool eos_;
 
-  inline uint32_t to_idx(uint32_t idx) {
-    return (idx >= this->ring_size_) ? 0 : idx;
+  inline uint32_t next(uint32_t idx) {
+    debug(DEBUG, "channel=%p", this);
+    assert(idx <= this->ring_size_);
+    return (idx + 1) % this->ring_size_;
   }
 
  public:
@@ -57,38 +66,50 @@ class Channel {
     for (uint32_t i = 0; i < this->ring_size_; i++) {
       this->ring_[i] = new T();
     }
+    debug(DEBUG, "channel=%p", this);
+    debug(DEBUG, "push:%u, pull:%u",
+          static_cast<uint32_t>(this->push_idx_),
+          static_cast<uint32_t>(this->pull_idx_));
   }
   ~Channel() {
   }
 
+  uint64_t push_wait() const { return this->push_wait_; }
+  uint64_t pull_wait() const { return this->pull_wait_; }
+
   // for data capture thread.
   T* retain() {
-    uint32_t n = to_idx(this->push_idx_ + 1);
-    return this->ring_[n];
-  }
-
-  void push(T *data) {
-    uint32_t n = to_idx(this->push_idx_ + 1);
+    uint32_t n = this->next(this->push_idx_);
+    debug(DEBUG, "reatin:%u", n);
 
     while (n == this->pull_idx_) {
       this->push_wait_ += 1;
       usleep(1);
     }
 
+    debug(DEBUG, "retained:%u", n);
+    return this->ring_[n];
+  }
+
+  void push(T *data) {
+    uint32_t n = this->next(this->push_idx_);
     this->ring_[n] = data;
     this->push_idx_ = n;
+    debug(DEBUG, "push:%u", n);
   }
 
 
   // for data processing thread.
   T* pull() {
-    uint32_t n = this->pull_idx_ + 1;
-    if (n >= this->ring_size_) {
-      n = 0;
-    }
+    uint32_t n = this->next(this->pull_idx_);
 
-    while (n == to_idx(this->push_idx_ + 1)) {
+    debug(DEBUG, "push:%u, pull:%u",
+           static_cast<uint32_t>(this->push_idx_),
+           static_cast<uint32_t>(this->pull_idx_));
+
+    while (n == this->next(this->push_idx_)) {
       if (this->closed()) {
+        debug(DEBUG, "closed");
         return nullptr;
       }
 

@@ -42,6 +42,20 @@ TEST(PcapFile, ok) {
   EXPECT_EQ(count, 10000);
 }
 
+TEST(PcapFile, ok_with_super_class) {
+  pm::Capture *pfile = new pm::PcapFile("./test/data1.pcap");
+  ASSERT_TRUE(pfile->ready());
+
+  pm::Packet pkt;
+  int count = 0;
+  while (0 <= (pfile->read(&pkt))) {
+    count += 1;
+  }
+
+  EXPECT_TRUE(pfile->error().empty());
+  EXPECT_EQ(count, 10000);
+}
+
 TEST(PcapFile, ng_no_such_file) {
   pm::PcapFile *pfile = new pm::PcapFile("./test/no_such_file.pcap");
   ASSERT_FALSE(pfile->ready());

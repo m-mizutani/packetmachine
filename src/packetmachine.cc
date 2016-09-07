@@ -24,9 +24,13 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <unistd.h>
 #include "./packetmachine.hpp"
 #include "./capture.hpp"
 #include "./packet.hpp"
+#include "./channel.hpp"
+
+#include "./debug.hpp"
 
 namespace pm {
 
@@ -37,7 +41,86 @@ Process::~Process() {
 }
 
 
-Machine::Machine() : cap_(nullptr) {
+
+class Input {
+ private:
+  Capture* cap_;
+  Channel<Packet>* channel_;
+
+ public:
+  Input(Capture* cap, Channel<Packet>* channel) :
+      cap_(cap), channel_(channel) {
+  }
+  ~Input() {
+  }
+
+  static void* thread(void* obj) {
+    Input* p = static_cast<Input*>(obj);
+    p->run();
+    return nullptr;
+  }
+
+  void run() {
+    Packet *pkt;
+    int rc = 0;
+
+    for (;;) {
+      pkt = this->channel_->retain();
+
+      while (0 == (rc = this->cap_->read(pkt))) {
+        // timeout read packet data.
+        usleep(1);
+      }
+
+      if (rc > 0) {
+        this->channel_->push(pkt);
+      } else {
+        // rc < 0, error occurred
+        this->channel_->close();
+        break;
+      }
+    }
+  }
+};
+
+
+class Kernel {
+ private:
+  Channel<Packet> channel_;
+  uint64_t recv_pkt_;
+  uint64_t recv_size_;
+
+ public:
+  Kernel() {
+  }
+  ~Kernel() {
+  }
+
+  static void* thread(void* obj) {
+    Kernel* p = static_cast<Kernel*>(obj);
+    p->run();
+    return nullptr;
+  }
+
+  void run() {
+    Packet* pkt;
+    while (nullptr != (pkt = this->channel_.pull())) {
+      this->recv_pkt_  += 1;
+      this->recv_size_ += pkt->cap_len();
+    }
+  }
+
+  Channel<Packet>* channel() {
+    return &this->channel_;
+  }
+
+  uint64_t recv_pkt()  const { return this->recv_pkt_; }
+  uint64_t recv_size() const { return this->recv_size_; }
+};
+
+
+
+Machine::Machine() : cap_(nullptr), input_(nullptr), kernel_(nullptr) {
 }
 
 Machine::~Machine() {
@@ -63,10 +146,21 @@ void Machine::add_pcapfile(const std::string &file_path) {
 }
 
 void Machine::start() {
-  Packet pkt;
+  if (!this->cap_) {
+    throw Exception::ConfigError("no input source is available");
+  }
+
+  this->kernel_ = new Kernel();
+  this->input_  = new Input(this->cap_, this->kernel_->channel());
+
+  pthread_create(&this->kernel_th_, nullptr, Kernel::thread, this->kernel_);
+  pthread_create(&this->input_th_,  nullptr, Input::thread,  this->input_);
 }
 
-
+void Machine::join() {
+  pthread_join(this->input_th_,  nullptr);
+  pthread_join(this->kernel_th_, nullptr);
+}
 
 void Machine::shutdown() {
 }
