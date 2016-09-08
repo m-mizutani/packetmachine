@@ -24,40 +24,33 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __PACKETMACHINE_PACKET_HPP__
-#define __PACKETMACHINE_PACKET_HPP__
+#include <string.h>
+#include "./gtest/gtest.h"
 
-#include <sys/time.h>
-#include "./packetmachine/common.hpp"
+#include "../src/packet.hpp"
 
-namespace pm {
+TEST(Packet, store) {
+  pm::byte_t a[] = {1, 2, 3, 4, 5};
+  pm::Packet pkt;
+  timeval tv = {100, 200};   // tv_sec, tv_usec
 
-// Packet is to store captured packet data(raw data, captured length,
-// actual packet length, timestamp).
+  // store
+  pkt.store(a, 4);
+  pkt.set_cap_len(10);
+  pkt.set_tv(tv);
 
-class Packet {
- private:
-  uint64_t len_;       // data length that program can see.
-  uint64_t cap_len_;   // length this packet.
-  uint64_t buf_len_;   // allocated buffer length.
-  byte_t *buf_;        // buffer memory pointer.
-  struct timeval tv_;  // timestamp of packet arrived.
+  // clear original data
+  ::memset(a, 0, sizeof(a));
+  ::memset(&tv, 0, sizeof(tv));
+  EXPECT_EQ(0, a[0]);
 
- public:
-  Packet();
-  ~Packet();
+  // test
+  auto tv_s = pkt.tv();
+  const pm::byte_t* p = pkt.buf();
 
-  bool store(const byte_t* data, uint64_t len);
-  void set_cap_len(unsigned int cap_len_);
-  void set_tv(const timeval& tv);
-
-  uint64_t len() const { return this->len_; }
-  uint64_t cap_len() const { return this->cap_len_; }
-  const byte_t* buf() const { return this->buf_; }
-  uint64_t buf_len() const { return this->buf_len_; }
-  const timeval& tv() const { return this->tv_; }
-};
-
-}   // namespace pm
-
-#endif   // __PACKETMACHINE_PACKET_HPP__
+  EXPECT_EQ(4, pkt.len());
+  EXPECT_EQ(1, p[0]);
+  EXPECT_EQ(4, p[3]);
+  EXPECT_EQ(100, tv_s.tv_sec);
+  EXPECT_EQ(200, tv_s.tv_usec);
+}
