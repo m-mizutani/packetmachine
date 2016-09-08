@@ -41,6 +41,8 @@ FILE(GLOB BASESRCS
 	"src/channel.hpp"	
 	"src/packet.cc"
 	"src/packet.hpp"
+	"src/kernel.cc"
+	"src/kernel.hpp"
 )
 FILE(GLOB HEADERS
   "src/packetmachine.hpp"

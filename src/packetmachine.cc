@@ -25,10 +25,12 @@
  */
 
 #include <unistd.h>
+#include <assert.h>
 #include "./packetmachine.hpp"
 #include "./capture.hpp"
 #include "./packet.hpp"
 #include "./channel.hpp"
+#include "./kernel.hpp"
 
 #include "./debug.hpp"
 
@@ -84,46 +86,13 @@ class Input {
 };
 
 
-class Kernel {
- private:
-  Channel<Packet> channel_;
-  uint64_t recv_pkt_;
-  uint64_t recv_size_;
-
- public:
-  Kernel() : recv_pkt_(0), recv_size_(0) {
-  }
-  ~Kernel() {
-  }
-
-  static void* thread(void* obj) {
-    Kernel* p = static_cast<Kernel*>(obj);
-    p->run();
-    return nullptr;
-  }
-
-  void run() {
-    Packet* pkt;
-    while (nullptr != (pkt = this->channel_.pull())) {
-      this->recv_pkt_  += 1;
-      this->recv_size_ += pkt->cap_len();
-    }
-  }
-
-  Channel<Packet>* channel() {
-    return &this->channel_;
-  }
-
-  uint64_t recv_pkt()  const { return this->recv_pkt_; }
-  uint64_t recv_size() const { return this->recv_size_; }
-};
-
-
 
 Machine::Machine() : cap_(nullptr), input_(nullptr), kernel_(nullptr) {
+  this->kernel_ = new Kernel();
 }
 
 Machine::~Machine() {
+  delete this->kernel_;
   delete this->cap_;
 }
 
@@ -150,7 +119,6 @@ void Machine::start() {
     throw Exception::ConfigError("no input source is available");
   }
 
-  this->kernel_ = new Kernel();
   this->input_  = new Input(this->cap_, this->kernel_->channel());
 
   pthread_create(&this->kernel_th_, nullptr, Kernel::thread, this->kernel_);
@@ -166,23 +134,18 @@ void Machine::shutdown() {
 }
 
 bool Machine::bind(const std::string& event_name, ProcPtr ptr) {
-  return false;
+  assert(this->kernel_);
+  return this->kernel_->bind(event_name, ptr);
 }
 
 uint64_t Machine::recv_pkt() const {
-  if (this->kernel_) {
-    return this->kernel_->recv_pkt();
-  } else {
-    return 0;
-  }
+  assert(this->kernel_);
+  return this->kernel_->recv_pkt();
 }
 
 uint64_t Machine::recv_size() const {
-  if (this->kernel_) {
-    return this->kernel_->recv_size();
-  } else {
-    return 0;
-  }
+  assert(this->kernel_);
+  return this->kernel_->recv_size();
 }
 
 }   // namespace pm
