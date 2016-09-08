@@ -91,7 +91,7 @@ class Kernel {
   uint64_t recv_size_;
 
  public:
-  Kernel() {
+  Kernel() : recv_pkt_(0), recv_size_(0) {
   }
   ~Kernel() {
   }
@@ -169,5 +169,20 @@ bool Machine::bind(const std::string& event_name, ProcPtr ptr) {
   return false;
 }
 
+uint64_t Machine::recv_pkt() const {
+  if (this->kernel_) {
+    return this->kernel_->recv_pkt();
+  } else {
+    return 0;
+  }
+}
+
+uint64_t Machine::recv_size() const {
+  if (this->kernel_) {
+    return this->kernel_->recv_size();
+  } else {
+    return 0;
+  }
+}
 
 }   // namespace pm

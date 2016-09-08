@@ -74,6 +74,9 @@ class Machine {
   void shutdown();
 
   bool bind(const std::string& event_name, ProcPtr ptr);
+
+  uint64_t recv_pkt() const;
+  uint64_t recv_size() const;
 };
 
 }   // namespace pm

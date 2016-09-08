@@ -34,6 +34,9 @@ TEST(Machine, ok) {
   m->add_pcapfile("./test/data1.pcap");
   m->start();
   m->join();
+
+  EXPECT_EQ(10000,   m->recv_pkt());
+  EXPECT_EQ(5282080, m->recv_size());
 }
 
-}
+}   // namespace machine_test
