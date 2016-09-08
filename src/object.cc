@@ -24,44 +24,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __PACKETMACHINE_EXCEPTION_HPP
-#define __PACKETMACHINE_EXCEPTION_HPP
-
-#include <exception>
-#include <sstream>
-#include <string>
+#include "./packetmachine/object.hpp"
 
 namespace pm {
-namespace Exception {
 
-// Exception::Error is base exception of packetmachine.
-// Exception classes of packetmachine should inherit Exception::Error
-// if there is no special reason.
-
-class Error : public std::exception {
- private:
-  std::string errmsg_;
- public:
-  explicit Error(const std::string &errmsg) : errmsg_(errmsg) {}
-  virtual ~Error() throw() {}
-  virtual const char* what() const throw() {
-    return this->errmsg_.c_str();
-  }
-};
-
-// ConfigError for invalid preparation.
-
-class ConfigError : public Error {
- public:
-  explicit ConfigError(const std::string &errmsg) : Error(errmsg) {}
-};
-
-class TypeError : public Error {
- public:
-  explicit TypeError(const std::string &errmsg) : Error(errmsg) {}
-};
-
-}   // namespace Exception
 }   // namespace pm
-
-#endif    // __PACKETMACHINE_EXCEPTION_HPP

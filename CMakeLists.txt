@@ -34,7 +34,11 @@ ENDIF()
 # Build library
 
 FILE(GLOB BASESRCS
+	# Exposed code
 	"src/packetmachine.cc"
+	"src/object.cc"
+
+	# Internal code
 	"src/capture.cc"
 	"src/capture.hpp"
 	"src/channel.cc"
@@ -46,6 +50,8 @@ FILE(GLOB BASESRCS
 )
 FILE(GLOB HEADERS
   "src/packetmachine.hpp"
+  "src/packetmachine/common.hpp"
+  "src/packetmachine/object.hpp"
   "src/packetmachine/exception.hpp"
   "src/packetmachine/property.hpp"
 )
