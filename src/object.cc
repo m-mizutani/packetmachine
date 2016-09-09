@@ -26,6 +26,7 @@
 
 #include "./packetmachine/object.hpp"
 
+#include <string.h>
 #include <ctype.h>
 #include <assert.h>
 #include <arpa/inet.h>
