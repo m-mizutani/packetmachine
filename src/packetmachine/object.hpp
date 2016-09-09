@@ -30,6 +30,7 @@
 #include <vector>
 #include <map>
 #include <string>
+#include <typeinfo>
 
 #include "./common.hpp"
 #include "./exception.hpp"
@@ -53,6 +54,7 @@ namespace pm {
 // Instance of child classes may be reused because of memory allocation/free
 // performance. Then, they should have clear method to change status into
 // "unavailable". The method is not needed to free internal memory.
+// Additionally, clear must be recursive.
 //
 // void repr(std::ostream &os) const:
 // In order to present internal data as printable format. It is inspired by
@@ -91,6 +93,8 @@ class Array : public Object {
   Array();
   ~Array();
   void clear();
+  void repr(std::ostream &os) const;
+  void push(Object *obj);
 };
 
 
@@ -102,6 +106,8 @@ class Map : public Object {
   Map();
   ~Map();
   void clear();
+  void repr(std::ostream &os) const;
+  void insert(const std::string& key, Object* obj);
 };
 
 
@@ -113,6 +119,8 @@ class Value : public Object {
   };
 
  private:
+  bool active_;
+
   byte_t* ptr_;
   size_t len_;
 
@@ -124,11 +132,14 @@ class Value : public Object {
   Value();
   ~Value();
 
-  void set(const byte_t* ptr, size_t len, Endian e = BIG);
-  void store(const byte_t* ptr, size_t len);
+  void set(byte_t* ptr, size_t len, Endian e = BIG);
+  void cpy(const byte_t* ptr, size_t len, Endian e = BIG);
 
   virtual void clear();
   virtual void repr(std::ostream &os) const;
+
+  bool active() const { return this->active_; }
+  size_t len() const { return this->len_; }
 
   virtual bool hex(std::ostream &os) const;
   virtual bool ip4(std::ostream &os) const;
@@ -136,18 +147,25 @@ class Value : public Object {
   virtual bool mac(std::ostream &os) const;
   virtual bool uint(uint64_t* d) const;
 
-  virtual bool is_hex() const;
-  virtual bool is_ip4() const;
-  virtual bool is_ip6() const;
-  virtual bool is_mac() const;
-  virtual bool is_uint() const;
+  inline bool is_hex() const { return this->active_; }
+  inline bool is_ip4() const { return (this->active_ && this->len_ == 4); }
+  inline bool is_ip6() const { return (this->active_ && this->len_ == 16); }
+  inline bool is_mac() const { return (this->active_ && this->len_ == 6); }
+  inline bool is_uint() const {
+    // support unsigned int less than or equal to 64bit.
+    return (this->active_ &&
+            (this->len_ == 1 ||    // uint8_t
+             this->len_ == 2 ||    // uint16_t
+             this->len_ == 4 ||    // uint32_t
+             this->len_ == 8));    // uint64_t
+  }
 
   std::string hex() const;
   std::string ip4() const;
   std::string ip6() const;
   std::string mac() const;
   uint64_t uint() const;
-  const byte_t* raw(size_t* len) const;
+  const byte_t* raw(size_t* len = nullptr) const;
 };
 
 }   // namespace pm
