@@ -40,14 +40,16 @@ FILE(GLOB BASESRCS
 	"src/object.cc"
 
 	# Internal code
-	"src/capture.cc"
-	"src/capture.hpp"
-	"src/channel.cc"
-	"src/channel.hpp"	
-	"src/packet.cc"
-	"src/packet.hpp"
-	"src/kernel.cc"
-	"src/kernel.hpp"
+	"src/capture.cc"  "src/capture.hpp"
+	"src/channel.cc"  "src/channel.hpp"
+	"src/packet.cc"   "src/packet.hpp"
+	"src/kernel.cc"   "src/kernel.hpp"
+	"src/module.cc"   "src/module.hpp"
+
+	# Decoder modules
+	"src/mods/ether.cc"
+	"src/mods/arp.cc"
+	"src/mods/ipv4.cc"
 )
 FILE(GLOB HEADERS
   "src/packetmachine.hpp"
