@@ -24,48 +24,51 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __PACKETMACHINE_PROPERTY_HPP
-#define __PACKETMACHINE_PROPERTY_HPP
-
-#include <stdio.h>
-#include "./common.hpp"
+#include <assert.h>
+#include "./packetmachine/property.hpp"
+#include "./packet.hpp"
 
 namespace pm {
 
-class Packet;
+Payload::Payload() : pkt_(nullptr) {
+}
 
-class Payload {
- private:
-  const Packet* pkt_;
-  const byte_t *ptr_;
-  const byte_t *end_;
-  size_t length_;
-
- public:
-  Payload();
-  ~Payload();
-
-  void reset(const Packet* pkt);
-
-  // check remain size and move current pointer.
-  const byte_t* retain(const size_t size);
-  // just return current pointer.
-  const byte_t* ptr() const { return this->ptr_; }
-  // adjust remain size because of excluding footer (e.g. Ethernet)
-  bool shrink(size_t length);
-  // just return remain size.
-  size_t length() const { return this->length_; }
-  // End Of Payload.
-  bool eop() const { return this->length_ == 0; }
-};
+Payload::~Payload() {
+}
 
 
-class Property {
- public:
-  Property();
-  ~Property();
-};
+void Payload::reset(const Packet* pkt) {
+  this->pkt_ = pkt;
 
-}    // namespace pm
+  this->length_ = pkt->len();
+  this->ptr_ = pkt->buf();
+  this->end_ = this->ptr_ + this->length_;
+}
 
-#endif    // __PACKETMACHINE_PROPERTY_HPP
+
+const byte_t* Payload::retain(size_t size) {
+  assert(this->pkt_);    // must be initialized.
+
+  const byte_t* n = this->ptr_ + size;
+  const byte_t* p = this->ptr_;
+
+  if (size <= this->length_ && n < this->end_) {
+    this->length_ -= size;
+    this->ptr_ = n;
+    return p;
+  } else {
+    return nullptr;
+  }
+}
+
+
+bool Payload::shrink(size_t length) {
+  if (length > this->length_) {
+    return false;
+  } else {
+    this->length_ = length;
+    return true;
+  }
+}
+
+}   // namespace pm

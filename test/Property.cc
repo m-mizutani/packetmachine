@@ -24,48 +24,59 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __PACKETMACHINE_PROPERTY_HPP
-#define __PACKETMACHINE_PROPERTY_HPP
+#include "./gtest/gtest.h"
+#include "../src/packet.hpp"
+#include "../src/packetmachine/property.hpp"
 
-#include <stdio.h>
-#include "./common.hpp"
+namespace machine_test {
 
-namespace pm {
+TEST(Payload, ok) {
+  pm::Packet pkt;
+  pm::byte_t data[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+  const pm::byte_t* ptr;
 
-class Packet;
+  pkt.store(data, 10);
+  ptr = pkt.buf();
 
-class Payload {
- private:
-  const Packet* pkt_;
-  const byte_t *ptr_;
-  const byte_t *end_;
-  size_t length_;
+  pm::Payload pd;
+  pd.reset(&pkt);
 
- public:
-  Payload();
-  ~Payload();
+  EXPECT_EQ(10, pd.length());
+  // get pointer of 0 byte index and move to forward 2 bytes.
+  EXPECT_EQ(&ptr[0], pd.retain(2));
 
-  void reset(const Packet* pkt);
+  EXPECT_FALSE(pd.eop());
 
-  // check remain size and move current pointer.
-  const byte_t* retain(const size_t size);
-  // just return current pointer.
-  const byte_t* ptr() const { return this->ptr_; }
-  // adjust remain size because of excluding footer (e.g. Ethernet)
-  bool shrink(size_t length);
-  // just return remain size.
-  size_t length() const { return this->length_; }
-  // End Of Payload.
-  bool eop() const { return this->length_ == 0; }
-};
+  EXPECT_EQ(8, pd.length());
+  EXPECT_EQ(&ptr[2], pd.retain(3));
 
+  EXPECT_EQ(5, pd.length());
+  EXPECT_TRUE(pd.shrink(4));
+  EXPECT_EQ(4, pd.length());
 
-class Property {
- public:
-  Property();
-  ~Property();
-};
+  EXPECT_EQ(&ptr[5], pd.retain(4));
+  EXPECT_EQ(0, pd.length());
+  EXPECT_TRUE(pd.eop());
+}
 
-}    // namespace pm
+TEST(Payload, ng) {
+  pm::Packet pkt;
+  pm::byte_t data[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+  const pm::byte_t* ptr;
 
-#endif    // __PACKETMACHINE_PROPERTY_HPP
+  pkt.store(data, 10);
+  ptr = pkt.buf();
+
+  pm::Payload pd;
+
+  // Move to out of range.
+  pd.reset(&pkt);
+  EXPECT_EQ(nullptr, pd.retain(12));    // fail to retain.
+
+  // Set remain size over current length (1)
+  pd.reset(&pkt);
+  EXPECT_FALSE(pd.shrink(12));
+  EXPECT_EQ(10, pd.length());    // remain size is not changed.
+}
+
+}   // namespace machine_test

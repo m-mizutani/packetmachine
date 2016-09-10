@@ -36,6 +36,7 @@ ENDIF()
 FILE(GLOB BASESRCS
 	# Exposed code
 	"src/packetmachine.cc"
+	"src/property.cc"
 	"src/object.cc"
 
 	# Internal code
