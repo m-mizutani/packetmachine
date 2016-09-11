@@ -45,6 +45,7 @@ FILE(GLOB BASESRCS
 	"src/packet.cc"   "src/packet.hpp"
 	"src/kernel.cc"   "src/kernel.hpp"
 	"src/module.cc"   "src/module.hpp"
+	"src/decoder.cc"  "src/decoder.hpp"
 
 	# Decoder modules
 	"src/mods/ether.cc"

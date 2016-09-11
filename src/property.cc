@@ -27,6 +27,7 @@
 #include <assert.h>
 #include "./packetmachine/property.hpp"
 #include "./packet.hpp"
+#include "./decoder.hpp"
 
 namespace pm {
 
@@ -69,6 +70,22 @@ bool Payload::shrink(size_t length) {
     this->length_ = length;
     return true;
   }
+}
+
+
+
+Property::Property(Decoder* dec) : dec_(dec) {
+}
+
+Property::~Property() {
+}
+
+Object* Property::object(param_id pid) {
+  Object* obj = this->dec_->new_param(this->context_, pid);
+  return obj;
+}
+
+Value* Property::value(param_id pid) {
 }
 
 }   // namespace pm

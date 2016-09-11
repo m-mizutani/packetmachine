@@ -30,8 +30,11 @@ namespace pm {
 
 class IPv4 : public Module {
  public:
-  void decode(Payload* pd, Property* prop) {
+  void setup() {
+  }
+  mod_id decode(Payload* pd, Property* prop) {
     // TODO(m-mizutani): implement
+    return Module::NONE;
   }
 };
 

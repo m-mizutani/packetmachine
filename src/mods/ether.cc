@@ -28,10 +28,80 @@
 
 namespace pm {
 
+#ifndef ETHERTYPE_ARP
+#define ETHERTYPE_ARP 0x0806
+#endif
+#ifndef ETHERTYPE_VLAN
+#define ETHERTYPE_VLAN 0x8100
+#endif
+#ifndef ETHERTYPE_IP
+#define ETHERTYPE_IP 0x0800
+#endif
+#ifndef ETHERTYPE_IPV6
+#define ETHERTYPE_IPV6 0x86dd
+#endif
+#ifndef ETHERTYPE_LOOPBACK
+#define ETHERTYPE_LOOPBACK 0x9000
+#endif
+#ifndef ETHERTYPE_WLCCP /* Cisco Wireless LAN Context Control Protocol */
+#define ETHERTYPE_WLCCP 0x872d
+#endif
+#ifndef ETHERTYPE_PPPOE_DISC
+#define ETHERTYPE_PPPOE_DISC 0x8863
+#endif
+#ifndef ETHERTYPE_PPPOE_SSN
+#define ETHERTYPE_PPPOE_SSN 0x8864
+#endif
+#ifndef ETHERTYPE_NETWARE /* Netware IPX/SPX */
+#define ETHERTYPE_NETWARE 0x8137
+#endif
+
 class Ethernet : public Module {
+ private:
+  static const size_t ETHER_ADDR_LEN = 6;
+
+  struct ether_header {
+    u_int8_t dst_[ETHER_ADDR_LEN];
+    u_int8_t src_[ETHER_ADDR_LEN];
+    u_int16_t type_;
+  } __attribute__((packed));
+
+  param_id p_type_, p_src_, p_dst_;
+  mod_id mod_ipv4_, mod_arp_;
+
  public:
-  void decode(Payload* pd, Property* prop) {
-    // TODO(m-mizutani): implement
+  Ethernet() {
+    this->p_type_ = this->define_param("type");
+    this->p_src_  = this->define_param("src");
+    this->p_dst_  = this->define_param("dst");
+  }
+
+  ~Ethernet() {
+  }
+
+  void setup() {
+    this->mod_ipv4_ = this->lookup_module("IPv4");
+    this->mod_arp_  = this->lookup_module("Arp");    
+  }
+  
+  mod_id decode(Payload* pd, Property* prop) {
+    auto hdr = reinterpret_cast<const struct ether_header*>
+               (pd->retain(sizeof(struct ether_header)));
+    if (hdr == nullptr) {
+      return Module::NONE;
+    }
+
+    prop->value(this->p_type_)->set(&hdr->type_, sizeof(hdr->type_));
+    prop->value(this->p_src_)->set(&hdr->src_, sizeof(hdr->src_));
+    prop->value(this->p_dst_)->set(&hdr->dst_, sizeof(hdr->dst_));
+
+    mod_id next = Module::NONE;
+    switch(hdr->type_) {
+      case ETHERTYPE_ARP: next = this->mod_arp_; break;
+      case ETHERTYPE_IP:  next = this->mod_ipv4_; break;
+    }
+
+    return next;
   }
 };
 

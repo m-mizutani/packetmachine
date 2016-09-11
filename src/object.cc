@@ -93,15 +93,15 @@ Value::~Value() {
 }
 
 
-void Value::set(byte_t* ptr, size_t len, Endian e) {
+void Value::set(const void* ptr, size_t len, Endian e) {
   this->active_ = true;
   this->endian_ = e;
-  this->ptr_ = ptr;
+  this->ptr_ = static_cast<const byte_t*>(ptr);
   this->len_ = len;
 }
 
 
-void Value::cpy(const byte_t* ptr, size_t len, Endian e) {
+void Value::cpy(const void* ptr, size_t len, Endian e) {
   if (this->buf_len_ < len) {
     // TODO(m-mizutani): handling memory allocation error
     this->buf_ = static_cast<byte_t*>(::realloc(this->buf_, len));
@@ -190,7 +190,7 @@ bool Value::uint(uint64_t* d) const {
 
       // uint16_t
       case 2: {
-        uint16_t t = *(reinterpret_cast<uint16_t*>(this->ptr_));
+        uint16_t t = *(reinterpret_cast<const uint16_t*>(this->ptr_));
         if (this->endian_ == BIG) {
           t = ntohs(t);
         }
@@ -199,7 +199,7 @@ bool Value::uint(uint64_t* d) const {
 
       // uint32_t
       case 4: {
-        uint32_t t = *(reinterpret_cast<uint32_t*>(this->ptr_));
+        uint32_t t = *(reinterpret_cast<const uint32_t*>(this->ptr_));
         if (this->endian_ == BIG) {
           t = ntohl(t);
         }
@@ -208,7 +208,7 @@ bool Value::uint(uint64_t* d) const {
 
       // uint64_t
       case 8: {
-        uint64_t r = *(reinterpret_cast<uint64_t*>(this->ptr_));
+        uint64_t r = *(reinterpret_cast<const uint64_t*>(this->ptr_));
 #if __BYTE_ORDER == __LITTLE_ENDIAN
         if (this->endian_ == BIG) {
           r = ((r & 0xFF00000000000000ull) >> 56) |

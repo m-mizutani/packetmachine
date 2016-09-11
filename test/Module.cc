@@ -31,7 +31,10 @@ namespace module_test {
 
 class TestMod : public pm::Module {
  public:
-  void decode(pm::Payload* pd, pm::Property* prop) {
+  void setup() {
+  }
+  pm::mod_id decode(pm::Payload* pd, pm::Property* prop) {
+    return pm::Module::NONE;
   }
 };
 

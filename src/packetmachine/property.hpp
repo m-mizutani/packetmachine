@@ -33,6 +33,13 @@
 namespace pm {
 
 class Packet;
+class Decoder;
+class Object;
+class Value;
+
+typedef uint64_t param_id;
+typedef uint64_t event_id;
+typedef  int64_t mod_id;
 
 class Payload {
  private:
@@ -61,9 +68,17 @@ class Payload {
 
 
 class Property {
+ private:
+  Decoder *dec_;
+  mod_id context_;
+
  public:
-  Property();
+  explicit Property(Decoder *dec);
   ~Property();
+
+  void set_mod_id_(mod_id id) { this->context_ = id; }
+  Object* object(param_id pid);
+  Value* value(param_id pid);
 };
 
 }    // namespace pm

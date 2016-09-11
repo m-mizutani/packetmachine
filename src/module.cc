@@ -24,7 +24,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <assert.h>
 #include "./module.hpp"
+#include "./decoder.hpp"
 
 namespace pm {
 
@@ -46,5 +48,50 @@ void ModuleBuilder::build(std::map<std::string, Module*> *mod_map) {
 void build_module_map(std::map<std::string, Module*> *mod_map) {
   __global_module_builder.build(mod_map);
 }
+
+
+
+Module::Module() : dec_(nullptr) {
+}
+
+Object* Module::new_value() {
+  return new Value();
+}
+/*
+Object* Module::new_array() {
+  return new Array();
+}
+Object* Module::new_map() {
+  return new Map();
+}
+*/
+
+param_id Module::define_param(const std::string& name,
+                              Object*(*new_object)()) {
+  param_id id = this->param_new_.size();
+  this->param_map_.insert(std::make_pair(name, id));
+  this->param_new_.push_back(new_object);
+  return id;
+}
+
+event_id Module::define_event(const std::string& name) {
+  return 0;     // TODO(m-mizutani): to be written
+}
+
+mod_id Module::lookup_module(const std::string& name) {
+  // lookup_module must not be called before set decoder.
+  assert(this->dec_);
+  return this->dec_->lookup_module(name);
+}
+
+void Module::set_decoder(Decoder* dec) {
+  this->dec_ = dec;
+}
+
+Object* Module::new_param(param_id id) {
+  assert(0 <= id && id < this->param_new_.size());
+  return this->param_new_[id]();
+}
+
 
 }   // namespace pm

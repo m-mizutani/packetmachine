@@ -31,15 +31,38 @@
 #include <vector>
 #include <string>
 
+#include "./packetmachine/object.hpp"
 #include "./packetmachine/property.hpp"
 
 namespace pm {
 
+class Decoder;
+
 class Module {
+ private:
+  std::map<std::string, param_id> param_map_;
+  std::vector<Object*(*)()> param_new_;
+  Decoder *dec_;
+
+ protected:
+  static Object* new_value();
+  static Object* new_array();
+  static Object* new_map();
+
+  param_id define_param(const std::string& name,
+                        Object*(*new_object)() = new_value);
+  event_id define_event(const std::string& name);
+  mod_id lookup_module(const std::string& name);
+
  public:
-  Module() = default;
-  ~Module() = default;
-  virtual void decode(Payload* pd, Property* prop) = 0;
+  static const mod_id NONE = -1;
+
+  Module();
+  virtual ~Module() = default;
+  virtual void setup() = 0;
+  virtual mod_id decode(Payload* pd, Property* prop) = 0;
+  void set_decoder(Decoder* dec);
+  Object* new_param(param_id id);
 };
 
 

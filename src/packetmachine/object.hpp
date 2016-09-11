@@ -121,7 +121,7 @@ class Value : public Object {
  private:
   bool active_;
 
-  byte_t* ptr_;
+  const byte_t* ptr_;
   size_t len_;
 
   byte_t* buf_;
@@ -132,8 +132,8 @@ class Value : public Object {
   Value();
   ~Value();
 
-  void set(byte_t* ptr, size_t len, Endian e = BIG);
-  void cpy(const byte_t* ptr, size_t len, Endian e = BIG);
+  void set(const void* ptr, size_t len, Endian e = BIG);
+  void cpy(const void* ptr, size_t len, Endian e = BIG);
 
   virtual void clear();
   virtual void repr(std::ostream &os) const;
