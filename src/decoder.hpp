@@ -44,6 +44,8 @@ class Decoder {
  private:
   std::map<std::string, mod_id> mod_map_;
   std::vector<Module*> modules_;
+  Module* mod_ethernet_;
+
  public:
   Decoder();
   ~Decoder();

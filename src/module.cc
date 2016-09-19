@@ -54,6 +54,9 @@ void build_module_map(std::map<std::string, Module*> *mod_map) {
 Module::Module() : dec_(nullptr) {
 }
 
+Module::~Module() {
+}
+
 Object* Module::new_value() {
   return new Value();
 }

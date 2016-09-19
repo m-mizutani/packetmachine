@@ -30,7 +30,7 @@
 
 namespace pm {
 
-Decoder::Decoder() {
+Decoder::Decoder() : mod_ethernet_(nullptr) {
   std::map<std::string, Module*> mod_map;
   build_module_map(&mod_map);
 
@@ -41,7 +41,13 @@ Decoder::Decoder() {
     const mod_id id = this->modules_.size();
     this->modules_.push_back(mod);
     this->mod_map_.insert(std::make_pair(m.first, id));
+
+    if (m.first == "Ethernet") {
+      this->mod_ethernet_ = mod;
+    }
   }
+
+  assert(this->mod_ethernet_);
 }
 
 Decoder::~Decoder() {
@@ -51,6 +57,18 @@ Decoder::~Decoder() {
 }
 
 void Decoder::decode(Payload* pd, Property* prop) {
+  Module* mod = this->mod_ethernet_;
+  mod_id next;
+  while (mod) {
+    next = mod->decode(pd, prop);
+
+    if (next == Module::NONE) {
+      mod = nullptr;
+    } else {
+      assert(0 <= next && next < this->modules_.size());
+      mod = this->modules_[next];
+    }
+  }
 }
 
 Object* Decoder::new_param(mod_id mid, param_id pid) {

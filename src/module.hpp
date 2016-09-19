@@ -58,7 +58,7 @@ class Module {
   static const mod_id NONE = -1;
 
   Module();
-  virtual ~Module() = default;
+  virtual ~Module();
   virtual void setup() = 0;
   virtual mod_id decode(Payload* pd, Property* prop) = 0;
   void set_decoder(Decoder* dec);
