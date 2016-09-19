@@ -27,53 +27,72 @@
 #include <assert.h>
 #include "./decoder.hpp"
 #include "./packetmachine/property.hpp"
+#include "./debug.hpp"
+
 
 namespace pm {
 
-Decoder::Decoder() : mod_ethernet_(nullptr) {
+Decoder::Decoder() : mod_ethernet_(Module::NONE) {
   std::map<std::string, Module*> mod_map;
   build_module_map(&mod_map);
 
+  // Building module map.
   for (auto& m : mod_map) {
     Module* mod = m.second;
-    mod->set_decoder(this);
-
     const mod_id id = this->modules_.size();
+    mod->set_decoder(this);
+    mod->set_mod_id(id);
+    mod->set_name(m.first);
+
     this->modules_.push_back(mod);
     this->mod_map_.insert(std::make_pair(m.first, id));
 
     if (m.first == "Ethernet") {
-      this->mod_ethernet_ = mod;
+      this->mod_ethernet_ = id;
     }
   }
 
-  assert(this->mod_ethernet_);
+  // Building parameter map.
+  for (auto& m : this->modules_) {
+    for (auto& p : *(m->param_map())) {
+      const param_id global_id = this->params_.size();
+      ParamDef *def = p.second;
+      def->set_module_id(m->id());
+      def->set_id(global_id);
+      def->set_name(m->name() + "." + p.first);
+      this->params_.push_back(def);
+    }
+  }
+
+  assert(this->mod_ethernet_ != Module::NONE);
 }
+
 
 Decoder::~Decoder() {
   for (auto& m : this->modules_) {
     delete m;
   }
-}
 
-void Decoder::decode(Payload* pd, Property* prop) {
-  Module* mod = this->mod_ethernet_;
-  mod_id next;
-  while (mod) {
-    next = mod->decode(pd, prop);
-
-    if (next == Module::NONE) {
-      mod = nullptr;
-    } else {
-      assert(0 <= next && next < this->modules_.size());
-      mod = this->modules_[next];
-    }
+  for (auto& pi : this->params_) {
+    delete pi;
   }
 }
 
-Object* Decoder::new_param(mod_id mid, param_id pid) {
-  assert(0 <= mid && mid < this->modules_.size());
-  return this->modules_[mid]->new_param(pid);
+
+void Decoder::decode(Payload* pd, Property* prop) {
+  Module* mod;
+  mod_id next = this->mod_ethernet_;
+
+  // debug(true, "decoding");
+
+  while (next != Module::NONE) {
+    // debug(true, "next = %lld", next);
+    mod = this->modules_[next];
+
+    next = mod->decode(pd, prop);
+
+    assert(next == Module::NONE || (0 <= next && next < this->modules_.size()));
+  }
 }
 
 mod_id Decoder::lookup_module(const std::string& name) const {
@@ -82,6 +101,23 @@ mod_id Decoder::lookup_module(const std::string& name) const {
     return Module::NONE;
   } else {
     return it->second;
+  }
+}
+
+param_id Decoder::lookup_param_id(const std::string& name) const {
+  const auto& it = this->param_map_.find(name);
+  if (it == this->param_map_.end()) {
+    return Param::NONE;
+  } else {
+    return it->second->id();
+  }
+}
+
+const std::string& Decoder::lookup_param_name(param_id pid) const {
+  if (pid < 0 || this->params_.size() <= pid) {
+    throw Exception::IndexError("No such parameter");
+  } else {
+    return this->params_[pid]->name();
   }
 }
 

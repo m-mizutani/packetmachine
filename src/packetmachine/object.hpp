@@ -63,6 +63,9 @@ namespace pm {
 
 class Object {
  public:
+  Object() = default;
+  virtual ~Object() {}
+
   template <typename T> const T& as() const {
     const T* ptr = dynamic_cast<const T*>(this);
     if (ptr) {
@@ -91,7 +94,7 @@ class Array : public Object {
 
  public:
   Array();
-  ~Array();
+  virtual ~Array();
   void clear();
   void repr(std::ostream &os) const;
   void push(Object *obj);
@@ -104,7 +107,7 @@ class Map : public Object {
 
  public:
   Map();
-  ~Map();
+  virtual ~Map();
   void clear();
   void repr(std::ostream &os) const;
   void insert(const std::string& key, Object* obj);
@@ -130,7 +133,7 @@ class Value : public Object {
 
  public:
   Value();
-  ~Value();
+  virtual ~Value();
 
   void set(const void* ptr, size_t len, Endian e = BIG);
   void cpy(const void* ptr, size_t len, Endian e = BIG);

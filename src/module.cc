@@ -45,13 +45,26 @@ void ModuleBuilder::build(std::map<std::string, Module*> *mod_map) {
   }
 }
 
+ModuleBuilder* __get_global_module_builder() {
+  static ModuleBuilder __global_module_builder;
+  return &__global_module_builder;
+}
+
 void build_module_map(std::map<std::string, Module*> *mod_map) {
-  __global_module_builder.build(mod_map);
+  ModuleBuilder* builder = __get_global_module_builder();
+  builder->build(mod_map);
 }
 
 
 
-Module::Module() : dec_(nullptr) {
+ParamDef::ParamDef(const std::string& local_name, Object*(*constructor)()) :
+    local_name_(local_name), constructor_(constructor) {
+}
+ParamDef::~ParamDef() {
+}
+
+
+Module::Module() : dec_(nullptr), id_(Module::NONE) {
 }
 
 Module::~Module() {
@@ -69,12 +82,11 @@ Object* Module::new_map() {
 }
 */
 
-param_id Module::define_param(const std::string& name,
-                              Object*(*new_object)()) {
-  param_id id = this->param_new_.size();
-  this->param_map_.insert(std::make_pair(name, id));
-  this->param_new_.push_back(new_object);
-  return id;
+const ParamDef* Module::define_param(const std::string& name,
+                                     Object*(*new_object)()) {
+  ParamDef *def = new ParamDef(name, new_object);
+  this->param_map_.insert(std::make_pair(name, def));
+  return def;
 }
 
 event_id Module::define_event(const std::string& name) {
@@ -91,10 +103,14 @@ void Module::set_decoder(Decoder* dec) {
   this->dec_ = dec;
 }
 
-Object* Module::new_param(param_id id) {
-  assert(0 <= id && id < this->param_new_.size());
-  return this->param_new_[id]();
+void Module::set_mod_id(mod_id id) {
+  this->id_ = id;
 }
+
+void Module::set_name(const std::string& name) {
+  this->name_ = name;
+}
+
 
 
 }   // namespace pm

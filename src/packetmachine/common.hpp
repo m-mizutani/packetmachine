@@ -32,6 +32,13 @@
 namespace pm {
 
 typedef uint8_t byte_t;
+typedef  int64_t param_id;
+typedef uint64_t event_id;
+typedef  int64_t mod_id;
+
+namespace Param {
+static const param_id NONE = -1;
+}
 
 }   // namespace pm
 

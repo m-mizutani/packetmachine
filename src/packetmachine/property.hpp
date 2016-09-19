@@ -28,6 +28,8 @@
 #define __PACKETMACHINE_PROPERTY_HPP
 
 #include <stdio.h>
+#include <string>
+#include <vector>
 #include "./common.hpp"
 
 namespace pm {
@@ -36,10 +38,7 @@ class Packet;
 class Decoder;
 class Object;
 class Value;
-
-typedef uint64_t param_id;
-typedef uint64_t event_id;
-typedef  int64_t mod_id;
+class ParamDef;
 
 class Payload {
  private:
@@ -70,15 +69,23 @@ class Payload {
 class Property {
  private:
   Decoder *dec_;
-  mod_id context_;
+  std::vector<size_t> param_idx_;
+  std::vector< std::vector<Object*>* > param_;
+
+  const Packet* pkt_;
+  static const Value null_;
 
  public:
   explicit Property(Decoder *dec);
   ~Property();
 
-  void set_mod_id_(mod_id id) { this->context_ = id; }
-  Object* object(param_id pid);
-  Value* value(param_id pid);
+  void init(const Packet* pkt);
+  Object* retain_object(const ParamDef *def);
+  Value* retain_value(const ParamDef *def);
+  const Value& value(param_id pid);
+  const Value& value(const std::string& name);
+  const Object& object(param_id pid);
+  const Object& object(const std::string& name);
 };
 
 }    // namespace pm

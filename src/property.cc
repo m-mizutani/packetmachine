@@ -73,19 +73,72 @@ bool Payload::shrink(size_t length) {
 }
 
 
+const Value Property::null_;
 
 Property::Property(Decoder* dec) : dec_(dec) {
+  size_t psize = this->dec_->param_size();
+  for (size_t i = 0; i < psize; i++) {
+    this->param_.push_back(new std::vector<Object*>());
+    this->param_idx_.push_back(0);
+  }
 }
 
 Property::~Property() {
+  for (size_t i = 0; i < this->param_.size(); i++) {
+    for (auto obj : *(this->param_[i])) {
+      delete obj;
+    }
+    delete this->param_[i];
+  }
 }
 
-Object* Property::object(param_id pid) {
-  Object* obj = this->dec_->new_param(this->context_, pid);
+void Property::init(const Packet* pkt) {
+  this->pkt_ = pkt;
+  for (size_t i = 0; i < this->param_idx_.size(); i++) {
+    this->param_idx_[i] = 0;
+  }
+}
+
+
+Object* Property::retain_object(const ParamDef* def) {
+  const param_id pid = def->id();
+  Object* obj;
+
+  if (this->param_idx_[pid] < this->param_[pid]->size()) {
+    obj = (*this->param_[pid])[this->param_idx_[pid]];
+  } else {
+    obj = def->new_object();
+    this->param_[pid]->push_back(obj);
+  }
+
+  this->param_idx_[pid]++;
   return obj;
 }
 
-Value* Property::value(param_id pid) {
+Value* Property::retain_value(const ParamDef* def) {
+  Value* val = dynamic_cast<Value*>(this->retain_object(def));
+  return val;
+}
+
+const Value& Property::value(param_id pid) {
+  return Property::null_;
+}
+
+const Value& Property::value(const std::string& name) {
+  param_id pid = this->dec_->lookup_param_id(name);
+  if (pid == Param::NONE) {
+    return Property::null_;
+  } else {
+    return this->value(pid);
+  }
+}
+
+const Object& Property::object(param_id pid) {
+  return Property::null_;
+}
+
+const Object& Property::object(const std::string& name) {
+  return Property::null_;
 }
 
 }   // namespace pm

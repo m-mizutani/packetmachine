@@ -40,18 +40,30 @@ class Module;
 class Property;
 class Packet;
 
+struct ParamInfo {
+  mod_id mod_id_;
+  param_id local_id_;
+  param_id global_id_;
+  std::string name_;
+};
+
 class Decoder {
  private:
   std::map<std::string, mod_id> mod_map_;
+  std::map<std::string, ParamDef*> param_map_;
+  std::vector<ParamDef*> params_;
   std::vector<Module*> modules_;
-  Module* mod_ethernet_;
+  mod_id mod_ethernet_;
 
  public:
   Decoder();
   ~Decoder();
   void decode(Payload* pd, Property* prop);
-  Object* new_param(mod_id mid, param_id pid);
   mod_id lookup_module(const std::string& name) const;
+
+  size_t param_size() const { return this->params_.size(); }
+  param_id lookup_param_id(const std::string& name) const;
+  const std::string& lookup_param_name(param_id pid) const;
 };
 
 }   // namespace pm

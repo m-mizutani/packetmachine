@@ -61,6 +61,11 @@ class TypeError : public Error {
   explicit TypeError(const std::string &errmsg) : Error(errmsg) {}
 };
 
+class IndexError : public Error {
+ public:
+  explicit IndexError(const std::string &errmsg) : Error(errmsg) {}
+};
+
 }   // namespace Exception
 }   // namespace pm
 
