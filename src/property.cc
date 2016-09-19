@@ -121,7 +121,17 @@ Value* Property::retain_value(const ParamDef* def) {
 }
 
 const Value& Property::value(param_id pid) {
-  return Property::null_;
+  assert(0 <= pid && pid < this->param_.size());
+  if (this->param_idx_[pid] > 0) {
+    Value* val = dynamic_cast<Value*>((*this->param_[pid])[0]);
+    if (val) {
+      return *val;
+    } else {
+      return Property::null_;
+    }
+  } else {
+    return Property::null_;
+  }
 }
 
 const Value& Property::value(const std::string& name) {

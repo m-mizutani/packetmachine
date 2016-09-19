@@ -70,7 +70,7 @@ FILE(GLOB PERFSRCS
 	"perf/Channel.cc"
 )
 
-ADD_LIBRARY(packetmachine SHARED ${BASESRCS})
+ADD_LIBRARY(packetmachine SHARED ${BASESRCS} ${HEADERS})
 IF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
     TARGET_LINK_LIBRARIES(packetmachine pcap pthread rt)
 ELSE(${CMAKE_SYSTEM_NAME} MATCHES "Linux")

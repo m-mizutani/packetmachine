@@ -61,9 +61,14 @@ Decoder::Decoder() : mod_ethernet_(Module::NONE) {
       def->set_id(global_id);
       def->set_name(m->name() + "." + p.first);
       this->params_.push_back(def);
+      this->param_map_.insert(std::make_pair(def->name(), def));
     }
   }
 
+  // Setup modules.
+  for (auto &m : this->modules_) {
+    m->setup();
+  }
   assert(this->mod_ethernet_ != Module::NONE);
 }
 
