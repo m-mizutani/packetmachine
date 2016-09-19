@@ -139,7 +139,7 @@ TEST(Channel, ok) {
 
 TEST(Channel, ok_slow_provider) {
   Prop p;
-  const int count = 100000;
+  const int count = 10000;
   p.ch_ = new pm::Channel<Data>();
   p.send_count_ = count;
   p.send_load_ = 0xffff;
@@ -153,14 +153,14 @@ TEST(Channel, ok_slow_provider) {
 
   EXPECT_EQ(p.seq_mismatch_, 0);
   EXPECT_EQ(p.recv_count_, count);
-  printf("push_wait: %llu, pull_wait: %llu\n",
-         p.ch_->push_wait(), p.ch_->pull_wait());
+  // printf("push_wait: %llu, pull_wait: %llu\n",
+  // p.ch_->push_wait(), p.ch_->pull_wait());
   delete p.ch_;
 }
 
 TEST(Channel, ok_slow_consumer) {
   Prop p;
-  const int count = 100000;
+  const int count = 10000;
   p.ch_ = new pm::Channel<Data>();
   p.send_count_ = count;
   p.recv_load_ = 0xffff;
@@ -174,8 +174,8 @@ TEST(Channel, ok_slow_consumer) {
 
   EXPECT_EQ(p.seq_mismatch_, 0);
   EXPECT_EQ(p.recv_count_, count);
-  printf("push_wait: %llu, pull_wait: %llu\n",
-         p.ch_->push_wait(), p.ch_->pull_wait());
+  // printf("push_wait: %llu, pull_wait: %llu\n",
+  // p.ch_->push_wait(), p.ch_->pull_wait());
   delete p.ch_;
 }
 
