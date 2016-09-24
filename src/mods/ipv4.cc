@@ -29,11 +29,82 @@
 namespace pm {
 
 class IPv4 : public Module {
+ private:
+  static const u_int8_t PROTO_ICMP  = 1;
+  static const u_int8_t PROTO_TCP   = 6;
+  static const u_int8_t PROTO_UDP   = 17;
+  static const u_int8_t PROTO_IPV6  = 41;
+  static const u_int8_t PROTO_ICMP6 = 58;
+
+  struct ipv4_header {
+    // little endian mode
+    u_int8_t  hdrlen_:4;
+    u_int8_t  ver_:4;
+    u_int8_t  tos_;
+    u_int16_t total_len_;  /* total length */
+    u_int16_t id_;
+    u_int16_t offset_;     /* fragment offset */
+    u_int8_t  ttl_;        /* Time To Live */
+    u_int8_t  proto_;      /* L4 Protocol */
+    u_int16_t chksum_;     /* ip header check sum */
+    u_int32_t src_;        /* source ip address */
+    u_int32_t dst_;        /* destination ip address */
+  } __attribute__((packed));
+
+  const ParamDef* p_hdr_len_;
+  const ParamDef* p_ver_;
+  const ParamDef* p_tos_;
+  const ParamDef* p_total_len_;
+  const ParamDef* p_id_;
+  const ParamDef* p_proto_;
+  const ParamDef* p_chksum_;
+  const ParamDef* p_src_;
+  const ParamDef* p_dst_;
+  
+  mod_id mod_tcp_, mod_udp_, mod_icmp_;
+
  public:
-  void setup() {
+  IPv4() {
+    this->p_hdr_len_ = this->define_param("hdr_len");
+    this->p_ver_    = this->define_param("ver");
+    this->p_tos_    = this->define_param("tos");
+    this->p_total_len_ = this->define_param("total_len");
+    this->p_id_     = this->define_param("id");
+    this->p_proto_  = this->define_param("proto");
+    this->p_chksum_ = this->define_param("chksum");
+    this->p_src_    = this->define_param("src");
+    this->p_dst_    = this->define_param("dst");
   }
+  
+  void setup() {
+    this->mod_tcp_  = this->lookup_module("Tcp");
+    this->mod_udp_  = this->lookup_module("Udp");
+    this->mod_icmp_ = this->lookup_module("Icmp");
+  }
+
+#define SET_PROP(PARAM,DATA) \
+  prop->retain_value(PARAM)->set(&(DATA), sizeof(DATA));
+  
   mod_id decode(Payload* pd, Property* prop) {
-    // TODO(m-mizutani): implement
+    auto hdr = reinterpret_cast<const struct ipv4_header*>
+               (pd->retain(sizeof(struct ipv4_header)));
+    if (hdr == nullptr) { // Not enough packet size.
+      return Module::NONE;
+    }
+
+    uint8_t hdrlen  = hdr->hdrlen_ << 4;
+    uint8_t version = hdr->ver_;
+    prop->retain_value(this->p_hdr_len_)->cpy(&hdrlen, sizeof(hdrlen));
+    prop->retain_value(this->p_ver_)->cpy(&version, sizeof(version));
+ 
+    SET_PROP(this->p_tos_, hdr->tos_);
+    SET_PROP(this->p_total_len_, hdr->total_len_);
+    SET_PROP(this->p_id_, hdr->id_);
+    SET_PROP(this->p_proto_, hdr->proto_);
+    SET_PROP(this->p_chksum_, hdr->chksum_);
+    SET_PROP(this->p_src_, hdr->src_);
+    SET_PROP(this->p_dst_, hdr->dst_);
+    
     return Module::NONE;
   }
 };

@@ -77,7 +77,7 @@ TEST(Decoder, basic) {
   }
 
   EXPECT_EQ(22, count_mac_saddr);
-  // EXPECT_EQ(491, count_ipv4_saddr);
+  EXPECT_EQ(270, count_ipv4_saddr);
 }
 
 }   // namespace module_test
