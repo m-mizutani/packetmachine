@@ -24,39 +24,58 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "./gtest/gtest.h"
-#include "../src/module.hpp"
+#include "../module.hpp"
 
-namespace module_test {
+namespace pm {
 
-class TestMod : public pm::Module {
+class Udp : public Module {
+ private:
+  struct udp_header {
+    u_int16_t src_port_;  // source port
+    u_int16_t dst_port_;  // destination port
+    u_int16_t length_;    // length
+    u_int16_t chksum_;    // checksum
+  } __attribute__((packed));
+
+  const ParamDef* p_src_port_;
+  const ParamDef* p_dst_port_;
+  const ParamDef* p_length_;
+  const ParamDef* p_chksum_;
+
+  mod_id mod_dns_;
+
  public:
-  void setup() {
+  Udp() {
+    this->p_src_port_ = this->define_param("src_port");
+    this->p_dst_port_ = this->define_param("dst_port");
+    this->p_length_   = this->define_param("length");
+    this->p_chksum_   = this->define_param("chksum");
   }
-  pm::mod_id decode(pm::Payload* pd, pm::Property* prop) {
-    return pm::Module::NONE;
+
+  void setup() {
+    this->mod_dns_  = this->lookup_module("Dns");
+  }
+
+#define SET_PROP(PARAM, DATA) \
+  prop->retain_value(PARAM)->set(&(DATA), sizeof(DATA));
+
+  mod_id decode(Payload* pd, Property* prop) {
+    auto hdr = reinterpret_cast<const struct udp_header*>
+               (pd->retain(sizeof(struct udp_header)));
+    if (hdr == nullptr) {   // Not enough packet size.
+      return Module::NONE;
+    }
+
+    SET_PROP(this->p_src_port_, hdr->src_port_);
+    SET_PROP(this->p_dst_port_, hdr->dst_port_);
+    SET_PROP(this->p_length_,   hdr->length_);
+    SET_PROP(this->p_chksum_,   hdr->chksum_);
+
+    mod_id next = Module::NONE;
+    return next;
   }
 };
 
-TEST(Module, basic) {
-  pm::ModuleBuilder builder;
-  pm::ModuleFactoryEntry<TestMod> tf("TestMod", &builder);
+INIT_MODULE(Udp);
 
-  std::map<std::string, pm::Module*> mod_map;
-  builder.build(&mod_map);
-
-  EXPECT_EQ(1, mod_map.size());
-}
-
-TEST(Module, use_global_variable) {
-  std::map<std::string, pm::Module*> mod_map;
-  build_module_map(&mod_map);
-
-  EXPECT_EQ(4, mod_map.size());
-  EXPECT_NE(mod_map.end(), mod_map.find("Ethernet"));
-  EXPECT_NE(mod_map.end(), mod_map.find("Arp"));
-  EXPECT_NE(mod_map.end(), mod_map.find("IPv4"));
-  EXPECT_NE(mod_map.end(), mod_map.find("Udp"));
-}
-
-}   // namespace module_test
+}   // namespace pm

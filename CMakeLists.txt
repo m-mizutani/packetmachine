@@ -51,6 +51,7 @@ FILE(GLOB BASESRCS
 	"src/mods/ether.cc"
 	"src/mods/arp.cc"
 	"src/mods/ipv4.cc"
+	"src/mods/udp.cc"
 )
 FILE(GLOB HEADERS
   "src/packetmachine.hpp"
