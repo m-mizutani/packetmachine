@@ -69,7 +69,6 @@ TEST(Decoder, basic) {
     if ("50:a7:33:0c:5e:4c" == prop.value("Ethernet.src").mac()) {
       count_mac_saddr++;
     }
-    // debug(true, "%s", prop.value("Ethernet.src").mac().c_str());
 
     if ("104.80.179.146" == prop.value("IPv4.src").ip4()) {
       count_ipv4_saddr++;

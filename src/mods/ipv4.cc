@@ -65,15 +65,15 @@ class IPv4 : public Module {
 
  public:
   IPv4() {
-    this->p_hdr_len_ = this->define_param("hdr_len");
-    this->p_ver_    = this->define_param("ver");
-    this->p_tos_    = this->define_param("tos");
+    this->p_hdr_len_   = this->define_param("hdr_len");
+    this->p_ver_       = this->define_param("ver");
+    this->p_tos_       = this->define_param("tos");
     this->p_total_len_ = this->define_param("total_len");
-    this->p_id_     = this->define_param("id");
-    this->p_proto_  = this->define_param("proto");
-    this->p_chksum_ = this->define_param("chksum");
-    this->p_src_    = this->define_param("src");
-    this->p_dst_    = this->define_param("dst");
+    this->p_id_        = this->define_param("id");
+    this->p_proto_     = this->define_param("proto");
+    this->p_chksum_    = this->define_param("chksum");
+    this->p_src_       = this->define_param("src");
+    this->p_dst_       = this->define_param("dst");
   }
 
   void setup() {
@@ -97,15 +97,23 @@ class IPv4 : public Module {
     prop->retain_value(this->p_hdr_len_)->cpy(&hdrlen, sizeof(hdrlen));
     prop->retain_value(this->p_ver_)->cpy(&version, sizeof(version));
 
-    SET_PROP(this->p_tos_, hdr->tos_);
+    SET_PROP(this->p_tos_,       hdr->tos_);
     SET_PROP(this->p_total_len_, hdr->total_len_);
-    SET_PROP(this->p_id_, hdr->id_);
-    SET_PROP(this->p_proto_, hdr->proto_);
-    SET_PROP(this->p_chksum_, hdr->chksum_);
-    SET_PROP(this->p_src_, hdr->src_);
-    SET_PROP(this->p_dst_, hdr->dst_);
+    SET_PROP(this->p_id_,        hdr->id_);
+    SET_PROP(this->p_proto_,     hdr->proto_);
+    SET_PROP(this->p_chksum_,    hdr->chksum_);
+    SET_PROP(this->p_src_,       hdr->src_);
+    SET_PROP(this->p_dst_,       hdr->dst_);
 
-    return Module::NONE;
+    mod_id next = Module::NONE;
+
+    switch (hdr->proto_) {
+      case PROTO_ICMP: next = this->mod_icmp_; break;
+      case PROTO_TCP:  next = this->mod_tcp_; break;
+      case PROTO_UDP:  next = this->mod_udp_; break;
+    }
+
+    return next;
   }
 };
 
