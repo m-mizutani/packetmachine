@@ -24,8 +24,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "../module.hpp"
 #include <arpa/inet.h>
+#include "../module.hpp"
 
 namespace pm {
 
@@ -71,7 +71,7 @@ class Ethernet : public Module {
   mod_id mod_ipv4_, mod_arp_;
 
  public:
-  explicit Ethernet() {
+  Ethernet() {
     this->p_type_ = this->define_param("type");
     this->p_src_  = this->define_param("src");
     this->p_dst_  = this->define_param("dst");
@@ -82,22 +82,22 @@ class Ethernet : public Module {
 
   void setup() {
     this->mod_ipv4_ = this->lookup_module("IPv4");
-    this->mod_arp_  = this->lookup_module("Arp");    
+    this->mod_arp_  = this->lookup_module("Arp");
   }
-  
+
   mod_id decode(Payload* pd, Property* prop) {
     auto hdr = reinterpret_cast<const struct ether_header*>
                (pd->retain(sizeof(struct ether_header)));
-    if (hdr == nullptr) { // Not enough packet size.
+    if (hdr == nullptr) {   // Not enough packet size.
       return Module::NONE;
     }
 
     prop->retain_value(this->p_type_)->set(&hdr->type_, sizeof(hdr->type_));
     prop->retain_value(this->p_src_)->set(&hdr->src_, sizeof(hdr->src_));
     prop->retain_value(this->p_dst_)->set(&hdr->dst_, sizeof(hdr->dst_));
-    
+
     mod_id next = Module::NONE;
-    switch(ntohs(hdr->type_)) {
+    switch (ntohs(hdr->type_)) {
       case ETHERTYPE_ARP: next = this->mod_arp_; break;
       case ETHERTYPE_IP:  next = this->mod_ipv4_; break;
     }

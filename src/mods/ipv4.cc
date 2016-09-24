@@ -60,7 +60,7 @@ class IPv4 : public Module {
   const ParamDef* p_chksum_;
   const ParamDef* p_src_;
   const ParamDef* p_dst_;
-  
+
   mod_id mod_tcp_, mod_udp_, mod_icmp_;
 
  public:
@@ -75,20 +75,20 @@ class IPv4 : public Module {
     this->p_src_    = this->define_param("src");
     this->p_dst_    = this->define_param("dst");
   }
-  
+
   void setup() {
     this->mod_tcp_  = this->lookup_module("Tcp");
     this->mod_udp_  = this->lookup_module("Udp");
     this->mod_icmp_ = this->lookup_module("Icmp");
   }
 
-#define SET_PROP(PARAM,DATA) \
+#define SET_PROP(PARAM, DATA) \
   prop->retain_value(PARAM)->set(&(DATA), sizeof(DATA));
-  
+
   mod_id decode(Payload* pd, Property* prop) {
     auto hdr = reinterpret_cast<const struct ipv4_header*>
                (pd->retain(sizeof(struct ipv4_header)));
-    if (hdr == nullptr) { // Not enough packet size.
+    if (hdr == nullptr) {   // Not enough packet size.
       return Module::NONE;
     }
 
@@ -96,7 +96,7 @@ class IPv4 : public Module {
     uint8_t version = hdr->ver_;
     prop->retain_value(this->p_hdr_len_)->cpy(&hdrlen, sizeof(hdrlen));
     prop->retain_value(this->p_ver_)->cpy(&version, sizeof(version));
- 
+
     SET_PROP(this->p_tos_, hdr->tos_);
     SET_PROP(this->p_total_len_, hdr->total_len_);
     SET_PROP(this->p_id_, hdr->id_);
@@ -104,7 +104,7 @@ class IPv4 : public Module {
     SET_PROP(this->p_chksum_, hdr->chksum_);
     SET_PROP(this->p_src_, hdr->src_);
     SET_PROP(this->p_dst_, hdr->dst_);
-    
+
     return Module::NONE;
   }
 };
