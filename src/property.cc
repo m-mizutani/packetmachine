@@ -120,7 +120,7 @@ Value* Property::retain_value(const ParamDef* def) {
   return val;
 }
 
-const Value& Property::value(param_id pid) {
+const Value& Property::value(param_id pid) const {
   assert(0 <= pid && pid < this->param_.size());
   if (this->param_idx_[pid] > 0) {
     Value* val = dynamic_cast<Value*>((*this->param_[pid])[0]);
@@ -134,7 +134,7 @@ const Value& Property::value(param_id pid) {
   }
 }
 
-const Value& Property::value(const std::string& name) {
+const Value& Property::value(const std::string& name) const {
   param_id pid = this->dec_->lookup_param_id(name);
   if (pid == Param::NONE) {
     return Property::null_;
@@ -143,11 +143,11 @@ const Value& Property::value(const std::string& name) {
   }
 }
 
-const Object& Property::object(param_id pid) {
+const Object& Property::object(param_id pid) const {
   return Property::null_;
 }
 
-const Object& Property::object(const std::string& name) {
+const Object& Property::object(const std::string& name) const {
   return Property::null_;
 }
 

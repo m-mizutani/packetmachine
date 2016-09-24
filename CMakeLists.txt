@@ -48,10 +48,10 @@ FILE(GLOB BASESRCS
 	"src/decoder.cc"  "src/decoder.hpp"
 
 	# Decoder modules
-	"src/mods/ether.cc"
-	"src/mods/arp.cc"
-	"src/mods/ipv4.cc"
-	"src/mods/udp.cc"
+	"src/modules/ether.cc"
+	"src/modules/arp.cc"
+	"src/modules/ipv4.cc"
+	"src/modules/udp.cc"
 )
 FILE(GLOB HEADERS
   "src/packetmachine.hpp"
@@ -63,12 +63,13 @@ FILE(GLOB HEADERS
 FILE(GLOB TESTSRCS
   "test/gtest/gtest-all.cc"	
   "test/*.cc"
+  "test/modules/*.cc"
 )
 
 FILE(GLOB PERFSRCS
   "perf/main.cc"
-	"perf/perf.cc"
-	"perf/Channel.cc"
+  "perf/perf.cc"
+  "perf/Channel.cc"
 )
 
 ADD_LIBRARY(packetmachine SHARED ${BASESRCS} ${HEADERS})

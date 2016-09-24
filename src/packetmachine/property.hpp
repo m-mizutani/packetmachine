@@ -82,10 +82,10 @@ class Property {
   void init(const Packet* pkt);
   Object* retain_object(const ParamDef *def);
   Value* retain_value(const ParamDef *def);
-  const Value& value(param_id pid);
-  const Value& value(const std::string& name);
-  const Object& object(param_id pid);
-  const Object& object(const std::string& name);
+  const Value& value(param_id pid) const;
+  const Value& value(const std::string& name) const;
+  const Object& object(param_id pid) const;
+  const Object& object(const std::string& name) const;
 };
 
 }    // namespace pm
