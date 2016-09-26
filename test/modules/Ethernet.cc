@@ -28,14 +28,17 @@
 
 
 TEST_F(ModuleTesterData1, Ethernet_simple) {
-  int count_mac_saddr = 0;
   const pm::Property* p;
-  
-  while (nullptr != (p = get_property())) {
-    if ("50:a7:33:0c:5e:4c" == p->value("Ethernet.src").mac()) {
-      count_mac_saddr++;
-    }
-  }
-  
-  EXPECT_EQ(22, count_mac_saddr);
+
+  p = get_property();   // packet #1
+  ASSERT_NE(nullptr, p);
+  EXPECT_EQ("b8:f6:b1:19:b0:b5", p->value("Ethernet.src").mac());
+  EXPECT_EQ("00:00:0c:07:ac:04", p->value("Ethernet.dst").mac());
+  EXPECT_EQ(0x800, p->value("Ethernet.type").uint());
+
+  p = get_property(1295);    // packet #1297
+  ASSERT_NE(nullptr, p);
+  EXPECT_EQ("b8:f6:b1:19:b0:b5", p->value("Ethernet.src").mac());
+  EXPECT_EQ("ff:ff:ff:ff:ff:ff", p->value("Ethernet.dst").mac());
+  EXPECT_EQ(0x806, p->value("Ethernet.type").uint());
 }

@@ -52,11 +52,16 @@ class ModuleTesterData1 : public ::testing::Test {
     delete prop_;
   }
 
-  const pm::Property* get_property() {
+  const pm::Property* get_property(size_t skip = 0) {
     struct pcap_pkthdr* pkthdr;
     const u_char* data;
     int rc;
-    while (0 == (rc = ::pcap_next_ex(pcap, &pkthdr, &data))) {
+    size_t idx = 0;
+    while (0 <= (rc = ::pcap_next_ex(pcap, &pkthdr, &data))) {
+      if (idx >= skip) {
+        break;
+      }
+      idx++;
     };
     
     if (rc < 0) {
