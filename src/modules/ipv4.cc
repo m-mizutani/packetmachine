@@ -56,6 +56,8 @@ class IPv4 : public Module {
   const ParamDef* p_tos_;
   const ParamDef* p_total_len_;
   const ParamDef* p_id_;
+  const ParamDef* p_offset_;
+  const ParamDef* p_ttl_;
   const ParamDef* p_proto_;
   const ParamDef* p_chksum_;
   const ParamDef* p_src_;
@@ -70,6 +72,8 @@ class IPv4 : public Module {
     this->p_tos_       = this->define_param("tos");
     this->p_total_len_ = this->define_param("total_len");
     this->p_id_        = this->define_param("id");
+    this->p_offset_    = this->define_param("offset");
+    this->p_ttl_       = this->define_param("ttl");
     this->p_proto_     = this->define_param("proto");
     this->p_chksum_    = this->define_param("chksum");
     this->p_src_       = this->define_param("src");
@@ -92,7 +96,7 @@ class IPv4 : public Module {
       return Module::NONE;
     }
 
-    uint8_t hdrlen  = hdr->hdrlen_ << 4;
+    uint8_t hdrlen  = hdr->hdrlen_ << 2;
     uint8_t version = hdr->ver_;
     prop->retain_value(this->p_hdr_len_)->cpy(&hdrlen, sizeof(hdrlen));
     prop->retain_value(this->p_ver_)->cpy(&version, sizeof(version));
@@ -100,6 +104,8 @@ class IPv4 : public Module {
     SET_PROP(this->p_tos_,       hdr->tos_);
     SET_PROP(this->p_total_len_, hdr->total_len_);
     SET_PROP(this->p_id_,        hdr->id_);
+    SET_PROP(this->p_offset_,    hdr->offset_);
+    SET_PROP(this->p_ttl_,       hdr->ttl_);
     SET_PROP(this->p_proto_,     hdr->proto_);
     SET_PROP(this->p_chksum_,    hdr->chksum_);
     SET_PROP(this->p_src_,       hdr->src_);

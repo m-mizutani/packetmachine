@@ -96,7 +96,7 @@ void Decoder::decode(Payload* pd, Property* prop) {
 
     next = mod->decode(pd, prop);
 
-    assert(next == Module::NONE || 
+    assert(next == Module::NONE ||
            (0 <= next && next < static_cast<mod_id>(this->modules_.size())));
   }
 }
