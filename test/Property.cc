@@ -62,11 +62,8 @@ TEST(Payload, ok) {
 TEST(Payload, ng) {
   pm::Packet pkt;
   pm::byte_t data[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
-  const pm::byte_t* ptr;
 
   pkt.store(data, 10);
-  ptr = pkt.buf();
-
   pm::Payload pd;
 
   // Move to out of range.

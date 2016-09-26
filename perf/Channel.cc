@@ -48,7 +48,7 @@ class ChannelPerf : public PerfTest {
 
     pm::Packet *pkt;
 
-    for (size_t i = 0; i < p->count_; i++) {
+    for (size_t i = 0; i < static_cast<size_t>(p->count_); i++) {
       pkt = ch->retain();
       ch->push(pkt);
     }

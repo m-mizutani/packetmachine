@@ -96,7 +96,8 @@ void Decoder::decode(Payload* pd, Property* prop) {
 
     next = mod->decode(pd, prop);
 
-    assert(next == Module::NONE || (0 <= next && next < this->modules_.size()));
+    assert(next == Module::NONE || 
+           (0 <= next && next < static_cast<mod_id>(this->modules_.size())));
   }
 }
 
@@ -119,7 +120,7 @@ param_id Decoder::lookup_param_id(const std::string& name) const {
 }
 
 const std::string& Decoder::lookup_param_name(param_id pid) const {
-  if (pid < 0 || this->params_.size() <= pid) {
+  if (pid < 0 || static_cast<param_id>(this->params_.size()) <= pid) {
     throw Exception::IndexError("No such parameter");
   } else {
     return this->params_[pid]->name();

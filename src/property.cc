@@ -121,7 +121,7 @@ Value* Property::retain_value(const ParamDef* def) {
 }
 
 const Value& Property::value(param_id pid) const {
-  assert(0 <= pid && pid < this->param_.size());
+  assert(0 <= pid && pid < static_cast<param_id>(this->param_.size()));
   if (this->param_idx_[pid] > 0) {
     Value* val = dynamic_cast<Value*>((*this->param_[pid])[0]);
     if (val) {

@@ -47,7 +47,7 @@ class Prop {
   int recv_load_;
 
   // access from only provider
-  int send_count_;
+  size_t send_count_;
 
   // access from only consumer
   int seq_mismatch_;
