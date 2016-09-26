@@ -30,8 +30,6 @@
 
 namespace pm {
 
-ModuleBuilder __global_module_builder __attribute__((init_priority(101)));
-
 void ModuleBuilder::add(const std::string& name, ModuleFactory *factory) {
   this->factory_.insert(std::make_pair(name, factory));
 }
