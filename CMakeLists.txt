@@ -52,6 +52,7 @@ FILE(GLOB BASESRCS
 	"src/modules/arp.cc"
 	"src/modules/ipv4.cc"
 	"src/modules/udp.cc"
+	"src/modules/icmp.cc"
 )
 FILE(GLOB HEADERS
   "src/packetmachine.hpp"

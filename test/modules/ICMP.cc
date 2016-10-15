@@ -24,40 +24,18 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "./gtest/gtest.h"
-#include "../src/module.hpp"
+#include "./fixtures.hpp"
 
-namespace module_test {
+TEST_F(ModuleTesterData1, ICMP_packet) {
+  const pm::Property* p;
+  p = get_property(565);   // # packet #566
 
-class TestMod : public pm::Module {
- public:
-  void setup() {
-  }
-  pm::mod_id decode(pm::Payload* pd, pm::Property* prop) {
-    return pm::Module::NONE;
-  }
-};
+  EXPECT_TRUE(p->has_value("ICMP.type"));
+  EXPECT_TRUE(p->has_value("ICMP.code"));
+  EXPECT_TRUE(p->has_value("ICMP.chksum"));
 
-TEST(Module, basic) {
-  pm::ModuleBuilder builder;
-  pm::ModuleFactoryEntry<TestMod> tf("TestMod", &builder);
-
-  std::map<std::string, pm::Module*> mod_map;
-  builder.build(&mod_map);
-
-  EXPECT_EQ(1, mod_map.size());
+  EXPECT_EQ(3,  p->value("ICMP.type").uint());
+  EXPECT_EQ(3,  p->value("ICMP.code").uint());
+  EXPECT_EQ(0x87c2, p->value("ICMP.chksum").uint());
 }
 
-TEST(Module, use_global_variable) {
-  std::map<std::string, pm::Module*> mod_map;
-  build_module_map(&mod_map);
-
-  EXPECT_EQ(5, mod_map.size());
-  EXPECT_NE(mod_map.end(), mod_map.find("Ethernet"));
-  EXPECT_NE(mod_map.end(), mod_map.find("ARP"));
-  EXPECT_NE(mod_map.end(), mod_map.find("IPv4"));
-  EXPECT_NE(mod_map.end(), mod_map.find("UDP"));
-  EXPECT_NE(mod_map.end(), mod_map.find("ICMP"));
-}
-
-}   // namespace module_test

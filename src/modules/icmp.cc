@@ -24,40 +24,50 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "./gtest/gtest.h"
-#include "../src/module.hpp"
+#include "../module.hpp"
 
-namespace module_test {
+namespace pm {
 
-class TestMod : public pm::Module {
+class ICMP : public Module {
+ private:
+  struct icmp_header {
+    u_int8_t type_;  // ICMP type
+    u_int8_t code_;  // ICMP code
+    u_int16_t chksum_;    // checksum
+  } __attribute__((packed));
+
+  const ParamDef* p_type_;
+  const ParamDef* p_code_;
+  const ParamDef* p_chksum_;
+
  public:
+  ICMP() {
+    this->p_type_   = this->define_param("type");
+    this->p_code_   = this->define_param("code");
+    this->p_chksum_ = this->define_param("chksum");
+  }
+
   void setup() {
   }
-  pm::mod_id decode(pm::Payload* pd, pm::Property* prop) {
-    return pm::Module::NONE;
+
+#define SET_PROP(PARAM, DATA) \
+  prop->retain_value(PARAM)->set(&(DATA), sizeof(DATA));
+
+  mod_id decode(Payload* pd, Property* prop) {
+    auto hdr = reinterpret_cast<const struct icmp_header*>
+               (pd->retain(sizeof(struct icmp_header)));
+    if (hdr == nullptr) {   // Not enough packet size.
+      return Module::NONE;
+    }
+
+    SET_PROP(this->p_type_, hdr->type_);
+    SET_PROP(this->p_code_, hdr->code_);
+    SET_PROP(this->p_chksum_, hdr->chksum_);
+
+    return Module::NONE;
   }
 };
 
-TEST(Module, basic) {
-  pm::ModuleBuilder builder;
-  pm::ModuleFactoryEntry<TestMod> tf("TestMod", &builder);
+INIT_MODULE(ICMP);
 
-  std::map<std::string, pm::Module*> mod_map;
-  builder.build(&mod_map);
-
-  EXPECT_EQ(1, mod_map.size());
-}
-
-TEST(Module, use_global_variable) {
-  std::map<std::string, pm::Module*> mod_map;
-  build_module_map(&mod_map);
-
-  EXPECT_EQ(5, mod_map.size());
-  EXPECT_NE(mod_map.end(), mod_map.find("Ethernet"));
-  EXPECT_NE(mod_map.end(), mod_map.find("ARP"));
-  EXPECT_NE(mod_map.end(), mod_map.find("IPv4"));
-  EXPECT_NE(mod_map.end(), mod_map.find("UDP"));
-  EXPECT_NE(mod_map.end(), mod_map.find("ICMP"));
-}
-
-}   // namespace module_test
+}   // namespace pm
