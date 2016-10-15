@@ -56,7 +56,7 @@ TEST(Module, use_global_variable) {
   EXPECT_NE(mod_map.end(), mod_map.find("Ethernet"));
   EXPECT_NE(mod_map.end(), mod_map.find("ARP"));
   EXPECT_NE(mod_map.end(), mod_map.find("IPv4"));
-  EXPECT_NE(mod_map.end(), mod_map.find("Udp"));
+  EXPECT_NE(mod_map.end(), mod_map.find("UDP"));
 }
 
 }   // namespace module_test

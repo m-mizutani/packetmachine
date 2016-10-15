@@ -81,9 +81,9 @@ class IPv4 : public Module {
   }
 
   void setup() {
-    this->mod_tcp_  = this->lookup_module("Tcp");
-    this->mod_udp_  = this->lookup_module("Udp");
-    this->mod_icmp_ = this->lookup_module("Icmp");
+    this->mod_tcp_  = this->lookup_module("TCP");
+    this->mod_udp_  = this->lookup_module("UDP");
+    this->mod_icmp_ = this->lookup_module("ICMP");
   }
 
 #define SET_PROP(PARAM, DATA) \

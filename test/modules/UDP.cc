@@ -24,58 +24,20 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "../module.hpp"
+#include "./fixtures.hpp"
 
-namespace pm {
+TEST_F(ModuleTesterData1, UDP_packet) {
+  const pm::Property* p;
+  p = get_property(8);   // # packet #9
 
-class UDP : public Module {
- private:
-  struct udp_header {
-    u_int16_t src_port_;  // source port
-    u_int16_t dst_port_;  // destination port
-    u_int16_t length_;    // length
-    u_int16_t chksum_;    // checksum
-  } __attribute__((packed));
+  EXPECT_TRUE(p->has_value("UDP.src_port"));
+  EXPECT_TRUE(p->has_value("UDP.dst_port"));
+  EXPECT_TRUE(p->has_value("UDP.length"));
+  EXPECT_TRUE(p->has_value("UDP.chksum"));
 
-  const ParamDef* p_src_port_;
-  const ParamDef* p_dst_port_;
-  const ParamDef* p_length_;
-  const ParamDef* p_chksum_;
+  EXPECT_EQ(53805,  p->value("UDP.src_port").uint());
+  EXPECT_EQ(443,    p->value("UDP.dst_port").uint());
+  EXPECT_EQ(1358,   p->value("UDP.length").uint());
+  EXPECT_EQ(0x410c, p->value("UDP.chksum").uint());
+}
 
-  mod_id mod_dns_;
-
- public:
-  UDP() {
-    this->p_src_port_ = this->define_param("src_port");
-    this->p_dst_port_ = this->define_param("dst_port");
-    this->p_length_   = this->define_param("length");
-    this->p_chksum_   = this->define_param("chksum");
-  }
-
-  void setup() {
-    this->mod_dns_  = this->lookup_module("Dns");
-  }
-
-#define SET_PROP(PARAM, DATA) \
-  prop->retain_value(PARAM)->set(&(DATA), sizeof(DATA));
-
-  mod_id decode(Payload* pd, Property* prop) {
-    auto hdr = reinterpret_cast<const struct udp_header*>
-               (pd->retain(sizeof(struct udp_header)));
-    if (hdr == nullptr) {   // Not enough packet size.
-      return Module::NONE;
-    }
-
-    SET_PROP(this->p_src_port_, hdr->src_port_);
-    SET_PROP(this->p_dst_port_, hdr->dst_port_);
-    SET_PROP(this->p_length_,   hdr->length_);
-    SET_PROP(this->p_chksum_,   hdr->chksum_);
-
-    mod_id next = Module::NONE;
-    return next;
-  }
-};
-
-INIT_MODULE(UDP);
-
-}   // namespace pm
