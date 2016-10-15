@@ -82,6 +82,9 @@ class Property {
   void init(const Packet* pkt);
   Object* retain_object(const ParamDef *def);
   Value* retain_value(const ParamDef *def);
+
+  bool has_value(param_id pid) const;
+  bool has_value(const std::string& name) const;
   const Value& value(param_id pid) const;
   const Value& value(const std::string& name) const;
   const Object& object(param_id pid) const;

@@ -24,39 +24,20 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "./gtest/gtest.h"
-#include "../src/module.hpp"
+#include "./fixtures.hpp"
 
-namespace module_test {
+TEST_F(ModuleTesterData1, ARP_packet) {
+  const pm::Property* p;
+  p = get_property(1296);   // # packet #1297
 
-class TestMod : public pm::Module {
- public:
-  void setup() {
-  }
-  pm::mod_id decode(pm::Payload* pd, pm::Property* prop) {
-    return pm::Module::NONE;
-  }
-};
+  EXPECT_TRUE(p->has_value("ARP.hw_type"));   // Ethernet
+  EXPECT_TRUE(p->has_value("ARP.pr_type"));   // IPv4
+  EXPECT_TRUE(p->has_value("ARP.hw_size"));   // MAC address (6 byte)
+  EXPECT_TRUE(p->has_value("ARP.pr_size"));   // IPv4 address (4 byte)
 
-TEST(Module, basic) {
-  pm::ModuleBuilder builder;
-  pm::ModuleFactoryEntry<TestMod> tf("TestMod", &builder);
-
-  std::map<std::string, pm::Module*> mod_map;
-  builder.build(&mod_map);
-
-  EXPECT_EQ(1, mod_map.size());
+  EXPECT_EQ(0x001, p->value("ARP.hw_type").uint());   // Ethernet
+  EXPECT_EQ(0x800, p->value("ARP.pr_type").uint());   // IPv4
+  EXPECT_EQ(6,     p->value("ARP.hw_size").uint());   // MAC address (6 byte)
+  EXPECT_EQ(4,     p->value("ARP.pr_size").uint());   // IPv4 address (4 byte)
 }
 
-TEST(Module, use_global_variable) {
-  std::map<std::string, pm::Module*> mod_map;
-  build_module_map(&mod_map);
-
-  EXPECT_EQ(4, mod_map.size());
-  EXPECT_NE(mod_map.end(), mod_map.find("Ethernet"));
-  EXPECT_NE(mod_map.end(), mod_map.find("ARP"));
-  EXPECT_NE(mod_map.end(), mod_map.find("IPv4"));
-  EXPECT_NE(mod_map.end(), mod_map.find("Udp"));
-}
-
-}   // namespace module_test

@@ -53,11 +53,12 @@ const byte_t* Payload::retain(size_t size) {
   const byte_t* n = this->ptr_ + size;
   const byte_t* p = this->ptr_;
 
-  if (size <= this->length_ && n < this->end_) {
+  if (size <= this->length_ && n <= this->end_) {
     this->length_ -= size;
     this->ptr_ = n;
     return p;
   } else {
+    debug(false, "not enough legnth, %d of %d", size, this->length_);
     return nullptr;
   }
 }
@@ -115,9 +116,23 @@ Object* Property::retain_object(const ParamDef* def) {
   return obj;
 }
 
+
 Value* Property::retain_value(const ParamDef* def) {
   Value* val = dynamic_cast<Value*>(this->retain_object(def));
   return val;
+}
+
+bool Property::has_value(param_id pid) const {
+  return (this->param_idx_[pid] > 0);
+}
+
+bool Property::has_value(const std::string& name) const {
+  param_id pid = this->dec_->lookup_param_id(name);
+  if (pid == Param::NONE) {
+    return false;
+  } else {
+    return this->has_value(pid);
+  }
 }
 
 const Value& Property::value(param_id pid) const {
