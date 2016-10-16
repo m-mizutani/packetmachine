@@ -51,6 +51,7 @@ class TCP : public Module {
   const ParamDef* p_seq_;
   const ParamDef* p_ack_;
   const ParamDef* p_offset_;
+  const ParamDef* p_flags_;
   const ParamDef* p_window_;
   const ParamDef* p_chksum_;
   const ParamDef* p_urgptr_;
@@ -88,6 +89,7 @@ class TCP : public Module {
     DEFINE_PARAM(seq);
     DEFINE_PARAM(ack);
     DEFINE_PARAM(offset);
+    DEFINE_PARAM(flags);
     DEFINE_PARAM(window);
     DEFINE_PARAM(chksum);
     DEFINE_PARAM(urgptr);
@@ -132,6 +134,7 @@ class TCP : public Module {
     prop->retain_value(this->p_offset_)->cpy(&offset, sizeof(offset));
 
     SET_PROP_FROM_HDR(offset_);
+    SET_PROP_FROM_HDR(flags_);
     SET_PROP_FROM_HDR(window_);
     SET_PROP_FROM_HDR(chksum_);
     SET_PROP_FROM_HDR(urgptr_);

@@ -35,6 +35,7 @@ TEST_F(ModuleTesterData1, TCP_packet) {
   EXPECT_TRUE(p->has_value("TCP.seq"));
   EXPECT_TRUE(p->has_value("TCP.ack"));
   EXPECT_TRUE(p->has_value("TCP.offset"));
+  EXPECT_TRUE(p->has_value("TCP.flags"));
   EXPECT_TRUE(p->has_value("TCP.window"));
   EXPECT_TRUE(p->has_value("TCP.chksum"));
   EXPECT_TRUE(p->has_value("TCP.urgptr"));
@@ -57,6 +58,7 @@ TEST_F(ModuleTesterData1, TCP_packet) {
   EXPECT_EQ(0x310f035e,  p->value("TCP.seq").uint());
   EXPECT_EQ(0xf597c00a,  p->value("TCP.ack").uint());
   EXPECT_EQ(32,          p->value("TCP.offset").uint());
+  EXPECT_EQ(0x08 | 0x10, p->value("TCP.flags").uint());  // PUSH|ACK
   EXPECT_EQ(66,          p->value("TCP.window").uint());
   EXPECT_EQ(0xb820,      p->value("TCP.chksum").uint());
   EXPECT_EQ(0,           p->value("TCP.urgptr").uint());
