@@ -26,6 +26,7 @@
 
 #include <assert.h>
 #include <stdlib.h>
+#include <string.h>
 #include "./packetmachine/property.hpp"
 #include "./packet.hpp"
 #include "./decoder.hpp"
