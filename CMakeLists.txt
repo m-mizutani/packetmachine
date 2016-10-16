@@ -52,7 +52,11 @@ FILE(GLOB BASESRCS
 	"src/modules/arp.cc"
 	"src/modules/ipv4.cc"
 	"src/modules/udp.cc"
+	"src/modules/tcp.cc"
 	"src/modules/icmp.cc"
+
+	# Decoding utilities
+	"src/utils/lru.cc"  "src/utils/lru.hpp"
 )
 FILE(GLOB HEADERS
   "src/packetmachine.hpp"

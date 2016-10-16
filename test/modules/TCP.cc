@@ -38,6 +38,7 @@ TEST_F(ModuleTesterData1, TCP_packet) {
   EXPECT_TRUE(p->has_value("TCP.window"));
   EXPECT_TRUE(p->has_value("TCP.chksum"));
   EXPECT_TRUE(p->has_value("TCP.urgptr"));
+  EXPECT_TRUE(p->has_value("TCP.optdata"));
   EXPECT_TRUE(p->has_value("TCP.segment"));
 
   // Flags
@@ -56,6 +57,9 @@ TEST_F(ModuleTesterData1, TCP_packet) {
   EXPECT_EQ(0x310f035e,  p->value("TCP.seq").uint());
   EXPECT_EQ(0xf597c00a,  p->value("TCP.ack").uint());
   EXPECT_EQ(32,          p->value("TCP.offset").uint());
+  EXPECT_EQ(66,          p->value("TCP.window").uint());
+  EXPECT_EQ(0xb820,      p->value("TCP.chksum").uint());
+  EXPECT_EQ(0,           p->value("TCP.urgptr").uint());
 
   EXPECT_EQ(0, p->value("TCP.flag_fin").uint());
   EXPECT_EQ(0, p->value("TCP.flag_syn").uint());
@@ -65,6 +69,14 @@ TEST_F(ModuleTesterData1, TCP_packet) {
   EXPECT_EQ(0, p->value("TCP.flag_urg").uint());
   EXPECT_EQ(0, p->value("TCP.flag_ece").uint());
   EXPECT_EQ(0, p->value("TCP.flag_cwr").uint());
-  
+
+  size_t optlen, seglen;
+  const pm::byte_t *opt = p->value("TCP.optdata").raw(&optlen);
+  EXPECT_EQ(12, optlen);
+  EXPECT_EQ(0x01, opt[0]);  // NOP
+
+  const pm::byte_t *seg = p->value("TCP.segment").raw(&seglen);
+  EXPECT_EQ(1045, seglen);
+  EXPECT_EQ(0x17, seg[0]);  // SSL Content Type: Application Data
 }
 

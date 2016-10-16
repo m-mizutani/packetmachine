@@ -25,6 +25,7 @@
  */
 
 #include "../module.hpp"
+#include "../utils/lru.hpp"
 
 namespace pm {
 
@@ -53,7 +54,6 @@ class TCP : public Module {
   const ParamDef* p_window_;
   const ParamDef* p_chksum_;
   const ParamDef* p_urgptr_;
-  const ParamDef* p_segment_;
 
   // Flags
   const ParamDef* p_flag_fin_;
@@ -65,6 +65,9 @@ class TCP : public Module {
   const ParamDef* p_flag_ece_;
   const ParamDef* p_flag_cwr_;
 
+  const ParamDef* p_optdata_;
+  const ParamDef* p_segment_;
+
   static const u_int8_t FIN  = 0x01;
   static const u_int8_t SYN  = 0x02;
   static const u_int8_t RST  = 0x04;
@@ -73,7 +76,6 @@ class TCP : public Module {
   static const u_int8_t URG  = 0x20;
   static const u_int8_t ECE  = 0x40;
   static const u_int8_t CWR  = 0x80;
-
 
 
  public:
@@ -89,7 +91,6 @@ class TCP : public Module {
     DEFINE_PARAM(window);
     DEFINE_PARAM(chksum);
     DEFINE_PARAM(urgptr);
-    DEFINE_PARAM(segment);
 
     // Flags
     DEFINE_PARAM(flag_fin);
@@ -100,6 +101,12 @@ class TCP : public Module {
     DEFINE_PARAM(flag_urg);
     DEFINE_PARAM(flag_ece);
     DEFINE_PARAM(flag_cwr);
+
+    // Option
+    DEFINE_PARAM(optdata);
+
+    // Segment
+    DEFINE_PARAM(segment);
   }
 
   void setup() {
@@ -115,25 +122,20 @@ class TCP : public Module {
 
 #define SET_PROP_FROM_HDR(NAME)                                         \
     prop->retain_value(this->p_ ## NAME)->set(&(hdr->NAME), sizeof(hdr->NAME));
-    
+
     SET_PROP_FROM_HDR(src_port_);
     SET_PROP_FROM_HDR(dst_port_);
     SET_PROP_FROM_HDR(seq_);
     SET_PROP_FROM_HDR(ack_);
 
-    {
-      uint8_t offset = (hdr->offset_ & 0xf0) >> 2;
-      prop->retain_value(this->p_offset_)->cpy(&offset, sizeof(offset));
-    }
+    const uint8_t offset = (hdr->offset_ & 0xf0) >> 2;
+    prop->retain_value(this->p_offset_)->cpy(&offset, sizeof(offset));
 
     SET_PROP_FROM_HDR(offset_);
     SET_PROP_FROM_HDR(window_);
     SET_PROP_FROM_HDR(chksum_);
     SET_PROP_FROM_HDR(urgptr_);
 
-    prop->retain_value(this->p_segment_)->set(pd->ptr(), pd->length());
-
-    
 #define SET_FLAGS(FNAME, PNAME)                                         \
     {                                                                   \
       byte_t f = ((hdr->flags_ & (FNAME)) > 0);                         \
@@ -148,7 +150,23 @@ class TCP : public Module {
     SET_FLAGS(URG, urg);
     SET_FLAGS(ECE, ece);
     SET_FLAGS(CWR, cwr);
-    
+
+    // Set option data.
+    const size_t optlen = offset - sizeof(tcp_header);
+    if (optlen > 0) {
+      const byte_t* opt = pd->retain(optlen);
+      if (opt == nullptr) {
+        return Module::NONE;
+      }
+
+      prop->retain_value(this->p_optdata_)->set(opt, optlen);
+    }
+
+    // Set segment data.
+    if (pd->length() > 0) {
+      prop->retain_value(this->p_segment_)->set(pd->ptr(), pd->length());
+    }
+
     mod_id next = Module::NONE;
     return next;
   }

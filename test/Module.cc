@@ -52,12 +52,13 @@ TEST(Module, use_global_variable) {
   std::map<std::string, pm::Module*> mod_map;
   build_module_map(&mod_map);
 
-  EXPECT_EQ(5, mod_map.size());
+  EXPECT_EQ(6, mod_map.size());
   EXPECT_NE(mod_map.end(), mod_map.find("Ethernet"));
   EXPECT_NE(mod_map.end(), mod_map.find("ARP"));
   EXPECT_NE(mod_map.end(), mod_map.find("IPv4"));
   EXPECT_NE(mod_map.end(), mod_map.find("UDP"));
   EXPECT_NE(mod_map.end(), mod_map.find("ICMP"));
+  EXPECT_NE(mod_map.end(), mod_map.find("TCP"));
 }
 
 }   // namespace module_test
