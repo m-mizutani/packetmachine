@@ -96,6 +96,8 @@ void Decoder::decode(Payload* pd, Property* prop) {
 
     next = mod->decode(pd, prop);
 
+    debug(false, "next=%lld, size=%zd", next, this->modules_.size());
+
     assert(next == Module::NONE ||
            (0 <= next && next < static_cast<mod_id>(this->modules_.size())));
   }

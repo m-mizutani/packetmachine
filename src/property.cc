@@ -25,6 +25,7 @@
  */
 
 #include <assert.h>
+#include <stdlib.h>
 #include "./packetmachine/property.hpp"
 #include "./packet.hpp"
 #include "./decoder.hpp"
@@ -58,7 +59,7 @@ const byte_t* Payload::retain(size_t size) {
     this->ptr_ = n;
     return p;
   } else {
-    debug(false, "not enough legnth, %d of %d", size, this->length_);
+    debug(false, "not enough legnth, %zd of %zu", size, this->length_);
     return nullptr;
   }
 }
@@ -73,6 +74,22 @@ bool Payload::shrink(size_t length) {
   }
 }
 
+
+
+Property::Buffer::~Buffer() {
+  if (this->buf_) {
+    free(this->buf_);
+  }
+}
+
+void Property::Buffer::assign(const void* data, size_t len) {
+  if (this->buflen_ < len) {
+    this->buflen_ = len;
+    this->buf_ = static_cast<byte_t*>(::realloc(this->buf_, this->buflen_));
+  }
+  ::memcpy(this->buf_, data, len);
+  this->len_ = len;
+}
 
 const Value Property::null_;
 
@@ -122,6 +139,20 @@ Value* Property::retain_value(const ParamDef* def) {
   return val;
 }
 
+void Property::set_src_addr(const void* addr, size_t len) {
+  this->src_addr_.assign(addr, len);
+}
+void Property::set_dst_addr(const void* addr, size_t len) {
+  this->dst_addr_.assign(addr, len);
+}
+void Property::set_src_port(uint16_t port) {
+  this->src_port_ = port;
+}
+void Property::set_dst_port(uint16_t port) {
+  this->dst_port_ = port;
+}
+
+
 bool Property::has_value(param_id pid) const {
   return (this->param_idx_[pid] > 0);
 }
@@ -164,6 +195,21 @@ const Object& Property::object(param_id pid) const {
 
 const Object& Property::object(const std::string& name) const {
   return Property::null_;
+}
+
+const byte_t* Property::src_addr(size_t* len) const {
+  *len = this->src_addr_.len();
+  return this->src_addr_.ptr();
+}
+const byte_t* Property::dst_addr(size_t* len) const {
+  *len = this->dst_addr_.len();
+  return this->dst_addr_.ptr();
+}
+uint16_t Property::src_port() const {
+  return this->src_port_;
+}
+uint16_t Property::dst_port() const {
+  return this->dst_port_;
 }
 
 }   // namespace pm

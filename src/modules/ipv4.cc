@@ -96,6 +96,9 @@ class IPv4 : public Module {
       return Module::NONE;
     }
 
+    prop->set_src_addr(&hdr->src_, sizeof(hdr->src_));
+    prop->set_dst_addr(&hdr->dst_, sizeof(hdr->dst_));
+
     uint8_t hdrlen  = hdr->hdrlen_ << 2;
     uint8_t version = hdr->ver_;
     prop->retain_value(this->p_hdr_len_)->cpy(&hdrlen, sizeof(hdrlen));

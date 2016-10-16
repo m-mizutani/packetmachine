@@ -111,7 +111,9 @@ class TCP : public Module {
     DEFINE_PARAM(segment);
   }
 
+  mod_id mod_tcpssn_;
   void setup() {
+    this->mod_tcpssn_ = this->lookup_module("TCPSession");
   }
 
 
@@ -121,6 +123,9 @@ class TCP : public Module {
     if (hdr == nullptr) {   // Not enough packet size.
       return Module::NONE;
     }
+
+    prop->set_src_port(hdr->src_port_);
+    prop->set_dst_port(hdr->dst_port_);
 
 #define SET_PROP_FROM_HDR(NAME)                                         \
     prop->retain_value(this->p_ ## NAME)->set(&(hdr->NAME), sizeof(hdr->NAME));
@@ -170,8 +175,7 @@ class TCP : public Module {
       prop->retain_value(this->p_segment_)->set(pd->ptr(), pd->length());
     }
 
-    mod_id next = Module::NONE;
-    return next;
+    return this->mod_tcpssn_;
   }
 };
 

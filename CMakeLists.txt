@@ -53,6 +53,7 @@ FILE(GLOB BASESRCS
 	"src/modules/ipv4.cc"
 	"src/modules/udp.cc"
 	"src/modules/tcp.cc"
+	"src/modules/tcpssn.cc"
 	"src/modules/icmp.cc"
 
 	# Decoding utilities

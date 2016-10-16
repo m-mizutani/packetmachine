@@ -72,8 +72,27 @@ class Property {
   std::vector<size_t> param_idx_;
   std::vector< std::vector<Object*>* > param_;
 
+  class Buffer {
+   private:
+    byte_t *buf_;
+    size_t buflen_;
+    size_t len_;
+
+   public:
+    Buffer() : buf_(nullptr), buflen_(0), len_(0) {}
+    ~Buffer();
+
+    void assign(const void* data, size_t len);
+    const byte_t* ptr() const { return this->buf_; }
+    size_t len() const { return this->len_; }
+  };
+
   const Packet* pkt_;
   static const Value null_;
+  Buffer src_addr_;
+  Buffer dst_addr_;
+  uint16_t src_port_;
+  uint16_t dst_port_;
 
  public:
   explicit Property(Decoder *dec);
@@ -82,6 +101,10 @@ class Property {
   void init(const Packet* pkt);
   Object* retain_object(const ParamDef *def);
   Value* retain_value(const ParamDef *def);
+  void set_src_addr(const void* addr, size_t len);
+  void set_dst_addr(const void* addr, size_t len);
+  void set_src_port(uint16_t port);
+  void set_dst_port(uint16_t port);
 
   bool has_value(param_id pid) const;
   bool has_value(const std::string& name) const;
@@ -89,6 +112,12 @@ class Property {
   const Value& value(const std::string& name) const;
   const Object& object(param_id pid) const;
   const Object& object(const std::string& name) const;
+
+  // General purpose attributes.
+  const byte_t* src_addr(size_t* len) const;
+  const byte_t* dst_addr(size_t* len) const;
+  uint16_t src_port() const;
+  uint16_t dst_port() const;
 };
 
 }    // namespace pm

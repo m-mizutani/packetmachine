@@ -37,6 +37,7 @@ namespace pm {
 class LRUHash {
   class Bucket;
   static const size_t DEFAULT_BUCKET_SIZE = 1031;
+  static const uint32_t SEED = 0xc0ffee;
 
  public:
   class Node {
@@ -57,6 +58,8 @@ class LRUHash {
     Node *pop_link();
     Node *search(uint64_t hv, const void *key, size_t len);
   };
+
+  static uint32_t murmur3(const void *key, size_t len);
 
  private:
   class NodeRoot : public Node {

@@ -97,6 +97,11 @@ mod_id Module::lookup_module(const std::string& name) {
   return this->dec_->lookup_module(name);
 }
 
+param_id Module::lookup_param_id(const std::string& name) {
+  assert(this->dec_);
+  return this->dec_->lookup_param_id(name);
+}
+
 void Module::set_decoder(Decoder* dec) {
   this->dec_ = dec;
 }

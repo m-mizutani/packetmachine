@@ -79,6 +79,7 @@ class Module {
                                Object*(*new_object)() = new_value);
   event_id define_event(const std::string& name);
   mod_id lookup_module(const std::string& name);
+  param_id lookup_param_id(const std::string& name);
 
  public:
   static const mod_id NONE = -1;
