@@ -34,7 +34,7 @@ namespace lru_test {
 
 class MyData {
  public:
-  MyData(int a) : a_(a) {}
+  explicit MyData(int a) : a_(a) {}
   int a_;
 };
 

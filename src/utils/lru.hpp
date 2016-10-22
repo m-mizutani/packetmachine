@@ -108,7 +108,7 @@ class LruHash {
     bool has_link() const {
       return (this->link_ != nullptr);
     }
-    
+
     Node* search(const Buffer& key) {
       if (this->key_ == key) {
         return this;
@@ -123,7 +123,7 @@ class LruHash {
       return this->key_;
     }
   };
-  
+
  private:
   // ------------------------------------------
   class Bucket {
@@ -134,7 +134,7 @@ class LruHash {
     Bucket() = default;
     ~Bucket() = default;
     void attach(Node *node) {
-      this->root_.attach(node);      
+      this->root_.attach(node);
     }
     Node* search(const Buffer& key) {
       return this->root_.search(key);
@@ -178,7 +178,7 @@ class LruHash {
   }
   ~LruHash() {
   }
-  
+
   bool put(uint64_t tick, const Buffer& key, T data) {
     if (tick >= this->timeslot_.size()) {
       return false;
@@ -193,17 +193,17 @@ class LruHash {
 
     return true;
   }
-  
+
   const Node& get(const Buffer& key) {
     size_t ptr = key2hv(key) % this->bucket_.size();
     Node* node = this->bucket_[ptr].search(key);
     if (node == nullptr) {
       node = &(this->null_node_);
     }
-    
+
     return *node;
   }
-  
+
   void update(uint64_t tick = 1) {   // progress tick
     for (size_t i = 0; i < tick; i++) {
       size_t tp = (this->curr_tick_ + i) % this->timeslot_.size();
@@ -221,7 +221,7 @@ class LruHash {
   bool has_expired() const {
     return this->exp_node_.has_link();
   }
-  
+
   T pop() {
     Node* node = this->exp_node_.pop_link();
     if (node) {

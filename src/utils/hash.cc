@@ -1,4 +1,4 @@
-/*-
+/*
  * Copyright (c) 2016 Masayoshi Mizutani <mizutani@sfc.wide.ad.jp>
  * All rights reserved.
  *
@@ -30,7 +30,7 @@
 namespace pm {
   // from Chromium
   // https://chromium.googlesource.com/chromium/src/base/+/master/hash.h
-  
+
 inline size_t hash32_2value(uint32_t value1, uint32_t value2) {
   uint64_t value1_64 = value1;
   uint64_t hash64 = (value1_64 << 32) | value2;
@@ -44,7 +44,7 @@ inline size_t hash32_2value(uint32_t value1, uint32_t value2) {
   return high_bits;
 }
 
-  
+
 uint32_t hash32(const void *ptr, size_t data_len) {
   const uint32_t *p = static_cast<const uint32_t*>(ptr);
   uint32_t v = 0;
@@ -62,5 +62,5 @@ uint32_t hash32(const void *ptr, size_t data_len) {
 
   return v;
 }
-  
+
 }  // namespace pm

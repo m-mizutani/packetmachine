@@ -156,7 +156,7 @@ class TCPSession : public Module {
     uint32_t seq = prop->value(this->tcp_seq_).uint();
     uint32_t ack = prop->value(this->tcp_ack_).uint();
 
-    Session::make_key(&key);
+    Session::make_key(*prop, &key);
 
 
     return Module::NONE;
