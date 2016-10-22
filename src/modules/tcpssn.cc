@@ -29,6 +29,7 @@
 #include <assert.h>
 #include "../module.hpp"
 #include "../utils/lru.hpp"
+#include "../utils/buffer.hpp"
 
 namespace pm {
 
@@ -41,7 +42,7 @@ class TCPSession : public Module {
   static const u_int8_t RST  = 0x04;
   static const u_int8_t ACK  = 0x10;
 
-  class Session : public LRUHash::Node {
+  class Session {
    private:
     enum Status {
       SYN_SENT,
@@ -99,56 +100,42 @@ class TCPSession : public Module {
     ~Session() {
     }
 
-    static size_t make_key(const Property &p, byte_t* buf, size_t buflen) {
+    static void make_key(const Property &p, Buffer* key) {
       size_t src_len, dst_len;
       const byte_t* src_addr = p.src_addr(&src_len);
       const byte_t* dst_addr = p.dst_addr(&dst_len);
       const uint16_t src_port = p.src_port();
       const uint16_t dst_port = p.dst_port();
 
+      assert(src_len == dst_len);
       const size_t keylen = src_len + dst_len +
                             sizeof(src_port) + sizeof(dst_port);
-      if (buflen < keylen) {
-        // not enough buffer size
-        return 0;
-      }
+      key->clear();
+      key->resize(keylen);
 
-      byte_t* ptr = buf;
-      assert(src_len == dst_len);
       int rc = ::memcmp(src_addr, dst_addr, src_len);
       if (rc > 0 || (rc == 0 && src_port > dst_port)) {
-        ::memcpy(ptr, src_addr, src_len);
-        ptr += src_len;
-        ::memcpy(ptr, &src_port, sizeof(src_port));
-        ptr += sizeof(src_port);
-        ::memcpy(ptr, dst_addr, dst_len);
-        ptr += dst_len;
-        ::memcpy(ptr, &dst_port, sizeof(dst_port));
-        ptr += sizeof(dst_port);
+        key->append(src_addr, src_len);
+        key->append(&src_port, sizeof(src_port));
+        key->append(dst_addr, dst_len);
+        key->append(&dst_port, sizeof(dst_port));
       } else {
-        ::memcpy(ptr, dst_addr, dst_len);
-        ptr += dst_len;
-        ::memcpy(ptr, &dst_port, sizeof(dst_port));
-        ptr += sizeof(dst_port);
-        ::memcpy(ptr, src_addr, src_len);
-        ptr += src_len;
-        ::memcpy(ptr, &src_port, sizeof(src_port));
-        ptr += sizeof(src_port);
+        key->append(dst_addr, dst_len);
+        key->append(&dst_port, sizeof(dst_port));
+        key->append(src_addr, src_len);
+        key->append(&src_port, sizeof(src_port));
       }
-
-      return keylen;
     }
   };
 
-  LRUHash *ssn_table_;
   static const time_t TIMEOUT = 300;
   param_id tcp_flags_, tcp_segment_, tcp_seq_, tcp_ack_;
   byte_t* keybuf_;
   static const size_t keybuf_len_ = 64;
+  LruHash<Session*> ssn_table_;
 
  public:
-  TCPSession() {
-    this->ssn_table_ = new LRUHash(3600, 0xffff);
+  TCPSession() : ssn_table_(3600, 0xffff) {
     this->keybuf_ = static_cast<byte_t*>(::malloc(TCPSession::keybuf_len_));
   }
   ~TCPSession() {
@@ -164,12 +151,13 @@ class TCPSession : public Module {
 
 
   mod_id decode(Payload* pd, Property* prop) {
+    Buffer key;
     uint8_t flags = prop->value(this->tcp_flags_).uint();
     uint32_t seq = prop->value(this->tcp_seq_).uint();
     uint32_t ack = prop->value(this->tcp_ack_).uint();
 
-    size_t keylen = Session::make_key(*prop, this->keybuf_,
-                                      this->keybuf_len_);
+    Session::make_key(&key);
+
 
     return Module::NONE;
   }
