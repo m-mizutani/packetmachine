@@ -57,7 +57,9 @@ FILE(GLOB BASESRCS
 	"src/modules/icmp.cc"
 
 	# Decoding utilities
-	"src/utils/lru.cc"  "src/utils/lru.hpp"
+	"src/utils/lru.cc"    "src/utils/lru.hpp"
+	"src/utils/buffer.cc" "src/utils/buffer.hpp"
+	"src/utils/hash.cc"   "src/utils/hash.hpp"
 )
 FILE(GLOB HEADERS
   "src/packetmachine.hpp"

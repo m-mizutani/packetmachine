@@ -31,6 +31,8 @@
 #include <vector>
 #include <deque>
 #include <string>
+#include "./buffer.hpp"
+#include "./hash.hpp"
 
 namespace pm {
 
@@ -99,6 +101,116 @@ class LRUHash {
   Node *get(uint64_t hv, const void *key, size_t len);
   void update(size_t tick = 1);  // progress tick
   Node *pop();  // pop expired node
+};
+
+
+template <typename T>
+class LruHash {
+ private:
+  // Node
+  class Node {
+   private:
+    T data_;
+    Node *next_, *prev_;  // double linked list for Bucket
+    Node *link_;          // single linked list for TimeSlot
+    int update_;
+
+
+   public:
+    explicit Node(T data) : data_(data) {}
+    ~Node() = default;
+
+    T data() const { return this->data_; }
+
+    void attach(Node *node) {
+      Node *prev = this;
+      Node *next = this->next_;
+
+      node->prev_ = prev;
+      node->next_ = next;
+      prev->next_ = node;
+      if (next) {
+        next->prev_ = node;
+      }
+    }
+    void detach() {
+      Node *next = this->next_;
+      Node *prev = this->prev_;
+      if (next) {
+        next->prev_ = prev;
+      }
+      if (prev) {
+        prev->next_ = next;
+      }
+      this->next_ = this->prev_ = nullptr;
+    }
+    void push_link(Node * node) {
+      Node * next = this->link_;
+      node->link_ = next;
+      this->link_ = node;
+    }
+    Node* pop_link() {
+      Node *node = this->link_;
+      if (node) {
+        Node *next = node->link_;
+        this->link_ = next;
+      }
+      return node;
+    }
+    Node* pop_all() {
+      Node * all = this->link_;
+      this->link_ = nullptr;
+      return all;
+    }
+  };
+  class Bucket {
+  };
+  class TimeSlot {
+  };
+
+  std::vector<TimeSlot> timeslot_;
+  std::vector<Bucket> bucket_;
+  size_t curr_tick_;
+  Node exp_node_;
+  static const size_t DEFAULT_BUCKET_SIZE = 1031;
+  static const uint32_t SEED = 0xc0ffee;
+
+
+ public:
+  static inline uint32_t key2hv(const Buffer& key) {
+    return hash32(key.get(), key.len());
+  }
+
+  LruHash(size_t timeslot_size,
+          size_t bucket_size = DEFAULT_BUCKET_SIZE) {
+  }
+  ~LruHash() {
+  }
+  bool put(size_t tick, const Buffer& key, T data) {
+    if (tick >= this->timeslot_.size()) {
+      return false;
+    }
+
+    size_t ptr = key2hv(key);
+    Node *node = new Node(data);
+    this->bucket_[ptr].attach();
+
+    size_t tp = (tick + this->curr_tick_) % this->timeslot_.size();
+    this->timeslot_[tp].push(node);
+
+    return true;
+  }
+  T get(const Buffer& key) {
+  }
+  void update(size_t tick = 1) {  // progress tick
+  }
+
+  T pop() {
+    Node* node = this->exp_node_.pop_link();
+    T data = node->data();
+    delete node;
+    return data;
+  }  // pop expired node
 };
 
 }  // namespace pm
