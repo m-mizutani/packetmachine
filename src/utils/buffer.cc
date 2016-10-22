@@ -30,12 +30,21 @@
 #include <string.h>
 #include <stdint.h>
 
+#include "../debug.hpp"
+
 namespace pm {
 
-Buffer::Buffer() : buf_(nullptr), len_(0) {
+Buffer::Buffer()
+    : buf_(nullptr), len_(0), buflen_(0) {
 }
 
-Buffer::Buffer(const Buffer& obj) : buf_(nullptr), len_(0) {
+Buffer::Buffer(const void* ptr, size_t len)
+    : buf_(nullptr), len_(0), buflen_(0) {
+  this->set(ptr, len);
+}
+
+Buffer::Buffer(const Buffer& obj)
+    : buf_(nullptr), len_(0), buflen_(0) {
   this->set(obj.buf_, obj.len_);
 }
 
@@ -43,6 +52,11 @@ Buffer::~Buffer() {
   if (this->buf_) {
     ::free(this->buf_);
   }
+}
+
+bool Buffer::operator==(const Buffer& obj) const {
+  return (this->len_ == obj.len_ &&
+          ::memcmp(this->buf_, obj.buf_, this->len_) == 0);
 }
 
 void Buffer::resize(size_t len) {

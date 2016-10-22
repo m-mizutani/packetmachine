@@ -31,8 +31,10 @@
 #include <vector>
 #include <deque>
 #include <string>
+#include "../packetmachine/exception.hpp"
 #include "./buffer.hpp"
 #include "./hash.hpp"
+#include "../debug.hpp"
 
 namespace pm {
 
@@ -106,21 +108,29 @@ class LRUHash {
 
 template <typename T>
 class LruHash {
- private:
-  // Node
+ public:
   class Node {
    private:
     T data_;
+    const Buffer key_;
     Node *next_, *prev_;  // double linked list for Bucket
     Node *link_;          // single linked list for TimeSlot
     int update_;
 
-
    public:
-    explicit Node(T data) : data_(data) {}
-    ~Node() = default;
+    Node() :
+        next_(nullptr), prev_(nullptr), link_(nullptr), update_(0) {
+    }
+    explicit Node(T data, const Buffer& key)
+        : data_(data), key_(key),
+          next_(nullptr), prev_(nullptr), link_(nullptr), update_(0) {
+    }
+    virtual ~Node() {}
 
     T data() const { return this->data_; }
+    virtual bool is_null() const {
+      return (this->key_.len() == 0);
+    }
 
     void attach(Node *node) {
       Node *prev = this;
@@ -162,54 +172,133 @@ class LruHash {
       this->link_ = nullptr;
       return all;
     }
+
+    bool has_link() const {
+      return (this->link_ != nullptr);
+    }
+    
+    Node* search(const Buffer& key) {
+      if (this->key_ == key) {
+        return this;
+      } else if (this->next_) {
+        return this->next_->search(key);
+      } else {
+        return nullptr;
+      }
+    }
+
+    const Buffer& key() const {
+      return this->key_;
+    }
   };
+  
+ private:
+  // ------------------------------------------
   class Bucket {
-  };
-  class TimeSlot {
+   private:
+    Node root_;
+
+   public:
+    Bucket() = default;
+    ~Bucket() = default;
+    void attach(Node *node) {
+      this->root_.attach(node);      
+    }
+    Node* search(const Buffer& key) {
+      return this->root_.search(key);
+    }
   };
 
+  // ------------------------------------------
+  class TimeSlot {
+   private:
+    Node root_;
+   public:
+    TimeSlot() = default;
+    ~TimeSlot() = default;
+    void push(Node *node) {
+      this->root_.push_link(node);
+    }
+    Node* pop() {
+      return this->root_.pop_link();
+    }
+  };
+
+  // ------------------------------------------
   std::vector<TimeSlot> timeslot_;
   std::vector<Bucket> bucket_;
-  size_t curr_tick_;
+  uint64_t curr_tick_;
   Node exp_node_;
   static const size_t DEFAULT_BUCKET_SIZE = 1031;
-  static const uint32_t SEED = 0xc0ffee;
-
+  Node null_node_;
 
  public:
   static inline uint32_t key2hv(const Buffer& key) {
     return hash32(key.get(), key.len());
   }
 
-  LruHash(size_t timeslot_size,
-          size_t bucket_size = DEFAULT_BUCKET_SIZE) {
+  explicit LruHash(size_t timeslot_size,
+                   size_t bucket_size = DEFAULT_BUCKET_SIZE)
+      : timeslot_(timeslot_size), bucket_(bucket_size), curr_tick_(0) {
+    if (this->bucket_.size() == 0) {
+      this->bucket_.resize(DEFAULT_BUCKET_SIZE);
+    }
   }
   ~LruHash() {
   }
-  bool put(size_t tick, const Buffer& key, T data) {
+  
+  bool put(uint64_t tick, const Buffer& key, T data) {
     if (tick >= this->timeslot_.size()) {
       return false;
     }
 
-    size_t ptr = key2hv(key);
-    Node *node = new Node(data);
-    this->bucket_[ptr].attach();
+    size_t ptr = key2hv(key) % this->bucket_.size();
+    Node *node = new Node(data, key);
+    this->bucket_[ptr].attach(node);
 
     size_t tp = (tick + this->curr_tick_) % this->timeslot_.size();
     this->timeslot_[tp].push(node);
 
     return true;
   }
-  T get(const Buffer& key) {
+  
+  const Node& get(const Buffer& key) {
+    size_t ptr = key2hv(key) % this->bucket_.size();
+    Node* node = this->bucket_[ptr].search(key);
+    if (node == nullptr) {
+      node = &(this->null_node_);
+    }
+    
+    return *node;
   }
-  void update(size_t tick = 1) {  // progress tick
+  
+  void update(uint64_t tick = 1) {   // progress tick
+    for (size_t i = 0; i < tick; i++) {
+      size_t tp = (this->curr_tick_ + i) % this->timeslot_.size();
+
+      Node *node;
+      while (nullptr != (node = this->timeslot_[tp].pop())) {
+        node->detach();
+        this->exp_node_.push_link(node);
+      }
+    }
+    this->curr_tick_ += tick;
+    return;
   }
 
+  bool has_expired() const {
+    return this->exp_node_.has_link();
+  }
+  
   T pop() {
     Node* node = this->exp_node_.pop_link();
-    T data = node->data();
-    delete node;
-    return data;
+    if (node) {
+      T data = node->data();
+      delete node;
+      return data;
+    } else {
+      throw Exception::NoDataError("no more expired data");
+    }
   }  // pop expired node
 };
 

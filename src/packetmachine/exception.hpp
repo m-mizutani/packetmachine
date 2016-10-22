@@ -66,6 +66,11 @@ class IndexError : public Error {
   explicit IndexError(const std::string &errmsg) : Error(errmsg) {}
 };
 
+class NoDataError : public Error {
+ public:
+  explicit NoDataError(const std::string &errmsg) : Error(errmsg) {}
+};
+
 }   // namespace Exception
 }   // namespace pm
 

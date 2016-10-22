@@ -40,7 +40,11 @@ class Buffer {
  public:
   Buffer();
   Buffer(const Buffer& obj);
+  Buffer(const void* ptr, size_t len);
   ~Buffer();
+
+  bool operator==(const Buffer& obj) const;
+
   void resize(size_t len);
   void clear();
   void set(const void* ptr, size_t len);

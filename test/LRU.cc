@@ -27,6 +27,7 @@
 #include <string.h>
 #include "./gtest/gtest.h"
 #include "../src/utils/lru.hpp"
+#include "../src/debug.hpp"
 
 class TestNode : public pm::LRUHash::Node {
 private:
@@ -151,3 +152,41 @@ TEST(LRUHash, error_handle) {
   EXPECT_EQ(NULL,  lru->pop());
 }
 
+namespace lru_test {
+
+class MyData {
+ public:
+  MyData(int a) : a_(a) {}
+  int a_;
+};
+
+TEST(LruHash, basic_test) {
+  pm::LruHash<MyData*> lru(10);
+  MyData d1(1), d2(2), d3(3);
+  pm::Buffer k1(&d1.a_, sizeof(d1.a_));
+  pm::Buffer k2(&d2.a_, sizeof(d2.a_));
+  pm::Buffer k3(&d3.a_, sizeof(d3.a_));
+
+  // put node
+  EXPECT_TRUE(lru.put(1, k1, &d1));
+  const auto n1 = lru.get(k1);
+  EXPECT_FALSE(n1.is_null());
+  EXPECT_EQ(&d1, n1.data());
+  EXPECT_FALSE(lru.has_expired());
+
+  // still alive
+  lru.update(1);
+  const auto n2 = lru.get(k1);
+  EXPECT_FALSE(n2.is_null());
+  EXPECT_EQ(&d1, n2.data());
+  EXPECT_FALSE(lru.has_expired());
+
+  // expired
+  lru.update(1);
+  const auto n3 = lru.get(k1);
+  EXPECT_TRUE(n3.is_null());
+  EXPECT_TRUE(lru.has_expired());
+  EXPECT_EQ(&d1, lru.pop());
+}
+
+}  // namespace lru_test
