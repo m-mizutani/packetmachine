@@ -173,26 +173,32 @@ class TCPSession : public Module {
     static Buffer key;   // memory can be reused, but not thread safe
 
     uint8_t flags = prop->value(this->tcp_flags_).uint();
+    flags &= (SYN|ACK|FIN|RST);
     uint32_t seq = prop->value(this->tcp_seq_).uint();
     uint32_t ack = prop->value(this->tcp_ack_).uint();
 
     Session::make_key(*prop, &key);
     auto node = this->ssn_table_.get(key);
 
-    Session* ssn;
-    if (node.is_null() && flags) {
-      this->ssn_count_ += 1;
-      ssn = new Session(*prop, this->ssn_count_);
-      this->ssn_table_.put(300, key, ssn);
-      // debug(true, "new session: %p", ssn);
+    Session* ssn = nullptr;
+    if (node.is_null()) {
+      if (flags == SYN) {
+        this->ssn_count_ += 1;
+        ssn = new Session(*prop, this->ssn_count_);
+        this->ssn_table_.put(300, key, ssn);
+        debug(false, "new session: %p", ssn);
+      } else {
+        debug(false, "new session, but not syn packet");
+      }
     } else {
       ssn = node.data();
-      // debug(true, "existing session: %p", ssn);
+      debug(false, "existing session: %p", ssn);
     }
 
-    const uint64_t ssn_id = ssn->id();
-    prop->retain_value(this->p_id_)->cpy(&ssn_id, sizeof(ssn_id));
-
+    if (ssn) {
+      const uint64_t ssn_id = ssn->id();
+      prop->retain_value(this->p_id_)->cpy(&ssn_id, sizeof(ssn_id));
+    }
     return Module::NONE;
   }
 };
