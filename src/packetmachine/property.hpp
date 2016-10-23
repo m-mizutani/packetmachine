@@ -40,6 +40,7 @@ class Decoder;
 class Object;
 class Value;
 class ParamDef;
+class EventDef;
 
 class Payload {
  private:
@@ -73,6 +74,9 @@ class Property {
   std::vector<size_t> param_idx_;
   std::vector< std::vector<Object*>* > param_;
 
+  size_t event_idx_;
+  std::vector<const EventDef*> event_;
+
   const Packet* pkt_;
   static const Value null_;
   Buffer src_addr_;
@@ -81,17 +85,27 @@ class Property {
   uint16_t dst_port_;
 
  public:
-  explicit Property(Decoder *dec);
+  explicit Property(Decoder* dec);
   ~Property();
 
   void init(const Packet* pkt);
-  Object* retain_object(const ParamDef *def);
-  Value* retain_value(const ParamDef *def);
+
+  // Retain data
+  Object* retain_object(const ParamDef* def);
+  Value* retain_value(const ParamDef* def);
+
+  // Push event
+  void push_event(const EventDef* def);
+  size_t event_idx() const { return this->event_idx_; }
+  const EventDef* event(size_t idx) const;
+
+  // Set general parameters
   void set_src_addr(const void* addr, size_t len);
   void set_dst_addr(const void* addr, size_t len);
   void set_src_port(uint16_t port);
   void set_dst_port(uint16_t port);
 
+  // const methods
   bool has_value(param_id pid) const;
   bool has_value(const std::string& name) const;
   const Value& value(param_id pid) const;

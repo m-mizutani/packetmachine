@@ -62,6 +62,9 @@ ParamDef::~ParamDef() {
 }
 
 
+
+
+
 Module::Module() : dec_(nullptr), id_(Module::NONE) {
 }
 
@@ -87,9 +90,12 @@ const ParamDef* Module::define_param(const std::string& name,
   return def;
 }
 
-event_id Module::define_event(const std::string& name) {
-  return 0;     // TODO(m-mizutani): to be written
+const EventDef* Module::define_event(const std::string& name) {
+  EventDef *def = new EventDef(name);
+  this->event_map_.insert(std::make_pair(name, def));
+  return def;
 }
+
 
 mod_id Module::lookup_module(const std::string& name) {
   // lookup_module must not be called before set decoder.

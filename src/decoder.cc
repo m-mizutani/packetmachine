@@ -43,8 +43,9 @@ Decoder::Decoder() : mod_ethernet_(Module::NONE) {
     mod->set_decoder(this);
     mod->set_mod_id(id);
     mod->set_name(m.first);
-
+    
     this->modules_.push_back(mod);
+    this->mod_event_.push_back(mod->define_event(""));
     this->mod_map_.insert(std::make_pair(m.first, id));
 
     if (m.first == "Ethernet") {
@@ -52,8 +53,8 @@ Decoder::Decoder() : mod_ethernet_(Module::NONE) {
     }
   }
 
-  // Building parameter map.
   for (auto& m : this->modules_) {
+    // Building parameter map.
     for (auto& p : *(m->param_map())) {
       const param_id global_id = this->params_.size();
       ParamDef *def = p.second;
@@ -63,13 +64,29 @@ Decoder::Decoder() : mod_ethernet_(Module::NONE) {
       this->params_.push_back(def);
       this->param_map_.insert(std::make_pair(def->name(), def));
     }
-  }
 
+    // Building event map.
+    for (auto& ev : *(m->event_map())) {
+      const event_id global_id = this->events_.size();
+      EventDef *def = ev.second;
+      def->set_module_id(m->id());
+      def->set_id(global_id);
+      if (ev.first.length() > 0) {
+        def->set_name(m->name() + "." + ev.first);
+      } else {
+        def->set_name(m->name());
+      }
+      this->events_.push_back(def);
+      this->event_map_.insert(std::make_pair(def->name(), def));
+    }
+  }
+  
   // Setup modules.
   for (auto &m : this->modules_) {
     m->setup();
   }
   assert(this->mod_ethernet_ != Module::NONE);
+  assert(this->mod_event_.size() == this->modules_.size());
 }
 
 
@@ -91,15 +108,21 @@ void Decoder::decode(Payload* pd, Property* prop) {
   // debug(true, "decoding");
 
   while (next != Module::NONE) {
-    // debug(true, "next = %lld", next);
+    // debug(true, "next = %lld", next);    
     mod = this->modules_[next];
-
+    prop->push_event(this->mod_event_[next]);
     next = mod->decode(pd, prop);
 
     debug(false, "next=%lld, size=%zd", next, this->modules_.size());
 
     assert(next == Module::NONE ||
            (0 <= next && next < static_cast<mod_id>(this->modules_.size())));
+  }
+
+  for (size_t idx = 0; idx < prop->event_idx(); idx++) {
+    const EventDef* ev = prop->event(idx);
+    debug(false, "ev=%s", ev->name().c_str());
+    // TODO(m-mizutani): callback event handler
   }
 }
 

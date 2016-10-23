@@ -36,6 +36,7 @@ namespace pm {
 class TCPSession : public Module {
  private:
   const ParamDef* p_id_;;
+  const EventDef* ev_new_;
 
   static const u_int8_t FIN  = 0x01;
   static const u_int8_t SYN  = 0x02;
@@ -226,6 +227,7 @@ class TCPSession : public Module {
  public:
   TCPSession() : ssn_table_(3600, 0xffff), ssn_count_(0) {
     this->p_id_ = this->define_param("id");
+    this->ev_new_ = this->define_event("new");
 
     this->keybuf_ = static_cast<byte_t*>(::malloc(TCPSession::keybuf_len_));
   }
@@ -261,6 +263,7 @@ class TCPSession : public Module {
         ssn = new Session(*prop, this->ssn_count_);
         this->ssn_table_.put(300, key, ssn);
         debug(false, "new session: %p", ssn);
+        prop->push_event(this->ev_new_);
       } else {
         debug(false, "new session, but not syn packet");
       }

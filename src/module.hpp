@@ -61,11 +61,32 @@ class ParamDef {
   Object* new_object() const { return this->constructor_(); }
 };
 
+class EventDef {
+ private:
+  mod_id module_id_;
+  event_id id_;
+  std::string name_;
+  std::string local_name_;
+
+ public:
+  EventDef(const std::string& local_name) : local_name_(local_name) {};
+  ~EventDef() {};
+  void set_module_id(mod_id id) { this->module_id_ = id; }
+  void set_id(param_id id) { this->id_ = id; }
+  void set_name(const std::string& name) { this->name_ = name; }
+
+  mod_id module_id() const { return this->module_id_; }
+  param_id id() const { return this->id_; }
+  const std::string& name() const { return this->name_; }
+};
+
 typedef std::map<std::string, ParamDef*> ParamMap;
+typedef std::map<std::string, EventDef*> EventMap;
 
 class Module {
  private:
   ParamMap param_map_;
+  EventMap event_map_;
   Decoder *dec_;
   mod_id id_;
   std::string name_;
@@ -77,7 +98,6 @@ class Module {
 
   const ParamDef* define_param(const std::string& name,
                                Object*(*new_object)() = new_value);
-  event_id define_event(const std::string& name);
   mod_id lookup_module(const std::string& name);
   param_id lookup_param_id(const std::string& name);
 
@@ -92,7 +112,10 @@ class Module {
   mod_id id() const { return this->id_; }
   const std::string& name() const { return this->name_; }
 
+  const EventDef* define_event(const std::string& name);
+
   ParamMap* param_map() { return &(this->param_map_); }
+  EventMap* event_map() { return &(this->event_map_); }
   void set_decoder(Decoder* dec);
   void set_mod_id(mod_id id);
   void set_name(const std::string& name);

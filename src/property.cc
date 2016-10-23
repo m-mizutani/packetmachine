@@ -100,6 +100,7 @@ void Property::init(const Packet* pkt) {
   for (size_t i = 0; i < this->param_idx_.size(); i++) {
     this->param_idx_[i] = 0;
   }
+  this->event_idx_ = 0;
 }
 
 
@@ -122,6 +123,24 @@ Object* Property::retain_object(const ParamDef* def) {
 Value* Property::retain_value(const ParamDef* def) {
   Value* val = dynamic_cast<Value*>(this->retain_object(def));
   return val;
+}
+
+void Property::push_event(const EventDef* def) {
+  if (this->event_idx_ + 1 > this->event_.size()) {
+    this->event_.push_back(def);
+  } else {
+    this->event_[this->event_idx_] = def;
+  }
+  this->event_idx_++;
+}
+
+const EventDef* Property::event(size_t idx) const {
+  assert(this->event_idx_ <= this->event_.size());
+  if (idx < this->event_idx_) {
+    return this->event_[idx];
+  } else {
+    return nullptr;
+  }
 }
 
 void Property::set_src_addr(const void* addr, size_t len) {
