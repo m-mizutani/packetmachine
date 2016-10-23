@@ -144,7 +144,7 @@ class TCPSession : public Module {
         return;  // Invalid sequence
       }
 
-      static const bool DBG = true;
+      static const bool DBG = false;
 
       switch (this->status_) {
         case UNKNOWN:
