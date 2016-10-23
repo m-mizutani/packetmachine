@@ -44,6 +44,8 @@ class TCPSession : public Module {
 
   class Session {
    private:
+    uint64_t id_;
+
     enum Status {
       SYN_SENT,
       SYNACK_SENT,
@@ -91,14 +93,26 @@ class TCPSession : public Module {
       bool recv(uint8_t flags, uint32_t seq, uint32_t ack, size_t data_len) {
         return false;
       }
-    };
+    } *client_, *server_;
 
    public:
-    explicit Session(const Property& p) {
+    explicit Session(const Property& p, uint64_t ssn_id) : id_(ssn_id) {
+      size_t src_len, dst_len;
+      const byte_t* src_addr = p.src_addr(&src_len);
+      const byte_t* dst_addr = p.dst_addr(&dst_len);
+      const uint16_t src_port = p.src_port();
+      const uint16_t dst_port = p.dst_port();
+
+      this->client_ = new Client(src_addr, src_len, src_port);
+      this->server_ = new Client(dst_addr, dst_len, dst_port);
       // TODO(m-mizutani): create session key and store
     }
     ~Session() {
+      delete this->client_;
+      delete this->server_;
     }
+
+    uint64_t id() const { return this->id_; }
 
     static void make_key(const Property &p, Buffer* key) {
       size_t src_len, dst_len;
@@ -128,14 +142,19 @@ class TCPSession : public Module {
     }
   };
 
+  const ParamDef* p_id_;;
+
   static const time_t TIMEOUT = 300;
   param_id tcp_flags_, tcp_segment_, tcp_seq_, tcp_ack_;
   byte_t* keybuf_;
   static const size_t keybuf_len_ = 64;
   LruHash<Session*> ssn_table_;
+  uint64_t ssn_count_;
 
  public:
-  TCPSession() : ssn_table_(3600, 0xffff) {
+  TCPSession() : ssn_table_(3600, 0xffff), ssn_count_(0) {
+    this->p_id_ = this->define_param("id");
+
     this->keybuf_ = static_cast<byte_t*>(::malloc(TCPSession::keybuf_len_));
   }
   ~TCPSession() {
@@ -151,13 +170,28 @@ class TCPSession : public Module {
 
 
   mod_id decode(Payload* pd, Property* prop) {
-    Buffer key;
+    static Buffer key;   // memory can be reused, but not thread safe
+
     uint8_t flags = prop->value(this->tcp_flags_).uint();
     uint32_t seq = prop->value(this->tcp_seq_).uint();
     uint32_t ack = prop->value(this->tcp_ack_).uint();
 
     Session::make_key(*prop, &key);
+    auto node = this->ssn_table_.get(key);
 
+    Session* ssn;
+    if (node.is_null() && flags) {
+      this->ssn_count_ += 1;
+      ssn = new Session(*prop, this->ssn_count_);
+      this->ssn_table_.put(300, key, ssn);
+      // debug(true, "new session: %p", ssn);
+    } else {
+      ssn = node.data();
+      // debug(true, "existing session: %p", ssn);
+    }
+
+    const uint64_t ssn_id = ssn->id();
+    prop->retain_value(this->p_id_)->cpy(&ssn_id, sizeof(ssn_id));
 
     return Module::NONE;
   }

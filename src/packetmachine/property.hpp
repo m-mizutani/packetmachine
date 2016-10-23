@@ -31,6 +31,7 @@
 #include <string>
 #include <vector>
 #include "./common.hpp"
+#include "./utils/buffer.hpp"
 
 namespace pm {
 
@@ -71,21 +72,6 @@ class Property {
   Decoder *dec_;
   std::vector<size_t> param_idx_;
   std::vector< std::vector<Object*>* > param_;
-
-  class Buffer {
-   private:
-    byte_t *buf_;
-    size_t buflen_;
-    size_t len_;
-
-   public:
-    Buffer() : buf_(nullptr), buflen_(0), len_(0) {}
-    ~Buffer();
-
-    void assign(const void* data, size_t len);
-    const byte_t* ptr() const { return this->buf_; }
-    size_t len() const { return this->len_; }
-  };
 
   const Packet* pkt_;
   static const Value null_;

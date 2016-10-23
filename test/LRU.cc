@@ -38,15 +38,13 @@ class MyData {
   int a_;
 };
 
-TEST(LruHash, basic_test) {
+TEST(LruHash, basic) {
   pm::LruHash<MyData*> lru(10);
-  MyData d1(1), d2(2), d3(3);
+  MyData d1(1);
   pm::Buffer k1(&d1.a_, sizeof(d1.a_));
-  pm::Buffer k2(&d2.a_, sizeof(d2.a_));
-  pm::Buffer k3(&d3.a_, sizeof(d3.a_));
 
   // put node
-  EXPECT_TRUE(lru.put(1, k1, &d1));
+  EXPECT_TRUE(lru.put(2, k1, &d1));
   const auto n1 = lru.get(k1);
   EXPECT_FALSE(n1.is_null());
   EXPECT_EQ(&d1, n1.data());
@@ -54,17 +52,108 @@ TEST(LruHash, basic_test) {
 
   // still alive
   lru.update(1);
-  const auto n2 = lru.get(k1);
-  EXPECT_FALSE(n2.is_null());
-  EXPECT_EQ(&d1, n2.data());
+  EXPECT_TRUE(lru.has(k1));
   EXPECT_FALSE(lru.has_expired());
 
   // expired
   lru.update(1);
-  const auto n3 = lru.get(k1);
-  EXPECT_TRUE(n3.is_null());
+  EXPECT_FALSE(lru.has(k1));
   EXPECT_TRUE(lru.has_expired());
   EXPECT_EQ(&d1, lru.pop());
+}
+
+TEST(LruHash, multiple_data) {
+  pm::LruHash<MyData*> lru(10);
+  MyData d1(1), d2(2);
+  pm::Buffer k1(&d1.a_, sizeof(d1.a_));
+  pm::Buffer k2(&d2.a_, sizeof(d2.a_));
+
+  // put node
+  EXPECT_TRUE(lru.put(2, k1, &d1));
+  EXPECT_TRUE(lru.put(3, k2, &d2));
+
+  auto n1 = lru.get(k1);
+  EXPECT_FALSE(n1.is_null());
+  EXPECT_EQ(&d1, n1.data());
+  auto n2 = lru.get(k2);
+  EXPECT_FALSE(n2.is_null());
+  EXPECT_EQ(&d2, n2.data());
+
+  lru.update(2);
+  EXPECT_FALSE(lru.has(k1));  // expired
+  EXPECT_TRUE(lru.has(k2));   // still alive
+
+  lru.update(1);
+  EXPECT_FALSE(lru.has(k1));  // expired
+  EXPECT_FALSE(lru.has(k2));  // expired
+}
+
+
+TEST(LruHash, update) {
+  pm::LruHash<MyData*> lru(10);
+  MyData d1(1), d2(2), d3(3);
+  pm::Buffer k1(&d1.a_, sizeof(d1.a_));
+  pm::Buffer k2(&d2.a_, sizeof(d2.a_));
+  pm::Buffer k3(&d3.a_, sizeof(d3.a_));
+
+  // start, tick: 0
+
+  // put node
+  EXPECT_TRUE(lru.put(3, k1, &d1));
+  EXPECT_TRUE(lru.put(3, k2, &d2));
+  EXPECT_TRUE(lru.put(3, k3, &d3));
+
+  lru.update(2);  // tick: 2
+
+  auto n1 = lru.get(k1);   // k1 hit cache, and updated.
+  // next expiring tick is 2 (current tick) + 3 (original TTL)  = 5
+  EXPECT_FALSE(n1.is_null());
+  EXPECT_EQ(&d1, n1.data());
+
+  auto n2 = lru.get(k2);   // k2 hit cache, and updated.
+  // next expiring tick is 2 (current tick) + 3 (original TTL)  = 5
+  EXPECT_FALSE(n2.is_null());
+  EXPECT_EQ(&d2, n2.data());
+
+
+  EXPECT_TRUE(lru.has(k1));   // k1 is still alive
+  EXPECT_TRUE(lru.has(k2));   // k2 is still alive
+  EXPECT_TRUE(lru.has(k3));   // k3 is still alive
+
+  lru.update(1);  // tick: 3
+
+  EXPECT_TRUE(lru.has(k1));   // k1 is still alive
+  EXPECT_TRUE(lru.has(k2));   // k2 is still alive
+  EXPECT_FALSE(lru.has(k3));  // k3 has been expired
+
+  lru.update(1);  // tick: 4
+
+  EXPECT_TRUE(lru.has(k1));   // k1 is still alive
+  EXPECT_TRUE(lru.has(k2));   // k2 is still alive
+  EXPECT_FALSE(lru.has(k3));  // k3 has been expired
+
+  auto n3 = lru.get(k2);   // k2 hit cache, and updated.
+  // next expiring tick is 4 (current tick) + 3 (original TTL)  = 7
+  EXPECT_FALSE(n2.is_null());
+  EXPECT_EQ(&d2, n2.data());
+
+  lru.update(1);  // tick: 5
+
+  EXPECT_FALSE(lru.has(k1));  // k1 has been expired
+  EXPECT_TRUE(lru.has(k2));   // k2 is still alive
+  EXPECT_FALSE(lru.has(k3));  // k3 has been expired
+
+  lru.update(1);  // tick: 6
+
+  EXPECT_FALSE(lru.has(k1));  // k1 has been expired
+  EXPECT_TRUE(lru.has(k2));   // k2 is still alive
+  EXPECT_FALSE(lru.has(k3));  // k3 has been expired
+
+  lru.update(1);  // tick: 7
+
+  EXPECT_FALSE(lru.has(k1));  // k1 has been expired
+  EXPECT_FALSE(lru.has(k2));  // k2 has been expired
+  EXPECT_FALSE(lru.has(k3));  // k3 has been expired
 }
 
 }  // namespace lru_test

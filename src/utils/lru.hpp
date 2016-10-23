@@ -1,4 +1,4 @@
-/*-
+/*
  * Copyright (c) 2016 Masayoshi Mizutani <mizutani@sfc.wide.ad.jp>
  * All rights reserved.
  *
@@ -47,15 +47,16 @@ class LruHash {
     const Buffer key_;
     Node *next_, *prev_;  // double linked list for Bucket
     Node *link_;          // single linked list for TimeSlot
-    int update_;
+    uint64_t update_;
+    uint64_t tick_;
 
    public:
-    Node() :
-        next_(nullptr), prev_(nullptr), link_(nullptr), update_(0) {
+    Node() : next_(nullptr), prev_(nullptr), link_(nullptr),
+             update_(0), tick_(0) {
     }
-    explicit Node(T data, const Buffer& key)
-        : data_(data), key_(key),
-          next_(nullptr), prev_(nullptr), link_(nullptr), update_(0) {
+    Node(T data, const Buffer& key, uint64_t tick)
+        : data_(data), key_(key), next_(nullptr), prev_(nullptr),
+          link_(nullptr), update_(0), tick_(tick) {
     }
     virtual ~Node() {}
 
@@ -63,6 +64,14 @@ class LruHash {
     virtual bool is_null() const {
       return (this->key_.len() == 0);
     }
+
+    void set_update(uint64_t curr_tick) {
+      this->update_ = curr_tick;
+      debug(false, "update: %llu", this->update_);
+    }
+
+    uint64_t tick() const { return this->tick_; }
+    uint64_t update() const { return this->update_; }
 
     void attach(Node *node) {
       Node *prev = this;
@@ -166,7 +175,7 @@ class LruHash {
 
  public:
   static inline uint32_t key2hv(const Buffer& key) {
-    return hash32(key.get(), key.len());
+    return hash32(key.ptr(), key.len());
   }
 
   explicit LruHash(size_t timeslot_size,
@@ -179,42 +188,71 @@ class LruHash {
   ~LruHash() {
   }
 
-  bool put(uint64_t tick, const Buffer& key, T data) {
-    if (tick >= this->timeslot_.size()) {
-      return false;
-    }
-
-    size_t ptr = key2hv(key) % this->bucket_.size();
-    Node *node = new Node(data, key);
+  void insert(Node* node, uint64_t tick) {
+    size_t ptr = key2hv(node->key()) % this->bucket_.size();
     this->bucket_[ptr].attach(node);
 
     size_t tp = (tick + this->curr_tick_) % this->timeslot_.size();
     this->timeslot_[tp].push(node);
+  }
 
+  bool put(uint64_t tick, const Buffer& key, T data) {
+    if (tick < 1) {
+      return false;
+    }
+    if (tick >= this->timeslot_.size()) {
+      return false;
+    }
+
+    Node *node = new Node(data, key, tick);
+    node->set_update(this->curr_tick_);
+
+    this->insert(node, tick);
     return true;
   }
 
   const Node& get(const Buffer& key) {
+    // Updated if hitting cache
     size_t ptr = key2hv(key) % this->bucket_.size();
     Node* node = this->bucket_[ptr].search(key);
     if (node == nullptr) {
       node = &(this->null_node_);
+    } else {
+      node->set_update(this->curr_tick_);
     }
 
     return *node;
   }
 
+  bool has(const Buffer& key) {
+    size_t ptr = key2hv(key) % this->bucket_.size();
+    return (this->bucket_[ptr].search(key) != nullptr);
+  }
+
   void update(uint64_t tick = 1) {   // progress tick
-    for (size_t i = 0; i < tick; i++) {
-      size_t tp = (this->curr_tick_ + i) % this->timeslot_.size();
+    const uint64_t base_tick = this->curr_tick_;
+    this->curr_tick_ += tick;
+
+    for (size_t i = 1; i <= tick; i++) {
+      size_t tp = (base_tick + i) % this->timeslot_.size();
 
       Node *node;
       while (nullptr != (node = this->timeslot_[tp].pop())) {
         node->detach();
-        this->exp_node_.push_link(node);
+        debug(false, "update: %llu, tick: %llu, curr_tick: %llu",
+              node->update(), node->tick(), this->curr_tick_);
+        if (node->update() + node->tick() > this->curr_tick_) {
+          const uint64_t remain = node->update() + node->tick()
+                                  - this->curr_tick_;
+          debug(false, "reinsert: %llu", remain);
+          // re-insert
+          this->insert(node, remain);
+        } else {
+          // expired, move to pop list
+          this->exp_node_.push_link(node);
+        }
       }
     }
-    this->curr_tick_ += tick;
     return;
   }
 
@@ -237,3 +275,4 @@ class LruHash {
 }  // namespace pm
 
 #endif  // PACKETMACHINE_UTILS_LRU_HPP__
+

@@ -25,7 +25,6 @@
  */
 
 #include "../module.hpp"
-#include "../utils/lru.hpp"
 
 namespace pm {
 
