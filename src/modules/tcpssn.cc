@@ -35,7 +35,7 @@ namespace pm {
 
 class TCPSession : public Module {
  private:
-  const ParamDef* p_data_;
+  const ParamDef* p_id_;;
 
   static const u_int8_t FIN  = 0x01;
   static const u_int8_t SYN  = 0x02;
@@ -43,18 +43,19 @@ class TCPSession : public Module {
   static const u_int8_t ACK  = 0x10;
 
   class Session {
-   private:
-    uint64_t id_;
-
+   public:
     enum Status {
+      UNKNOWN,
       SYN_SENT,
       SYNACK_SENT,
       ESTABLISHED,
       CLOSING,
       CLOSED,
-    } status_;
-    byte_t* key_;
-    size_t keylen_;
+    };
+
+   private:
+    uint64_t id_;
+    Status status_;
 
     /* State Transition
 
@@ -69,7 +70,7 @@ class TCPSession : public Module {
           |    <--(ACK or Data)-- |
     */
 
-    class Client {
+    class Peer {
      private:
       uint32_t base_seq_;
       uint32_t next_ack_;
@@ -78,34 +79,46 @@ class TCPSession : public Module {
       uint16_t port_;
 
      public:
-      Client(const byte_t* addr, size_t addr_len, uint16_t port) :
+      Peer(const byte_t* addr, size_t addr_len, uint16_t port) :
           base_seq_(0), next_ack_(0), addr_len_(addr_len), port_(port) {
         this->addr_ = static_cast<byte_t*>(::malloc(this->addr_len_));
         ::memcpy(this->addr_, addr, this->addr_len_);
       }
-      ~Client() {
+      ~Peer() {
         free(this->addr_);
       }
-      bool match(const byte_t* addr, size_t addr_len, uint16_t port) {
+      bool is_src(const Property& p) {
+        size_t src_len;
+        const byte_t* src_addr = p.src_addr(&src_len);
+        const uint16_t src_port = p.src_port();
+        return this->match(src_addr, src_len, src_port);
+      }
+
+      inline bool match(const byte_t* addr, size_t addr_len, uint16_t port) {
         return (this->addr_len_ == addr_len && this->port_ == port &&
                 ::memcmp(addr, this->addr_, addr_len) == 0);
       }
-      bool recv(uint8_t flags, uint32_t seq, uint32_t ack, size_t data_len) {
-        return false;
+      bool send(uint8_t flags, uint32_t seq, uint32_t ack, size_t data_len) {
+        // TODO(m-mizutani): implement
+        return true;
       }
-    } *client_, *server_;
+      bool recv(uint8_t flags, uint32_t seq, uint32_t ack, size_t data_len) {
+        // TODO(m-mizutani): implement
+        return true;
+      }
+    } *client_, *server_, *closing_;
 
    public:
-    explicit Session(const Property& p, uint64_t ssn_id) : id_(ssn_id) {
+    explicit Session(const Property& p, uint64_t ssn_id) :
+        id_(ssn_id), status_(UNKNOWN), closing_(nullptr) {
       size_t src_len, dst_len;
       const byte_t* src_addr = p.src_addr(&src_len);
       const byte_t* dst_addr = p.dst_addr(&dst_len);
       const uint16_t src_port = p.src_port();
       const uint16_t dst_port = p.dst_port();
 
-      this->client_ = new Client(src_addr, src_len, src_port);
-      this->server_ = new Client(dst_addr, dst_len, dst_port);
-      // TODO(m-mizutani): create session key and store
+      this->client_ = new Peer(src_addr, src_len, src_port);
+      this->server_ = new Peer(dst_addr, dst_len, dst_port);
     }
     ~Session() {
       delete this->client_;
@@ -113,8 +126,69 @@ class TCPSession : public Module {
     }
 
     uint64_t id() const { return this->id_; }
+    Status status() const { return this->status_; }
 
-    static void make_key(const Property &p, Buffer* key) {
+    void decode(Property* p, uint8_t flags, uint32_t seq, uint32_t ack,
+                size_t seg_len, const void* seg_ptr) {
+      Peer *sender, *recver;
+      if (this->client_->is_src(*p)) {
+        sender = this->client_;
+        recver = this->server_;
+      } else {
+        sender = this->server_;
+        recver = this->client_;
+      }
+
+      if (!sender->send(flags, seq, ack, seg_len) ||
+          !recver->recv(flags, seq, ack, seg_len)) {
+        return;  // Invalid sequence
+      }
+
+      static const bool DBG = true;
+
+      switch (this->status_) {
+        case UNKNOWN:
+          if (flags == SYN && sender == this->client_) {
+            debug(DBG, "%p: SYN", this);
+            this->status_ = SYN_SENT;
+          }
+          break;
+
+        case SYN_SENT:
+          if (flags == (SYN|ACK) && sender == this->server_) {
+            debug(DBG, "%p: SYN-ACK", this);
+            this->status_ = SYNACK_SENT;
+          }
+          break;
+
+        case SYNACK_SENT:
+          if (flags == ACK && sender == this->client_) {
+            debug(DBG, "%p: ACK, ESTABLISHED", this);
+            this->status_ = ESTABLISHED;
+          }
+          break;
+
+        case ESTABLISHED:
+          if ((flags & FIN) > 0) {
+            debug(DBG, "%p: FIN", this);
+            this->status_ = CLOSING;
+            this->closing_ = sender;
+          }
+          break;
+
+        case CLOSING:
+          if ((flags & FIN) > 0 && this->closing_ != sender) {
+            debug(DBG, "%p: CLOSED", this);
+            this->status_ = CLOSED;
+          }
+          break;
+
+        case CLOSED:
+          break;  // pass
+      }
+    }
+
+    static void make_key(const Property& p, Buffer* key) {
       size_t src_len, dst_len;
       const byte_t* src_addr = p.src_addr(&src_len);
       const byte_t* dst_addr = p.dst_addr(&dst_len);
@@ -141,8 +215,6 @@ class TCPSession : public Module {
       }
     }
   };
-
-  const ParamDef* p_id_;;
 
   static const time_t TIMEOUT = 300;
   param_id tcp_flags_, tcp_segment_, tcp_seq_, tcp_ack_;
@@ -176,6 +248,8 @@ class TCPSession : public Module {
     flags &= (SYN|ACK|FIN|RST);
     uint32_t seq = prop->value(this->tcp_seq_).uint();
     uint32_t ack = prop->value(this->tcp_ack_).uint();
+    size_t seg_len;
+    const void* seg_ptr = prop->value(this->tcp_segment_).raw(&seg_len);
 
     Session::make_key(*prop, &key);
     auto node = this->ssn_table_.get(key);
@@ -198,7 +272,9 @@ class TCPSession : public Module {
     if (ssn) {
       const uint64_t ssn_id = ssn->id();
       prop->retain_value(this->p_id_)->cpy(&ssn_id, sizeof(ssn_id));
+      ssn->decode(prop, flags, seq, ack, seg_len, seg_ptr);
     }
+
     return Module::NONE;
   }
 };
@@ -206,3 +282,4 @@ class TCPSession : public Module {
 INIT_MODULE(TCPSession);
 
 }   // namespace pm
+
