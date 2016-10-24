@@ -36,14 +36,6 @@
 
 namespace pm {
 
-Process::Process() {
-}
-
-Process::~Process() {
-}
-
-
-
 class Input {
  private:
   Capture* cap_;
@@ -133,9 +125,10 @@ void Machine::join() {
 void Machine::shutdown() {
 }
 
-bool Machine::bind(const std::string& event_name, ProcPtr ptr) {
+bool Machine::on(const std::string& event_name,
+                 std::function<void(const Property&)>&& callback) {
   assert(this->kernel_);
-  return this->kernel_->bind(event_name, ptr);
+  return this->kernel_->on(event_name, callback);
 }
 
 uint64_t Machine::recv_pkt() const {

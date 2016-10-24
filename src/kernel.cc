@@ -54,7 +54,8 @@ void Kernel::proc(Packet* pkt) {
   this->recv_size_ += pkt->cap_len();
 }
 
-bool Kernel::bind(const std::string& event_name, ProcPtr ptr) {
+bool Kernel::on(const std::string& event_name,
+                std::function<void(const Property&)>& callback) {
   return false;
 }
 

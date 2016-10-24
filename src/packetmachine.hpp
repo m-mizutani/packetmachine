@@ -30,6 +30,7 @@
 #include <pthread.h>
 #include <memory>
 #include <string>
+#include <functional>
 
 #include "./packetmachine/exception.hpp"
 #include "./packetmachine/property.hpp"
@@ -37,18 +38,6 @@
 namespace pm {
 
 class Capture;
-
-class Process {
- public:
-  Process();
-  ~Process();
-
-  virtual void recieve(const Property& prop) = 0;
-};
-
-
-typedef std::shared_ptr<Process> ProcPtr;
-typedef int eid;
 
 class Input;
 class Kernel;
@@ -72,8 +61,10 @@ class Machine {
   void start();
   void join();
   void shutdown();
+  void loop();
 
-  bool bind(const std::string& event_name, ProcPtr ptr);
+  bool on(const std::string& event_name,
+          std::function<void(const Property&)>&& callback);
 
   uint64_t recv_pkt() const;
   uint64_t recv_size() const;

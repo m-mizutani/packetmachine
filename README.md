@@ -6,20 +6,17 @@ PacketMachine
 #include <iostream>
 #include <packetmachine.hpp>
 
-class Printer : public pm::Process {
-  void recv(const netdec::Property &p) {
-    if (p.has("dns")) {
-      std::cout << p["dns"] << std::endl;
-    }
-  };
-};
-
 int main(int argc, char *argv[]) {
-  pm::Machine m("eth0");
-	pm::ProcPtr ptr(new Printer());
-	m.bind("dns.request", ptr);
+  pm::Machine m;
+	m.add_device("eth0");
+	m.on("TCPSession.new", [&](const Property& p) {
+	  std::cout << "TCP: " <<
+		  p.value("IPv4.src") << ":" << p.value("TCP.src_port") << " -> " <<
+		  p.value("IPv4.dst") << ":" << p.value("TCP.dst_port") << std::endl;
+	});
 
 	m.start();
-	m.stop();
+	m.join();
+	return 0;
 }
 ```

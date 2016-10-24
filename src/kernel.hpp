@@ -50,7 +50,8 @@ class Kernel {
   static void* thread(void* obj);
   void run();
   void proc(Packet* pkt);
-  bool bind(const std::string& event_name, ProcPtr ptr);
+  bool on(const std::string& event_name,
+          std::function<void(const Property&)>& callback);
 
   Channel<Packet>* channel() { return &this->channel_; }
   uint64_t recv_pkt()  const { return this->recv_pkt_; }
