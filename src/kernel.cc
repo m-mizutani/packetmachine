@@ -33,6 +33,7 @@
 namespace pm {
 
 Kernel::Kernel() : recv_pkt_(0), recv_size_(0) {
+  this->callback_.resize(this->dec_.event_size());
 }
 Kernel::~Kernel() {
 }
@@ -55,6 +56,14 @@ void Kernel::run() {
     prop.init(pkt);
     pd.reset(pkt);
     this->dec_.decode(&pd, &prop);
+
+    size_t ev_size = prop.event_idx();
+    for (size_t i = 0; i < ev_size; i++) {
+      event_id eid = prop.event(i)->id();
+      for (auto cb : this->callback_[eid]) {
+        cb(prop);
+      }
+    }
   }
 }
 
@@ -62,6 +71,13 @@ void Kernel::proc(Packet* pkt) {
 }
 
 bool Kernel::on(const std::string& event_name, Callback& cb) {
+  event_id eid = this->dec_.lookup_event_id(event_name);
+
+  if (eid == Event::NONE) {
+    return false;
+  }
+
+  this->callback_[eid].push_back(cb);
   
   return false;
 }

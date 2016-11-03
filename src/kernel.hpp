@@ -44,6 +44,7 @@ class Kernel {
   Decoder dec_;
   uint64_t recv_pkt_;
   uint64_t recv_size_;
+  std::vector< std::vector<Callback> > callback_;
 
  public:
   Kernel();
