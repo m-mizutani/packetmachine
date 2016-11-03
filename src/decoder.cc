@@ -152,4 +152,21 @@ const std::string& Decoder::lookup_param_name(param_id pid) const {
   }
 }
 
+event_id Decoder::lookup_event_id(const std::string& name) const {
+  const auto& it = this->event_map_.find(name);
+  if (it == this->event_map_.end()) {
+    return Param::NONE;
+  } else {
+    return it->second->id();
+  }  
+}
+
+const std::string& Decoder::lookup_event_name(event_id eid) const {
+  if (eid < 0 || static_cast<event_id>(this->events_.size()) <= eid) {
+    throw Exception::IndexError("No such parameter");
+  } else {
+    return this->events_[eid]->name();
+  }
+}
+
 }   // namespace pm

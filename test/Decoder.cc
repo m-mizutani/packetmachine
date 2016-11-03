@@ -79,4 +79,26 @@ TEST(Decoder, basic) {
   EXPECT_EQ(270, count_ipv4_saddr);
 }
 
+TEST(Decoder, lookup_param) {
+  pm::Decoder dec;
+  pm::param_id pid = dec.lookup_param_id("Ethernet.src");
+  EXPECT_NE(pm::Param::NONE, pid);
+  EXPECT_NE(dec.lookup_param_id("Ethernet.dst"), pid);
+  EXPECT_EQ("Ethernet.src", dec.lookup_param_name(pid));
+
+  EXPECT_EQ(pm::Param::NONE, dec.lookup_param_id("Invalid_Param"));
+}
+
+TEST(Decoder, lookup_event) {
+  pm::Decoder dec;
+  pm::event_id eid = dec.lookup_event_id("Ethernet");
+  EXPECT_NE(pm::Event::NONE, eid);
+  EXPECT_NE(dec.lookup_event_id("IPv4"), eid);
+  EXPECT_EQ("Ethernet", dec.lookup_event_name(eid));
+
+  EXPECT_EQ(pm::Param::NONE, dec.lookup_param_id("Invalid_Param"));
+}
+
+
 }   // namespace module_test
+

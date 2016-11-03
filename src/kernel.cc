@@ -55,7 +55,6 @@ void Kernel::run() {
     prop.init(pkt);
     pd.reset(pkt);
     this->dec_.decode(&pd, &prop);
-    debug(true, "pkt: %lld, size:%lld", this->recv_pkt_, this->recv_size_);
   }
 }
 

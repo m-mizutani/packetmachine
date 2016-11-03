@@ -39,6 +39,9 @@ typedef int64_t mod_id;
 namespace Param {
 static const param_id NONE = -1;
 }
+namespace Event {
+static const event_id NONE = -2;
+}
 
 }   // namespace pm
 
