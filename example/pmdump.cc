@@ -24,41 +24,40 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <unistd.h>
+#include <iostream>
+#include "../src/packetmachine.hpp"
 
-#include "./kernel.hpp"
-#include "./debug.hpp"
+int main(int argc, char* argv[]) {
+  pm::Machine m;
 
-namespace pm {
 
-Kernel::Kernel() : recv_pkt_(0), recv_size_(0) {
-}
-Kernel::~Kernel() {
-}
+  m.on("TCP", [&](const pm::Property& p) {
+      std::cout << "TCP: " << 
+          p.value("IPv4.src") << ":" << p.value("TCP.src_port") << " -> " <<
+          p.value("IPv4.dst") << ":" << p.value("TCP.dst_port") << std::endl;
+    });
+  
+  m.on("UDP", [&](const pm::Property& p) {
+      std::cout << "UDP: " <<
+          p.value("IPv4.src") << ":" << p.value("UDP.src_port") << " -> " <<
+          p.value("IPv4.dst") << ":" << p.value("UDP.dst_port") << std::endl;
+    });
 
-void* Kernel::thread(void* obj) {
-  Kernel* p = static_cast<Kernel*>(obj);
-  p->run();
-  return nullptr;
-}
+  m.on("ICMP", [&](const pm::Property& p) {
+      std::cout << "ICMP: " <<
+          p.value("IPv4.src") << " -> " << p.value("IPv4.dst") << " " <<
+          p.value("ICMP.type") << ":" << p.value("ICMP.code") << std::endl;
+    });
+  
+  if (argc != 2) {
+    std::cout << "usage) pmdump <dev>" << std::endl;
+    return -1;
+  }
 
-void Kernel::run() {
-  Packet* pkt;
-  while (nullptr != (pkt = this->channel_.pull())) {
-    this->proc(pkt);
+  try {
+    m.add_pcapdev(argv[1]);
+    m.loop();
+  } catch (pm::Exception::Error &e) {
+    std::cerr << "PacketMachine Error: " << e.what() << std::endl;
   }
 }
-
-void Kernel::proc(Packet* pkt) {
-  this->recv_pkt_  += 1;
-  this->recv_size_ += pkt->cap_len();
-}
-
-bool Kernel::on(const std::string& event_name,
-                std::function<void(const Property&)>& callback) {
-  
-  return false;
-}
-
-
-}   // namespace pm

@@ -80,6 +80,7 @@ FILE(GLOB PERFSRCS
   "perf/Channel.cc"
 )
 
+
 ADD_LIBRARY(packetmachine SHARED ${BASESRCS} ${HEADERS})
 IF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
     TARGET_LINK_LIBRARIES(packetmachine pcap pthread rt)
@@ -98,3 +99,8 @@ TARGET_LINK_LIBRARIES(packetmachine-test packetmachine)
 # Performance check binary
 ADD_EXECUTABLE(packetmachine-perf ${PERFSRCS})
 TARGET_LINK_LIBRARIES(packetmachine-perf packetmachine)
+
+
+# Examples
+ADD_EXECUTABLE(pmdump example/pmdump.cc)
+TARGET_LINK_LIBRARIES(pmdump packetmachine)

@@ -32,13 +32,14 @@
 #include <string>
 #include <functional>
 
+#include "./packetmachine/common.hpp"
 #include "./packetmachine/exception.hpp"
 #include "./packetmachine/property.hpp"
+#include "./packetmachine/object.hpp"
 
 namespace pm {
 
 class Capture;
-
 class Input;
 class Kernel;
 
@@ -54,7 +55,7 @@ class Machine {
   ~Machine();
 
   // Configure data source.
-  void add_device(const std::string& dev_name);
+  void add_pcapdev(const std::string& dev_name);
   void add_pcapfile(const std::string& file_path);
 
   // Contorl capture & packet decodeing.

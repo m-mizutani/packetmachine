@@ -88,7 +88,8 @@ Machine::~Machine() {
   delete this->cap_;
 }
 
-void Machine::add_device(const std::string &dev_name) {
+void Machine::add_pcapdev(const std::string &dev_name) {
+  // TODO(m-mizutani): implement
 }
 
 void Machine::add_pcapfile(const std::string &file_path) {
@@ -123,6 +124,15 @@ void Machine::join() {
 }
 
 void Machine::shutdown() {
+}
+
+void Machine::loop() {
+  if (!this->cap_) {
+    throw Exception::ConfigError("no input source is available");
+  }
+
+  this->input_ = new Input(this->cap_, this->kernel_->channel());
+  this->kernel_->run();
 }
 
 bool Machine::on(const std::string& event_name,

@@ -31,6 +31,7 @@
 #include <map>
 #include <string>
 #include <typeinfo>
+#include <iostream>
 
 #include "./common.hpp"
 #include "./exception.hpp"
@@ -61,6 +62,7 @@ namespace pm {
 // __repr__() method in Python.
 //
 
+
 class Object {
  public:
   Object() = default;
@@ -85,6 +87,7 @@ class Object {
   virtual void clear() = 0;
   virtual void repr(std::ostream &os) const = 0;
   std::string repr() const;
+  friend std::ostream& operator<<(std::ostream& os, const Object& obj);
 };
 
 

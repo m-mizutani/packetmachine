@@ -34,12 +34,14 @@
 #include "./packet.hpp"
 #include "./channel.hpp"
 #include "./packetmachine.hpp"
+#include "./decoder.hpp"
 
 namespace pm {
 
 class Kernel {
  private:
   Channel<Packet> channel_;
+  Decoder dec_;
   uint64_t recv_pkt_;
   uint64_t recv_size_;
 

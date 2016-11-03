@@ -46,6 +46,12 @@ std::string Object::repr() const {
 }
 
 
+std::ostream& operator<<(std::ostream& os, const Object& obj) {
+  os << obj.repr();
+  return os;
+}
+
+
 void Array::clear() {
   // TODO(m-mizutani): implement
 }
