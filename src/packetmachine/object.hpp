@@ -174,6 +174,31 @@ class Value : public Object {
   const byte_t* raw(size_t* len = nullptr) const;
 };
 
+
+/*
+ * General Value Type
+ */
+class IPv4Addr : public Value {
+ public:
+  IPv4Addr() = default;
+  ~IPv4Addr() = default;
+  void repr(std::ostream &os) const { this->ip4(os); }
+  static Object* new_value() { return new IPv4Addr(); }
+};
+
+class PortNumber : public Value {
+ public:
+  PortNumber() = default;
+  ~PortNumber() = default;
+  void repr(std::ostream &os) const {
+    uint64_t d;
+    this->uint(&d);
+    os << d;
+  }
+  static Object* new_value() { return new PortNumber(); }
+};
+
+
 }   // namespace pm
 
 #endif   // __PACKETMACHINE_OBJECT_HPP__

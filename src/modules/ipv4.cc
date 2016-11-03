@@ -76,8 +76,8 @@ class IPv4 : public Module {
     this->p_ttl_       = this->define_param("ttl");
     this->p_proto_     = this->define_param("proto");
     this->p_chksum_    = this->define_param("chksum");
-    this->p_src_       = this->define_param("src");
-    this->p_dst_       = this->define_param("dst");
+    this->p_src_       = this->define_param("src", IPv4Addr::new_value);
+    this->p_dst_       = this->define_param("dst", IPv4Addr::new_value);
   }
 
   void setup() {

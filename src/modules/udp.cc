@@ -46,8 +46,10 @@ class UDP : public Module {
 
  public:
   UDP() {
-    this->p_src_port_ = this->define_param("src_port");
-    this->p_dst_port_ = this->define_param("dst_port");
+    this->p_src_port_ = this->define_param("src_port",
+                                           PortNumber::new_value);
+    this->p_dst_port_ = this->define_param("dst_port",
+                                           PortNumber::new_value);
     this->p_length_   = this->define_param("length");
     this->p_chksum_   = this->define_param("chksum");
   }
