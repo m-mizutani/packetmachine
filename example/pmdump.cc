@@ -32,11 +32,11 @@ int main(int argc, char* argv[]) {
 
 
   m.on("TCP", [&](const pm::Property& p) {
-      std::cout << "TCP: " << 
+      std::cout << "TCP: " <<
           p.value("IPv4.src") << ":" << p.value("TCP.src_port") << " > " <<
           p.value("IPv4.dst") << ":" << p.value("TCP.dst_port") << std::endl;
     });
-  
+
   m.on("UDP", [&](const pm::Property& p) {
       std::cout << "UDP: " <<
           p.value("IPv4.src") << ":" << p.value("UDP.src_port") << " > " <<
@@ -48,7 +48,7 @@ int main(int argc, char* argv[]) {
           p.value("IPv4.src") << " > " << p.value("IPv4.dst") << " " <<
           p.value("ICMP.type") << ":" << p.value("ICMP.code") << std::endl;
     });
-  
+
   if (argc != 2) {
     std::cout << "usage) pmdump <dev>" << std::endl;
     return -1;
