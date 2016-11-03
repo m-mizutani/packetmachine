@@ -27,6 +27,7 @@
 #include <unistd.h>
 
 #include "./kernel.hpp"
+#include "./packetmachine/property.hpp"
 #include "./debug.hpp"
 
 namespace pm {
@@ -44,18 +45,24 @@ void* Kernel::thread(void* obj) {
 
 void Kernel::run() {
   Packet* pkt;
-  while (nullptr != (pkt = this->channel_.pull())) {
-    this->proc(pkt);
+  Payload pd;
+  Property prop(&(this->dec_));
+  
+  while (nullptr != (pkt = this->channel_.pull())) { 
+    this->recv_pkt_  += 1;
+    this->recv_size_ += pkt->cap_len();
+
+    prop.init(pkt);
+    pd.reset(pkt);
+    this->dec_.decode(&pd, &prop);
+    debug(true, "pkt: %lld, size:%lld", this->recv_pkt_, this->recv_size_);
   }
 }
 
 void Kernel::proc(Packet* pkt) {
-  this->recv_pkt_  += 1;
-  this->recv_size_ += pkt->cap_len();
 }
 
-bool Kernel::on(const std::string& event_name,
-                std::function<void(const Property&)>& callback) {
+bool Kernel::on(const std::string& event_name, Callback& cb) {
   
   return false;
 }

@@ -65,13 +65,14 @@ class Capture {
 // Device is wrapper of libpcap packet capture because threre is a plan to
 // replace libpcap with other packet capture mechanism such as netmap.
 
-class Device : public Capture {
+class PcapDev : public Capture {
  private:
   std::string dev_name_;
+  pcap_t *pd_;
 
  public:
-  explicit Device(const std::string& dev_name);
-  ~Device();
+  explicit PcapDev(const std::string& dev_name);
+  ~PcapDev();
 
   int read(Packet *pkt);
 };

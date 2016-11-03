@@ -83,7 +83,7 @@ class Ethernet : public Module {
   void setup() {
     this->mod_ipv4_ = this->lookup_module("IPv4");
     this->mod_arp_  = this->lookup_module("ARP");
-    debug(false, "ARP mod_id = %d", this->mod_arp_);
+    debug(false, "ARP mod_id = %lld", this->mod_arp_);
   }
 
   mod_id decode(Payload* pd, Property* prop) {

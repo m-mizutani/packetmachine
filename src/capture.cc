@@ -40,17 +40,66 @@ Capture::~Capture() {
 
 
 
-Device::Device(const std::string &dev_name) :
-    dev_name_(dev_name) {
-  // TODO(m-mizutani): implement
+PcapDev::PcapDev(const std::string &dev_name) :
+    dev_name_(dev_name), pd_(nullptr) {
+  
+  char errbuf[PCAP_ERRBUF_SIZE];
+  this->pd_ = ::pcap_open_live(this->dev_name_.c_str(), 0xffff, 1, 1, errbuf);
+
+  if (this->pd_ == nullptr) {
+    this->set_error(errbuf);
+  } else {
+    this->set_ready(true);
+  }
 }
 
-Device::~Device() {
-  // TODO(m-mizutani): implement
+PcapDev::~PcapDev() {
+  if (this->pd_) {
+    pcap_close(this->pd_);
+  }
 }
 
-int Device::read(Packet* pkt) {
-  // TODO(m-mizutani): implement
+int PcapDev::read(Packet* pkt) {
+  struct pcap_pkthdr* pkthdr;
+  const u_char* data;
+
+  if (!this->ready()) {
+    this->set_error("pcap is not ready");
+    return -1;
+  }
+
+  int rc = ::pcap_next_ex(this->pd_, &pkthdr, &data);
+  
+  if (rc == 1) {
+    // the packet was read without problems.
+    if (pkt->store(data, pkthdr->caplen) == false) {
+      this->set_error("memory allocation error");
+      return -1;
+    }
+
+    pkt->set_cap_len(pkthdr->caplen);
+    pkt->set_tv(pkthdr->ts);
+
+    return 1;
+  } else if (rc == 0) {
+    // packets are being read from a live capture and the timeout expired.
+    return 0;
+  } else if (rc == -1) {
+    // an error occurred.
+    char* e = pcap_geterr(this->pd_);
+    printf("%d, %s\n", rc, e);
+    this->set_error(e);
+    this->set_ready(false);
+    return -1;
+  } else if (rc == -2) {
+    // exit normaly.
+    this->set_ready(false);
+    return -1;
+  } else {
+    assert(0);   // invalid return code from pcap_next_ex.
+    return -3;
+  }
+
   return 0;
 }
 

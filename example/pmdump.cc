@@ -33,19 +33,19 @@ int main(int argc, char* argv[]) {
 
   m.on("TCP", [&](const pm::Property& p) {
       std::cout << "TCP: " << 
-          p.value("IPv4.src") << ":" << p.value("TCP.src_port") << " -> " <<
+          p.value("IPv4.src") << ":" << p.value("TCP.src_port") << " > " <<
           p.value("IPv4.dst") << ":" << p.value("TCP.dst_port") << std::endl;
     });
   
   m.on("UDP", [&](const pm::Property& p) {
       std::cout << "UDP: " <<
-          p.value("IPv4.src") << ":" << p.value("UDP.src_port") << " -> " <<
+          p.value("IPv4.src") << ":" << p.value("UDP.src_port") << " > " <<
           p.value("IPv4.dst") << ":" << p.value("UDP.dst_port") << std::endl;
     });
 
   m.on("ICMP", [&](const pm::Property& p) {
       std::cout << "ICMP: " <<
-          p.value("IPv4.src") << " -> " << p.value("IPv4.dst") << " " <<
+          p.value("IPv4.src") << " > " << p.value("IPv4.dst") << " " <<
           p.value("ICMP.type") << ":" << p.value("ICMP.code") << std::endl;
     });
   

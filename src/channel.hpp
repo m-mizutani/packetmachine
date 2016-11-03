@@ -82,9 +82,13 @@ class Channel {
     uint32_t n = this->next(this->push_idx_);
     debug(DEBUG, "reatin:%u", n);
 
+    uint32_t wait = 0;
     while (n == this->pull_idx_) {
       this->push_wait_ += 1;
-      usleep(1);
+      if (wait < 1000) {
+        ++wait;
+      }
+      usleep(wait);
     }
 
     debug(DEBUG, "retained:%u", n);
@@ -107,6 +111,7 @@ class Channel {
            static_cast<uint32_t>(this->push_idx_),
            static_cast<uint32_t>(this->pull_idx_));
 
+    uint32_t wait = 1;
     while (n == this->next(this->push_idx_)) {
       if (this->closed()) {
         debug(DEBUG, "closed");
@@ -114,7 +119,11 @@ class Channel {
       }
 
       this->pull_wait_ += 1;
-      usleep(1);
+
+      if ((wait & 0xffff) != 0) {
+        wait *= 2;
+      }      
+      usleep(wait);
     }
 
     T* pkt = this->ring_[n];

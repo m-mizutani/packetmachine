@@ -89,7 +89,18 @@ Machine::~Machine() {
 }
 
 void Machine::add_pcapdev(const std::string &dev_name) {
-  // TODO(m-mizutani): implement
+  if (this->cap_) {
+    throw Exception::ConfigError("data source has been configured");
+  }
+
+  Capture *cap = new PcapDev(dev_name);
+  if (!cap->ready()) {
+    const std::string msg = cap->error();
+    delete cap;
+    throw Exception::ConfigError(msg);
+  }
+
+  this->cap_ = cap;
 }
 
 void Machine::add_pcapfile(const std::string &file_path) {
@@ -130,9 +141,13 @@ void Machine::loop() {
   if (!this->cap_) {
     throw Exception::ConfigError("no input source is available");
   }
+  debug(true, "enter loop");
 
   this->input_ = new Input(this->cap_, this->kernel_->channel());
+  pthread_create(&this->input_th_, nullptr, Input::thread, this->input_);
+  
   this->kernel_->run();
+  pthread_join(this->input_th_, nullptr);
 }
 
 bool Machine::on(const std::string& event_name,

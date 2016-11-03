@@ -95,7 +95,7 @@ Property::~Property() {
   }
 }
 
-void Property::init(const Packet* pkt) {
+void Property::init(const Packet *pkt) {
   this->pkt_ = pkt;
   for (size_t i = 0; i < this->param_idx_.size(); i++) {
     this->param_idx_[i] = 0;

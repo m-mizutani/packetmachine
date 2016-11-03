@@ -30,6 +30,7 @@
 #include <stdio.h>
 #include <string>
 #include <vector>
+#include <functional>
 #include "./common.hpp"
 #include "./utils/buffer.hpp"
 
@@ -119,6 +120,8 @@ class Property {
   uint16_t src_port() const;
   uint16_t dst_port() const;
 };
+
+typedef std::function<void(const Property&)> Callback;
 
 }    // namespace pm
 
