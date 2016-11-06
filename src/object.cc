@@ -137,6 +137,12 @@ void Value::repr(std::ostream &os) const {
   }
 }
 
+std::string Value::repr() const {
+  std::stringstream ss;
+  this->repr(ss);
+  return ss.str();
+}
+
 
 bool Value::hex(std::ostream &os) const {
   return false;

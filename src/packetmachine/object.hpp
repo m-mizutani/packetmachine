@@ -86,7 +86,7 @@ class Object {
 
   virtual void clear() = 0;
   virtual void repr(std::ostream &os) const = 0;
-  std::string repr() const;
+  virtual std::string repr() const;
   friend std::ostream& operator<<(std::ostream& os, const Object& obj);
 };
 
@@ -143,6 +143,7 @@ class Value : public Object {
 
   virtual void clear();
   virtual void repr(std::ostream &os) const;
+  virtual std::string repr() const;
 
   bool active() const { return this->active_; }
   size_t len() const { return this->len_; }
