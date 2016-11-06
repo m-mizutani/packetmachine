@@ -48,7 +48,7 @@ $ sudo make install
 
 Prepare `example.cc` as below:
 
-```
+```cpp
 #include <iostream>
 #include <packetmachine.hpp>
 
@@ -70,7 +70,7 @@ int main(int argc, char* argv[]) {
 
 Compile `example.cc` and run it.
 
-```
+```sh
 $ clang++ -std=c++11 example.cc -o example -lpacketmachine
 $ sudo ./example eth0
 TCP: 199.59.148.241:443 > 172.20.10.2:53227
