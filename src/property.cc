@@ -30,6 +30,7 @@
 #include "./packetmachine/property.hpp"
 #include "./packet.hpp"
 #include "./decoder.hpp"
+#include "./utils/buffer.hpp"
 
 namespace pm {
 
@@ -84,6 +85,9 @@ Property::Property(Decoder* dec) : dec_(dec) {
     this->param_.push_back(new std::vector<Object*>());
     this->param_idx_.push_back(0);
   }
+
+  this->src_addr_ = new Buffer();
+  this->dst_addr_ = new Buffer();
 }
 
 Property::~Property() {
@@ -93,6 +97,9 @@ Property::~Property() {
     }
     delete this->param_[i];
   }
+
+  delete this->src_addr_;
+  delete this->dst_addr_;
 }
 
 void Property::init(const Packet *pkt) {
@@ -144,10 +151,10 @@ const EventDef* Property::event(size_t idx) const {
 }
 
 void Property::set_src_addr(const void* addr, size_t len) {
-  this->src_addr_.set(addr, len);
+  this->src_addr_->set(addr, len);
 }
 void Property::set_dst_addr(const void* addr, size_t len) {
-  this->dst_addr_.set(addr, len);
+  this->dst_addr_->set(addr, len);
 }
 void Property::set_src_port(uint16_t port) {
   this->src_port_ = port;
@@ -202,12 +209,12 @@ const Object& Property::object(const std::string& name) const {
 }
 
 const byte_t* Property::src_addr(size_t* len) const {
-  *len = this->src_addr_.len();
-  return static_cast<const byte_t*>(this->src_addr_.ptr());
+  *len = this->src_addr_->len();
+  return static_cast<const byte_t*>(this->src_addr_->ptr());
 }
 const byte_t* Property::dst_addr(size_t* len) const {
-  *len = this->dst_addr_.len();
-  return static_cast<const byte_t*>(this->dst_addr_.ptr());
+  *len = this->dst_addr_->len();
+  return static_cast<const byte_t*>(this->dst_addr_->ptr());
 }
 uint16_t Property::src_port() const {
   return this->src_port_;

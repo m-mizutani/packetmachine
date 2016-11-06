@@ -32,7 +32,6 @@
 #include <vector>
 #include <functional>
 #include "./common.hpp"
-#include "./utils/buffer.hpp"
 
 namespace pm {
 
@@ -42,6 +41,7 @@ class Object;
 class Value;
 class ParamDef;
 class EventDef;
+class Buffer;
 
 class Payload {
  private:
@@ -80,8 +80,8 @@ class Property {
 
   const Packet* pkt_;
   static const Value null_;
-  Buffer src_addr_;
-  Buffer dst_addr_;
+  Buffer* src_addr_;
+  Buffer* dst_addr_;
   uint16_t src_port_;
   uint16_t dst_port_;
 
