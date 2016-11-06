@@ -166,4 +166,21 @@ uint64_t Machine::recv_size() const {
   return this->kernel_->recv_size();
 }
 
+param_id Machine::lookup_param_id(const std::string& name) const {
+  assert(this->kernel_);
+  return this->kernel_->dec().lookup_param_id(name);
+}
+const std::string& Machine::lookup_param_name(param_id pid) const {
+  assert(this->kernel_);
+  return this->kernel_->dec().lookup_param_name(pid);
+}
+event_id Machine::lookup_event_id(const std::string& name) const {
+  assert(this->kernel_);
+  return this->kernel_->dec().lookup_event_id(name);
+}
+const std::string& Machine::lookup_event_name(event_id eid) const {
+  assert(this->kernel_);
+  return this->kernel_->dec().lookup_event_name(eid);
+}
+
 }   // namespace pm

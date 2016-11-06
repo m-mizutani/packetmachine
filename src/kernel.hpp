@@ -59,6 +59,8 @@ class Kernel {
   Channel<Packet>* channel() { return &this->channel_; }
   uint64_t recv_pkt()  const { return this->recv_pkt_; }
   uint64_t recv_size() const { return this->recv_size_; }
+
+  const Decoder& dec() const { return this->dec_; }
 };
 
 }   // namespace pm
