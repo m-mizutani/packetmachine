@@ -114,6 +114,14 @@ class Property {
   const Object& object(param_id pid) const;
   const Object& object(const std::string& name) const;
 
+  const Value& operator[](param_id pid) const {
+    return this->value(pid);
+  }
+  const Value& operator[](const std::string& name) const {
+    return this->value(name);
+  }
+
+
   // General purpose attributes.
   const byte_t* src_addr(size_t* len) const;
   const byte_t* dst_addr(size_t* len) const;

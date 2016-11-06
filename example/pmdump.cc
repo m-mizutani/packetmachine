@@ -38,20 +38,20 @@ int main(int argc, char* argv[]) {
   try {
     m.on("TCP", [&](const pm::Property& p) {
         std::cout << "TCP: " <<
-            p.value("IPv4.src") << ":" << p.value("TCP.src_port") << " > " <<
-            p.value("IPv4.dst") << ":" << p.value("TCP.dst_port") << std::endl;
+            p["IPv4.src"] << ":" << p["TCP.src_port"] << " > " <<
+            p["IPv4.dst"] << ":" << p["TCP.dst_port"] << std::endl;
       });
 
     m.on("UDP", [&](const pm::Property& p) {
         std::cout << "UDP: " <<
-            p.value("IPv4.src") << ":" << p.value("UDP.src_port") << " > " <<
-            p.value("IPv4.dst") << ":" << p.value("UDP.dst_port") << std::endl;
+            p["IPv4.src"] << ":" << p["UDP.src_port"] << " > " <<
+            p["IPv4.dst"] << ":" << p["UDP.dst_port"] << std::endl;
       });
 
     m.on("ICMP", [&](const pm::Property& p) {
         std::cout << "ICMP: " <<
-            p.value("IPv4.src") << " > " << p.value("IPv4.dst") << " " <<
-            p.value("ICMP.type") << ":" << p.value("ICMP.code") << std::endl;
+            p["IPv4.src"]  << " > " << p["IPv4.dst"] << " " <<
+            p["ICMP.type"] << ":" << p["ICMP.code"] << std::endl;
       });
 
     m.add_pcapdev(argv[1]);
