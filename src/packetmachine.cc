@@ -141,7 +141,7 @@ void Machine::loop() {
   if (!this->cap_) {
     throw Exception::ConfigError("no input source is available");
   }
-  debug(true, "enter loop");
+  debug(false, "enter loop");
 
   this->input_ = new Input(this->cap_, this->kernel_->channel());
   pthread_create(&this->input_th_, nullptr, Input::thread, this->input_);
