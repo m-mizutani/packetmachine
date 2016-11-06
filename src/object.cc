@@ -152,8 +152,31 @@ bool Value::hex(std::ostream &os) const {
 bool Value::ip4(std::ostream &os) const {
   if (this->is_ip4()) {
     char addr[INET_ADDRSTRLEN];
-    const char* p = inet_ntop(AF_INET, this->ptr_, addr, sizeof(addr));
-    assert(p);
+    
+    /*
+      implement original inet_ntop below because of performance instead of:
+      const char* p = inet_ntop(AF_INET, this->ptr_, addr, sizeof(addr));
+    */
+    
+    char* p = &addr[0];
+    for (int i = 0; i < 4; i++) {
+      int n = this->ptr_[i];
+      if (n >= 100) {
+        *p = (n / 100) + '0';
+        p++;
+      }
+      if (n >= 10) {
+        *p = ((n / 10) % 10) + '0';
+        p++;
+      }
+      p[0] = (n % 10) + '0';
+      p[1] = '.';
+      p += 2;
+    }
+
+    p[-1] = '\0';
+    
+    // assert(p);
     os << addr;
     return true;
   } else {
