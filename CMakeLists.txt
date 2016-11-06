@@ -104,3 +104,5 @@ TARGET_LINK_LIBRARIES(packetmachine-perf packetmachine)
 # Examples
 ADD_EXECUTABLE(pmdump example/pmdump.cc)
 TARGET_LINK_LIBRARIES(pmdump packetmachine)
+ADD_EXECUTABLE(pmfile example/pmfile.cc)
+TARGET_LINK_LIBRARIES(pmfile packetmachine)

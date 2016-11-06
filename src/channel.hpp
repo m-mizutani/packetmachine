@@ -60,7 +60,7 @@ class Channel {
   }
 
  public:
-  Channel() : push_idx_(0), pull_idx_(0), ring_size_(4096),
+  Channel() : push_idx_(0), pull_idx_(0), ring_size_(0xfff),
               push_wait_(0), pull_wait_(0), eos_(false) {
     this->ring_.resize(this->ring_size_);
     for (uint32_t i = 0; i < this->ring_size_; i++) {
@@ -82,11 +82,11 @@ class Channel {
     uint32_t n = this->next(this->push_idx_);
     debug(DEBUG, "reatin:%u", n);
 
-    uint32_t wait = 0;
+    uint32_t wait = 1;
     while (n == this->pull_idx_) {
       this->push_wait_ += 1;
-      if (wait < 1000) {
-        ++wait;
+      if (wait < 0xffff) {
+        wait *= 2;
       }
       usleep(wait);
     }
