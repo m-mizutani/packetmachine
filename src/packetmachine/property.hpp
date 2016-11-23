@@ -106,9 +106,16 @@ class Property {
   void set_src_port(uint16_t port);
   void set_dst_port(uint16_t port);
 
+  // ------------------------------------
   // const methods
+
+  // packet size
   size_t pkt_size() const;
 
+  // timestamp
+  time_t ts() const;
+
+  // values
   bool has_value(param_id pid) const;
   bool has_value(const std::string& name) const;
   const Value& value(param_id pid) const;

@@ -41,7 +41,7 @@ class Buffer {
   Buffer();
   Buffer(const Buffer& obj);
   Buffer(const void* ptr, size_t len);
-  ~Buffer();
+  virtual ~Buffer();
 
   bool operator==(const Buffer& obj) const;
 

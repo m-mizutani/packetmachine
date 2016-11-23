@@ -41,20 +41,39 @@ namespace pm {
 template <typename T>
 class LruHash {
  public:
+  class Key : public Buffer {
+   private:
+    uint32_t hv_;
+   public:
+    Key() {
+      this->hv_ = 0;
+    }
+    Key(const void* ptr, size_t len) : Buffer(ptr, len) {
+      this->hv_ = hash32(this->ptr(), this->len());
+    }
+    Key(const Key& obj) : Buffer(obj) {
+      this->hv_ = obj.hv_;
+    }
+    ~Key() = default;
+
+    inline uint32_t hv() const { return this->hv_; }
+  };
+
   class Node {
    private:
     T data_;
-    const Buffer key_;
+    const Key key_;
     Node *next_, *prev_;  // double linked list for Bucket
     Node *link_;          // single linked list for TimeSlot
     uint64_t update_;
     uint64_t tick_;
+    uint32_t hv_;
 
    public:
     Node() : next_(nullptr), prev_(nullptr), link_(nullptr),
              update_(0), tick_(0) {
     }
-    Node(T data, const Buffer& key, uint64_t tick)
+    Node(T data, const Key& key, uint64_t tick)
         : data_(data), key_(key), next_(nullptr), prev_(nullptr),
           link_(nullptr), update_(0), tick_(tick) {
     }
@@ -118,8 +137,8 @@ class LruHash {
       return (this->link_ != nullptr);
     }
 
-    Node* search(const Buffer& key) {
-      if (this->key_ == key) {
+    Node* search(const Key& key) {
+      if (this->key_.hv() == key.hv() && this->key_ == key) {
         return this;
       } else if (this->next_) {
         return this->next_->search(key);
@@ -128,7 +147,7 @@ class LruHash {
       }
     }
 
-    const Buffer& key() const {
+    const Key& key() const {
       return this->key_;
     }
   };
@@ -145,7 +164,7 @@ class LruHash {
     void attach(Node *node) {
       this->root_.attach(node);
     }
-    Node* search(const Buffer& key) {
+    Node* search(const Key& key) {
       return this->root_.search(key);
     }
   };
@@ -189,14 +208,14 @@ class LruHash {
   }
 
   void insert(Node* node, uint64_t tick) {
-    size_t ptr = key2hv(node->key()) % this->bucket_.size();
+    size_t ptr = node->key().hv() % this->bucket_.size();
     this->bucket_[ptr].attach(node);
 
     size_t tp = (tick + this->curr_tick_) % this->timeslot_.size();
     this->timeslot_[tp].push(node);
   }
 
-  bool put(uint64_t tick, const Buffer& key, T data) {
+  bool put(uint64_t tick, const Key& key, T data) {
     if (tick < 1) {
       return false;
     }
@@ -211,9 +230,9 @@ class LruHash {
     return true;
   }
 
-  const Node& get(const Buffer& key) {
+  const Node& get(const Key& key) {
     // Updated if hitting cache
-    size_t ptr = key2hv(key) % this->bucket_.size();
+    size_t ptr = key.hv() % this->bucket_.size();
     Node* node = this->bucket_[ptr].search(key);
     if (node == nullptr) {
       node = &(this->null_node_);
@@ -224,8 +243,8 @@ class LruHash {
     return *node;
   }
 
-  bool has(const Buffer& key) {
-    size_t ptr = key2hv(key) % this->bucket_.size();
+  bool has(const Key& key) {
+    size_t ptr = key.hv() % this->bucket_.size();
     return (this->bucket_[ptr].search(key) != nullptr);
   }
 

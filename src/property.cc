@@ -168,6 +168,10 @@ size_t Property::pkt_size() const {
   return this->pkt_->len();
 }
 
+time_t Property::ts() const {
+  return this->pkt_->tv().tv_sec;
+}
+
 bool Property::has_value(param_id pid) const {
   return (this->param_idx_[pid] > 0);
 }

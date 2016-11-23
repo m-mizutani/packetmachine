@@ -189,7 +189,7 @@ class TCPSession : public Module {
       }
     }
 
-    static void make_key(const Property& p, Buffer* key) {
+    static void make_key(const Property& p, LruHash<Session*>::Key* key) {
       size_t src_len, dst_len;
       const byte_t* src_addr = p.src_addr(&src_len);
       const byte_t* dst_addr = p.dst_addr(&dst_len);
@@ -223,9 +223,12 @@ class TCPSession : public Module {
   static const size_t keybuf_len_ = 64;
   LruHash<Session*> ssn_table_;
   uint64_t ssn_count_;
+  time_t curr_ts_;
+  bool init_ts_;
 
  public:
-  TCPSession() : ssn_table_(3600, 0xffff), ssn_count_(0) {
+  TCPSession() : ssn_table_(3600, 0xffff), ssn_count_(0), curr_ts_(0),
+                 init_ts_(false) {
     this->p_id_ = this->define_param("id");
     this->ev_new_ = this->define_event("new");
 
@@ -244,7 +247,19 @@ class TCPSession : public Module {
 
 
   mod_id decode(Payload* pd, Property* prop) {
-    static Buffer key;   // memory can be reused, but not thread safe
+    static LruHash<Session*>::Key key;
+    // memory can be reused, but not thread safe
+
+    time_t ts = prop->ts();
+    if (this->curr_ts_ < ts) {
+      time_t diff = ts - this->curr_ts_;
+      this->curr_ts_ = ts;
+      if (this->init_ts_) {
+        this->ssn_table_.update(diff);
+      } else {
+        this->init_ts_ = true;
+      }
+    }
 
     uint8_t flags = prop->value(this->tcp_flags_).uint();
     flags &= (SYN|ACK|FIN|RST);

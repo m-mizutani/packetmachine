@@ -41,7 +41,7 @@ class MyData {
 TEST(LruHash, basic) {
   pm::LruHash<MyData*> lru(10);
   MyData d1(1);
-  pm::Buffer k1(&d1.a_, sizeof(d1.a_));
+  pm::LruHash<MyData*>::Key k1(&d1.a_, sizeof(d1.a_));
 
   // put node
   EXPECT_TRUE(lru.put(2, k1, &d1));
@@ -65,8 +65,8 @@ TEST(LruHash, basic) {
 TEST(LruHash, multiple_data) {
   pm::LruHash<MyData*> lru(10);
   MyData d1(1), d2(2);
-  pm::Buffer k1(&d1.a_, sizeof(d1.a_));
-  pm::Buffer k2(&d2.a_, sizeof(d2.a_));
+  pm::LruHash<MyData*>::Key k1(&d1.a_, sizeof(d1.a_));
+  pm::LruHash<MyData*>::Key k2(&d2.a_, sizeof(d2.a_));
 
   // put node
   EXPECT_TRUE(lru.put(2, k1, &d1));
@@ -92,9 +92,9 @@ TEST(LruHash, multiple_data) {
 TEST(LruHash, update) {
   pm::LruHash<MyData*> lru(10);
   MyData d1(1), d2(2), d3(3);
-  pm::Buffer k1(&d1.a_, sizeof(d1.a_));
-  pm::Buffer k2(&d2.a_, sizeof(d2.a_));
-  pm::Buffer k3(&d3.a_, sizeof(d3.a_));
+  pm::LruHash<MyData*>::Key k1(&d1.a_, sizeof(d1.a_));
+  pm::LruHash<MyData*>::Key k2(&d2.a_, sizeof(d2.a_));
+  pm::LruHash<MyData*>::Key k3(&d3.a_, sizeof(d3.a_));
 
   // start, tick: 0
 
