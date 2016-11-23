@@ -164,6 +164,10 @@ void Property::set_dst_port(uint16_t port) {
 }
 
 
+size_t Property::pkt_size() const {
+  return this->pkt_->len();
+}
+
 bool Property::has_value(param_id pid) const {
   return (this->param_idx_[pid] > 0);
 }

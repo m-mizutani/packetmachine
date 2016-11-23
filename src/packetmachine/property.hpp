@@ -107,6 +107,8 @@ class Property {
   void set_dst_port(uint16_t port);
 
   // const methods
+  size_t pkt_size() const;
+
   bool has_value(param_id pid) const;
   bool has_value(const std::string& name) const;
   const Value& value(param_id pid) const;
@@ -120,7 +122,6 @@ class Property {
   const Value& operator[](const std::string& name) const {
     return this->value(name);
   }
-
 
   // General purpose attributes.
   const byte_t* src_addr(size_t* len) const;
