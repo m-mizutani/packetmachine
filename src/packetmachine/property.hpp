@@ -73,7 +73,7 @@ class Property {
  private:
   Decoder *dec_;
   std::vector<size_t> param_idx_;
-  std::vector< std::vector<Object*>* > param_;
+  std::vector< std::vector<Value*>* > param_;
 
   size_t event_idx_;
   std::vector<const EventDef*> event_;

@@ -82,7 +82,7 @@ const Value Property::null_;
 Property::Property(Decoder* dec) : dec_(dec) {
   size_t psize = this->dec_->param_size();
   for (size_t i = 0; i < psize; i++) {
-    this->param_.push_back(new std::vector<Object*>());
+    this->param_.push_back(new std::vector<Value*>());
     this->param_idx_.push_back(0);
   }
 
@@ -112,24 +112,24 @@ void Property::init(const Packet *pkt) {
 
 
 Object* Property::retain_object(const ParamDef* def) {
+  assert(0);
+}
+
+
+Value* Property::retain_value(const ParamDef* def) {
+  // Value* val = dynamic_cast<Value*>(this->retain_object(def));
   const param_id pid = def->id();
-  Object* obj;
+  Value* obj;
 
   if (this->param_idx_[pid] < this->param_[pid]->size()) {
     obj = (*this->param_[pid])[this->param_idx_[pid]];
   } else {
-    obj = def->new_object();
+    obj = dynamic_cast<Value*>(def->new_object());
     this->param_[pid]->push_back(obj);
   }
 
   this->param_idx_[pid]++;
   return obj;
-}
-
-
-Value* Property::retain_value(const ParamDef* def) {
-  Value* val = dynamic_cast<Value*>(this->retain_object(def));
-  return val;
 }
 
 void Property::push_event(const EventDef* def) {
