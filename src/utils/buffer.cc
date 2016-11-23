@@ -29,22 +29,23 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include <assert.h>
 
 #include "../debug.hpp"
 
 namespace pm {
 
 Buffer::Buffer()
-    : buf_(nullptr), len_(0), buflen_(0) {
+    : buf_(nullptr), len_(0), buflen_(0), finalized_(false) {
 }
 
 Buffer::Buffer(const void* ptr, size_t len)
-    : buf_(nullptr), len_(0), buflen_(0) {
+    : buf_(nullptr), len_(0), buflen_(0), finalized_(false) {
   this->set(ptr, len);
 }
 
 Buffer::Buffer(const Buffer& obj)
-    : buf_(nullptr), len_(0), buflen_(0) {
+    : buf_(nullptr), len_(0), buflen_(0), finalized_(false) {
   this->set(obj.buf_, obj.len_);
 }
 
@@ -66,18 +67,24 @@ void Buffer::resize(size_t len) {
 
 void Buffer::clear() {
   this->len_ = 0;
+  this->finalized_ = false;
 }
 
 void Buffer::set(const void* ptr, size_t len) {
+  assert(!this->finalized_);
+
   if (this->buflen_ < len) {
     this->resize(len);
   }
 
   ::memcpy(this->buf_, ptr, len);
   this->len_ = len;
+  this->finalize();
 }
 
 void Buffer::append(const void* ptr, size_t len) {
+  assert(!this->finalized_);
+
   if (this->buflen_ < this->len_ + len) {
     this->resize(this->len_ + len);
   }
@@ -86,5 +93,10 @@ void Buffer::append(const void* ptr, size_t len) {
   ::memcpy(idx + this->len_, ptr, len);
   this->len_ += len;
 }
+
+void Buffer::finalize() {
+  this->finalized_ = true;
+}
+
 
 }  // namespace pm

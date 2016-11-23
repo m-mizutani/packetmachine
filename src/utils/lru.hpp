@@ -27,6 +27,8 @@
 #ifndef PACKETMACHINE_UTILS_LRU_HPP__
 #define PACKETMACHINE_UTILS_LRU_HPP__
 
+#include <assert.h>
+
 #include <map>
 #include <vector>
 #include <deque>
@@ -44,12 +46,13 @@ class LruHash {
   class Key : public Buffer {
    private:
     uint32_t hv_;
+    bool has_hv_;
+
    public:
     Key() {
-      this->hv_ = 0;
     }
     Key(const void* ptr, size_t len) : Buffer(ptr, len) {
-      this->hv_ = hash32(this->ptr(), this->len());
+      // this->hv_ = hash32(this->ptr(), this->len());
     }
     Key(const Key& obj) : Buffer(obj) {
       this->hv_ = obj.hv_;
@@ -57,6 +60,22 @@ class LruHash {
     ~Key() = default;
 
     inline uint32_t hv() const { return this->hv_; }
+
+    bool operator==(const Key& obj) const {
+      assert(this->finalized());
+      assert(obj.finalized());
+
+      if (this->hv_ == obj.hv_ && this->Buffer::operator==(obj)) {
+        return true;
+      } else {
+        return false;
+      }
+    }
+
+    void finalize() {
+      this->hv_ = hash32(this->ptr(), this->len());
+      this->Buffer::finalize();
+    }
   };
 
   class Node {
@@ -138,7 +157,7 @@ class LruHash {
     }
 
     Node* search(const Key& key) {
-      if (this->key_.hv() == key.hv() && this->key_ == key) {
+      if (this->key_.finalized() && this->key_ == key) {
         return this;
       } else if (this->next_) {
         return this->next_->search(key);

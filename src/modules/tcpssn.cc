@@ -214,6 +214,8 @@ class TCPSession : public Module {
         key->append(src_addr, src_len);
         key->append(&src_port, sizeof(src_port));
       }
+
+      key->finalize();
     }
   };
 

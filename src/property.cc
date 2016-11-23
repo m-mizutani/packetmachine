@@ -151,9 +151,11 @@ const EventDef* Property::event(size_t idx) const {
 }
 
 void Property::set_src_addr(const void* addr, size_t len) {
+  this->src_addr_->clear();
   this->src_addr_->set(addr, len);
 }
 void Property::set_dst_addr(const void* addr, size_t len) {
+  this->dst_addr_->clear();
   this->dst_addr_->set(addr, len);
 }
 void Property::set_src_port(uint16_t port) {

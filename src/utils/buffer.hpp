@@ -36,6 +36,7 @@ class Buffer {
   void *buf_;
   size_t len_;
   size_t buflen_;
+  bool finalized_;
 
  public:
   Buffer();
@@ -49,9 +50,11 @@ class Buffer {
   void clear();
   void set(const void* ptr, size_t len);
   void append(const void* ptr, size_t len);
+  virtual void finalize();
 
   const void* ptr() const { return (this->len_ > 0) ? this->buf_ : nullptr; }
   size_t len() const { return this->len_; }
+  bool finalized() const { return this->finalized_; }
 };
 
 }  // namespace pm
