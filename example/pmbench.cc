@@ -37,13 +37,13 @@ int main(int argc, char* argv[]) {
     return -1;
   }
 
-  int tcp_pkt_count = 0;
-  int tcp_data_size = 0;
-  int tcp_ssn_count = 0;
-  int udp_pkt_count = 0;
-  int udp_data_size = 0;
-  int total_pkt_count = 0;
-  int total_data_size = 0;
+  uint64_t tcp_pkt_count = 0;
+  uint64_t tcp_data_size = 0;
+  uint64_t tcp_ssn_count = 0;
+  uint64_t udp_pkt_count = 0;
+  uint64_t udp_data_size = 0;
+  uint64_t total_pkt_count = 0;
+  uint64_t total_data_size = 0;
 
   try {
     m.on("Ethernet", [&](const pm::Property& p) {
@@ -89,8 +89,8 @@ int main(int argc, char* argv[]) {
     std::cout << "[performance]" << std::endl
               << "\t" << period << " second" << std::endl
               << "\t" << total_pkt_count / period << " pps" << std::endl
-              << "\t" << total_data_size * 8 / 1000 / period
-              << " Kbps" << std::endl;
+              << "\t" << total_data_size * 8 / 1000000 / period
+              << " Mbps" << std::endl;
   } catch (pm::Exception::Error &e) {
     std::cerr << "PacketMachine Error: " << e.what() << std::endl;
   }
