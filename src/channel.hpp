@@ -82,7 +82,7 @@ class Channel {
     uint32_t n = this->next(this->push_idx_);
     debug(DEBUG, "reatin:%u", n);
 
-    uint32_t wait = 1;
+    uint32_t wait = 100;
     while (n == this->pull_idx_) {
       this->push_wait_ += 1;
       if (wait < 0xffff) {
@@ -111,7 +111,7 @@ class Channel {
            static_cast<uint32_t>(this->push_idx_),
            static_cast<uint32_t>(this->pull_idx_));
 
-    uint32_t wait = 1;
+    uint32_t wait = 100;
     while (n == this->next(this->push_idx_)) {
       if (this->closed()) {
         debug(DEBUG, "closed");
