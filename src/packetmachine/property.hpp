@@ -120,8 +120,6 @@ class Property {
   bool has_value(const std::string& name) const;
   const Value& value(param_id pid) const;
   const Value& value(const std::string& name) const;
-  const Object& object(param_id pid) const;
-  const Object& object(const std::string& name) const;
 
   const Value& operator[](param_id pid) const {
     return this->value(pid);

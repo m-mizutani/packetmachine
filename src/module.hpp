@@ -45,10 +45,10 @@ class ParamDef {
   param_id id_;
   std::string name_;
   std::string local_name_;
-  Object*(*constructor_)();
+  Value*(*constructor_)();
 
  public:
-  ParamDef(const std::string& local_name, Object*(*constructor)());
+  ParamDef(const std::string& local_name, Value*(*constructor)());
   ~ParamDef();
 
   void set_module_id(mod_id id) { this->module_id_ = id; }
@@ -58,7 +58,7 @@ class ParamDef {
   mod_id module_id() const { return this->module_id_; }
   param_id id() const { return this->id_; }
   const std::string& name() const { return this->name_; }
-  Object* new_object() const { return this->constructor_(); }
+  Value* new_object() const { return this->constructor_(); }
 };
 
 class EventDef {
@@ -92,12 +92,12 @@ class Module {
   std::string name_;
 
  protected:
-  static Object* new_value();
-  static Object* new_array();
-  static Object* new_map();
+  static Value* new_value();
+  static Value* new_array();
+  static Value* new_map();
 
   const ParamDef* define_param(const std::string& name,
-                               Object*(*new_object)() = new_value);
+                               Value*(*new_object)() = new_value);
   mod_id lookup_module(const std::string& name);
   param_id lookup_param_id(const std::string& name);
 

@@ -39,17 +39,17 @@
 namespace pm {
 
 //
-// Object is abstruction class to present decoded items from packet(s).
+// Value is abstruction class to present decoded items from packet(s).
 // e.g. source TCP port number from TCP header.
 //
 // A decode module developer basically uses Value class or create a new
 // class inheriting Value class. However some fields of decoded result of
 // packet has complex structure. For example, DNS packet has any number of
 // query records. Then, PacketMachine has not only Value class but also
-// Array and Map structure. They inherit from Object class in order to have
+// Array and Map structure. They inherit from Value class in order to have
 // represent function and abstruct variable to store in memory.
 //
-// Child classes of Object class must has 2 methods:
+// Value and Child classes must has 2 methods:
 //
 // void clear():
 // Instance of child classes may be reused because of memory allocation/free
@@ -90,34 +90,7 @@ class Object {
   friend std::ostream& operator<<(std::ostream& os, const Object& obj);
 };
 
-
-class Array : public Object {
- private:
-  std::vector<Object*> array_;
-
- public:
-  Array();
-  virtual ~Array();
-  void clear();
-  void repr(std::ostream &os) const;
-  void push(Object *obj);
-};
-
-
-class Map : public Object {
- private:
-  std::map<std::string, Object*> map_;
-
- public:
-  Map();
-  virtual ~Map();
-  void clear();
-  void repr(std::ostream &os) const;
-  void insert(const std::string& key, Object* obj);
-};
-
-
-class Value : public Object {
+class Value {
  public:
   enum Endian {
     LITTLE,
@@ -176,6 +149,34 @@ class Value : public Object {
 };
 
 
+class Array : public Value {
+ private:
+  std::vector<Object*> array_;
+
+ public:
+  Array();
+  virtual ~Array();
+  void clear();
+  void repr(std::ostream &os) const;
+  void push(Object *obj);
+};
+
+
+class Map : public Value {
+ private:
+  std::map<std::string, Object*> map_;
+
+ public:
+  Map();
+  virtual ~Map();
+  void clear();
+  void repr(std::ostream &os) const;
+  void insert(const std::string& key, Object* obj);
+};
+
+
+
+
 /*
  * General Value Type
  */
@@ -184,7 +185,7 @@ class IPv4Addr : public Value {
   IPv4Addr() = default;
   ~IPv4Addr() = default;
   void repr(std::ostream &os) const { this->ip4(os); }
-  static Object* new_value() { return new IPv4Addr(); }
+  static Value* new_value() { return new IPv4Addr(); }
 };
 
 class PortNumber : public Value {
@@ -196,7 +197,7 @@ class PortNumber : public Value {
     this->uint(&d);
     os << d;
   }
-  static Object* new_value() { return new PortNumber(); }
+  static Value* new_value() { return new PortNumber(); }
 };
 
 

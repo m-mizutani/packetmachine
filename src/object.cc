@@ -39,13 +39,6 @@
 
 namespace pm {
 
-std::string Object::repr() const {
-  std::stringstream ss;
-  this->repr(ss);
-  return ss.str();
-}
-
-
 std::ostream& operator<<(std::ostream& os, const Object& obj) {
   os << obj.repr();
   return os;

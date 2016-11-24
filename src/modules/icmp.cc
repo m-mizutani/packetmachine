@@ -61,7 +61,7 @@ class ICMP : public Module {
         case 18: os << "Address Mask Reply"; break;
       }
     }
-    static Object* new_value() { return new IcmpType(); }
+    static Value* new_value() { return new IcmpType(); }
   };
 
   class IcmpCode : public Value {
@@ -123,7 +123,7 @@ class ICMP : public Module {
         os << code;
       }
     }
-    static Object* new_value() { return new IcmpCode(); }
+    static Value* new_value() { return new IcmpCode(); }
   };
 
  public:

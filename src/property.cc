@@ -210,14 +210,6 @@ const Value& Property::value(const std::string& name) const {
   }
 }
 
-const Object& Property::object(param_id pid) const {
-  return Property::null_;
-}
-
-const Object& Property::object(const std::string& name) const {
-  return Property::null_;
-}
-
 const byte_t* Property::src_addr(size_t* len) const {
   *len = this->src_addr_->len();
   return static_cast<const byte_t*>(this->src_addr_->ptr());
