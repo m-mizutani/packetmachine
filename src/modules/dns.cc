@@ -24,43 +24,17 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "./gtest/gtest.h"
-#include "../src/module.hpp"
+#include "./utils.hpp"
 
-namespace module_test {
+namespace pm {
 
-class TestMod : public pm::Module {
+class DNS : public NameService {
  public:
-  void setup() {
+  DNS() : NameService("DNS") {
   }
-  pm::mod_id decode(pm::Payload* pd, pm::Property* prop) {
-    return pm::Module::NONE;
-  }
+  ~DNS() = default;
 };
 
-TEST(Module, basic) {
-  pm::ModuleBuilder builder;
-  pm::ModuleFactoryEntry<TestMod> tf("TestMod", &builder);
+INIT_MODULE(DNS);
 
-  std::map<std::string, pm::Module*> mod_map;
-  builder.build(&mod_map);
-
-  EXPECT_EQ(1, mod_map.size());
-}
-
-TEST(Module, use_global_variable) {
-  std::map<std::string, pm::Module*> mod_map;
-  build_module_map(&mod_map);
-
-  EXPECT_EQ(8, mod_map.size());
-  EXPECT_NE(mod_map.end(), mod_map.find("Ethernet"));
-  EXPECT_NE(mod_map.end(), mod_map.find("ARP"));
-  EXPECT_NE(mod_map.end(), mod_map.find("IPv4"));
-  EXPECT_NE(mod_map.end(), mod_map.find("UDP"));
-  EXPECT_NE(mod_map.end(), mod_map.find("ICMP"));
-  EXPECT_NE(mod_map.end(), mod_map.find("TCP"));
-  EXPECT_NE(mod_map.end(), mod_map.find("TCPSession"));
-  EXPECT_NE(mod_map.end(), mod_map.find("DNS"));
-}
-
-}   // namespace module_test
+}   // namespace pm

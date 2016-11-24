@@ -55,7 +55,7 @@ class UDP : public Module {
   }
 
   void setup() {
-    this->mod_dns_  = this->lookup_module("Dns");
+    this->mod_dns_  = this->lookup_module("DNS");
   }
 
 #define SET_PROP(PARAM, DATA) \
@@ -77,6 +77,10 @@ class UDP : public Module {
     SET_PROP(this->p_chksum_,   hdr->chksum_);
 
     mod_id next = Module::NONE;
+    if (htons(hdr->src_port_) == 53 || htons(hdr->dst_port_) == 53) {
+      next = this->mod_dns_;
+    }
+
     return next;
   }
 };

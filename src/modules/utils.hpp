@@ -24,43 +24,42 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "./gtest/gtest.h"
-#include "../src/module.hpp"
+#ifndef __PACKETMACHINE_SRC_MODULES_UTILS_HPP
+#define __PACKETMACHINE_SRC_MODULES_UTILS_HPP
 
-namespace module_test {
+#include <string>
+#include "../module.hpp"
 
-class TestMod : public pm::Module {
+namespace pm {
+
+class NameService : public Module {
+ private:
+  const ParamDef* p_tx_id_;
+  const ParamDef* p_record_[4];
+  const EventDef* ev_query_;
+  const EventDef* ev_reply_;
+  const std::string base_name_;
+
+  static const u_int16_t NS_FLAG_MASK_QUERY = 0x8000;
+  static const u_int16_t RR_QD  = 0;
+  static const u_int16_t RR_AN  = 1;
+  static const u_int16_t RR_NS  = 2;
+  static const u_int16_t RR_AR  = 3;
+  static const u_int16_t RR_CNT = 4;
+
  public:
-  void setup() {
-  }
-  pm::mod_id decode(pm::Payload* pd, pm::Property* prop) {
-    return pm::Module::NONE;
-  }
+  explicit NameService(const std::string& base_name);
+  virtual ~NameService();
+  void setup();
+  mod_id decode(Payload* pd, Property* prop);
+  bool ns_decode(Payload* pd, Property* prop);
+  static const byte_t * parse_label(const byte_t * p, size_t remain,
+                                    const byte_t * sp,
+                                    const size_t total_len,
+                                    std::string * s);
 };
 
-TEST(Module, basic) {
-  pm::ModuleBuilder builder;
-  pm::ModuleFactoryEntry<TestMod> tf("TestMod", &builder);
+}   // namespace pm
 
-  std::map<std::string, pm::Module*> mod_map;
-  builder.build(&mod_map);
 
-  EXPECT_EQ(1, mod_map.size());
-}
-
-TEST(Module, use_global_variable) {
-  std::map<std::string, pm::Module*> mod_map;
-  build_module_map(&mod_map);
-
-  EXPECT_EQ(8, mod_map.size());
-  EXPECT_NE(mod_map.end(), mod_map.find("Ethernet"));
-  EXPECT_NE(mod_map.end(), mod_map.find("ARP"));
-  EXPECT_NE(mod_map.end(), mod_map.find("IPv4"));
-  EXPECT_NE(mod_map.end(), mod_map.find("UDP"));
-  EXPECT_NE(mod_map.end(), mod_map.find("ICMP"));
-  EXPECT_NE(mod_map.end(), mod_map.find("TCP"));
-  EXPECT_NE(mod_map.end(), mod_map.find("TCPSession"));
-  EXPECT_NE(mod_map.end(), mod_map.find("DNS"));
-}
-
-}   // namespace module_test
+#endif   // __PACKETMACHINE_SRC_MODULES_UTILS_HPP

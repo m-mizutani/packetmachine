@@ -55,6 +55,9 @@ FILE(GLOB BASESRCS
 	"src/modules/tcp.cc"
 	"src/modules/tcpssn.cc"
 	"src/modules/icmp.cc"
+  "src/modules/dns.cc"
+	# Decoder utilities
+  "src/modules/utils.cc" "src/modules/utils.hpp"
 
 	# Decoding utilities
 	"src/utils/lru.cc"    "src/utils/lru.hpp"
