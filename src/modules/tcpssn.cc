@@ -265,8 +265,8 @@ class TCPSession : public Module {
 
     uint8_t flags = prop->value(this->tcp_flags_).uint();
     flags &= (SYN|ACK|FIN|RST);
-    uint32_t seq = prop->value(this->tcp_seq_).uint();
-    uint32_t ack = prop->value(this->tcp_ack_).uint();
+    uint32_t seq = static_cast<uint32_t>(prop->value(this->tcp_seq_).uint());
+    uint32_t ack = static_cast<uint32_t>(prop->value(this->tcp_ack_).uint());
     size_t seg_len;
     const void* seg_ptr = prop->value(this->tcp_segment_).raw(&seg_len);
 

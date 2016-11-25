@@ -39,42 +39,45 @@
 
 namespace pm {
 
-std::ostream& operator<<(std::ostream& os, const Object& obj) {
+std::ostream& operator<<(std::ostream& os, const Value& obj) {
   os << obj.repr();
   return os;
 }
 
 
 void Array::clear() {
-  // TODO(m-mizutani): implement
+  this->array_.resize(0);
 }
 
 void Array::repr(std::ostream &os) const {
-  // TODO(m-mizutani): implement
+  os << "[";
+  for (auto it : this->array_) {
+    it->repr(os);
+    os << ", ";
+  }
+  os << "]";
 }
 
-void Array::push(Object *obj) {
-  // TODO(m-mizutani): implement
+void Array::push(Value *obj) {
+  this->array_.push_back(obj);
 }
 
-
-Map::Map() {
-  // TODO(m-mizutani): implement
-}
-
-Map::~Map() {
-  // TODO(m-mizutani): implement
-}
 
 void Map::clear() {
-  // TODO(m-mizutani): implement
+  this->map_.clear();
 }
 
 void Map::repr(std::ostream &os) const {
-  // TODO(m-mizutani): implement
+  os << "{";
+  for (const auto& it : this->map_) {
+    os << "\"" << it.first << "\": ";
+    it.second->repr(os);
+    os << ", ";
+  }
+  os << "}";
 }
 
-void Map::insert(const std::string& key, Object* obj) {
+void Map::insert(const std::string& key, Value* obj) {
   // TODO(m-mizutani): implement
 }
 
@@ -145,12 +148,12 @@ bool Value::hex(std::ostream &os) const {
 bool Value::ip4(std::ostream &os) const {
   if (this->is_ip4()) {
     char addr[INET_ADDRSTRLEN];
-    
+
     /*
       implement original inet_ntop below because of performance instead of:
       const char* p = inet_ntop(AF_INET, this->ptr_, addr, sizeof(addr));
     */
-    
+
     char* p = &addr[0];
     for (int i = 0; i < 4; i++) {
       int n = this->ptr_[i];
@@ -168,7 +171,7 @@ bool Value::ip4(std::ostream &os) const {
     }
 
     p[-1] = '\0';
-    
+
     // assert(p);
     os << addr;
     return true;
@@ -308,6 +311,17 @@ const byte_t* Value::raw(size_t* len) const {
     return nullptr;
   }
 }
+
+const std::vector<Value*>& Value::vector() const {
+  throw Exception::TypeError("not Vector value");
+}
+
+const std::map<std::string, Value*>& Value::map() const {
+  throw Exception::TypeError("not Map value");
+}
+
+
+
 
 
 }   // namespace pm

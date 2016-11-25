@@ -28,6 +28,7 @@
 #define __PACKETMACHINE_SRC_MODULES_UTILS_HPP
 
 #include <string>
+#include <map>
 #include "../module.hpp"
 
 namespace pm {
@@ -36,6 +37,11 @@ class NameService : public Module {
  private:
   const ParamDef* p_tx_id_;
   const ParamDef* p_record_[4];
+  const ParamDef* p_records_;
+  const ParamDef* p_name_;
+  const ParamDef* p_data_;
+  const ParamDef* p_type_;
+
   const EventDef* ev_query_;
   const EventDef* ev_reply_;
   const std::string base_name_;
@@ -58,6 +64,69 @@ class NameService : public Module {
                                     const size_t total_len,
                                     std::string * s);
 };
+
+
+
+class NSName : public Value {
+ private:
+  const byte_t* base_ptr_;
+  size_t total_len_;
+
+ public:
+  NSName() = default;
+  ~NSName() = default;
+  void set_param(const byte_t * ptr, size_t len,
+                 const byte_t * base_ptr, size_t total_len);
+
+  void repr(std::ostream &os) const;
+  static Value* new_value() { return new NSName(); }
+};
+
+
+class NSData : public Value {
+ private:
+  uint16_t type_;
+  const byte_t* base_ptr_;
+  size_t total_len_;
+
+ public:
+  NSData() = default;
+  ~NSData() = default;
+  void set_data(const byte_t * ptr, size_t len, uint16_t type,
+                const byte_t * base_ptr, size_t total_len);
+
+  void repr(std::ostream &os) const;
+  static Value* new_value() { return new NSData(); }
+};
+
+
+class NSType : public Value {
+ public:
+  NSType() = default;
+  ~NSType() = default;
+  void repr(std::ostream &os) const;
+  static Value* new_value() { return new NSType(); }
+};
+
+
+class NSRecord : public Map {
+ private:
+  std::map<std::string, Value*>::iterator it_type_;
+  std::map<std::string, Value*>::iterator it_name_;
+  std::map<std::string, Value*>::iterator it_data_;
+
+ public:
+  NSRecord();
+  ~NSRecord();
+
+  void set_type(Value* val);
+  void set_name(NSName* name);
+  void set_data(NSData* data);
+  void clear();
+  static Value* new_value() { return new NSRecord(); }
+};
+
+
 
 }   // namespace pm
 

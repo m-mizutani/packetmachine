@@ -52,6 +52,10 @@ struct ns_ans_header {
 NameService::NameService(const std::string& base_name)
     : base_name_(base_name) {
   this->p_tx_id_ = this->define_param("tx_id");
+  this->p_records_ = this->define_param("records", NSRecord::new_value);
+  this->p_name_ = this->define_param("name", NSName::new_value);
+  this->p_data_ = this->define_param("data", NSData::new_value);
+  this->p_type_ = this->define_param("type", NSType::new_value);
 
   std::vector<std::string> types = {
     "question",
@@ -60,8 +64,9 @@ NameService::NameService(const std::string& base_name)
     "additional",
   };
 
+
   for (size_t i = 0; i < types.size(); i++) {
-    this->p_record_[i] = this->define_param(types[i]);
+    this->p_record_[i] = this->define_param(types[i], Array::new_value);
   }
 
   this->ev_query_ = this->define_event("query");
@@ -97,8 +102,8 @@ bool NameService::ns_decode(Payload* pd, Property* prop) {
   rr_count[RR_AN] = ntohs(hdr->an_count_);
   rr_count[RR_NS] = ntohs(hdr->ns_count_);
   rr_count[RR_AR] = ntohs(hdr->ar_count_);
-  int rr_total =
-      rr_count[RR_QD] + rr_count[RR_AN] + rr_count[RR_NS] + rr_count[RR_AR];
+  int rr_total = rr_count[RR_QD] + rr_count[RR_AN] +
+                 rr_count[RR_NS] + rr_count[RR_AR];
 
   for (int i = 0; i < 4; i++) {
     rr_delim[i] = (i == 0 ? 0 : (rr_delim[i - 1] + rr_count[i - 1]));
@@ -114,7 +119,7 @@ bool NameService::ns_decode(Payload* pd, Property* prop) {
   const byte_t * ep = base_ptr + hdr_len + total_len;
 
   prop->retain_value(this->p_tx_id_)->set(&(hdr->trans_id_),
-                                          sizeof(hdr->trans_id_));
+                                        sizeof(hdr->trans_id_));
 
   if ((hdr->flags_ & NS_FLAG_MASK_QUERY) > 0) {
     prop->push_event(this->ev_query_);
@@ -122,7 +127,7 @@ bool NameService::ns_decode(Payload* pd, Property* prop) {
     prop->push_event(this->ev_reply_);
   }
 
-
+  Array* arr = nullptr;
   // parsing resource record
   int target = 0, rr_c = 0;
   for (int c = 0; c < rr_total; c++) {
@@ -130,22 +135,32 @@ bool NameService::ns_decode(Payload* pd, Property* prop) {
       rr_c = 0;
       target++;
       assert(target < RR_CNT);
+      arr = nullptr;
     }
     rr_c++;
 
-    int remain = ep - ptr;
+    auto remain = ep - ptr;
     // assert (ep - ptr > 0);
     if (ep <= ptr) {
       return false;
     }
 
-    // TODO(m-mizutani): retain map-type value and store data
-    /*
-    VarNameServiceName * vn =
-        dynamic_cast <VarNameServiceName*> (p->retain (this->NS_NAME[target]));
-    assert (vn != NULL);
-    vn->set_data (ptr, remain, base_ptr, total_len);
-    */
+    if (arr == nullptr) {
+      arr = dynamic_cast<Array*>(prop->retain_value(this->p_record_[target]));
+    }
+
+    assert(arr != nullptr);
+    NSRecord *rec =
+      dynamic_cast<NSRecord*>(prop->retain_value(this->p_records_));
+    NSName* v_name = dynamic_cast<NSName*>(prop->retain_value(this->p_name_));
+    NSData* v_data = dynamic_cast<NSData*>(prop->retain_value(this->p_data_));
+    Value* v_type = prop->retain_value(this->p_type_);
+
+    rec->set_name(v_name);
+    rec->set_data(v_data);
+    rec->set_type(v_type);
+
+    v_name->set_param(ptr, remain, base_ptr, total_len);
 
     if (NULL == (ptr = NameService::parse_label (ptr, remain, base_ptr,
                                                  total_len, NULL))) {
@@ -276,10 +291,136 @@ const byte_t * NameService::parse_label(const byte_t * p, size_t remain,
     remain -= data_len + 1;
   }
 
-  // if exiting loop,
+  // if exiting loop
   debug(DEBUG, "too long domain name (invalid)");
   return NULL;
 }
 
+NSRecord::NSRecord() {
+  this->map_.insert(std::make_pair("name", nullptr));
+  this->map_.insert(std::make_pair("data", nullptr));
+  this->map_.insert(std::make_pair("type", nullptr));
+  this->it_type_ = this->map_.find("type");
+  this->it_name_ = this->map_.find("name");
+  this->it_data_ = this->map_.find("data");
+}
+
+NSRecord::~NSRecord() {
+}
+
+void NSRecord::set_type(Value* val) {
+  this->it_type_->second = val;
+}
+void NSRecord::set_name(NSName* name) {
+  this->it_name_->second = name;
+}
+void NSRecord::set_data(NSData* data) {
+  this->it_data_->second = data;
+}
+
+void NSRecord::clear() {
+  // pass
+}
+
+void NSName::set_param(const byte_t* ptr, size_t len,
+                       const byte_t* base_ptr, size_t total_len) {
+  this->set(ptr, len);
+  this->base_ptr_ = base_ptr;
+  this->total_len_ = total_len;
+}
+
+
+void NSName::repr(std::ostream &os) const {
+  size_t len;
+  const byte_t * ptr = this->raw(&len);
+  std::string s;
+  const byte_t* rp = NameService::parse_label(ptr, len, this->base_ptr_,
+                                              this->total_len_, &s);
+  os << ((rp != NULL) ? s : "?");
+}
+
+void NSData::set_data(const byte_t * ptr, size_t len, u_int16_t type,
+                       const byte_t * base_ptr, size_t total_len) {
+  this->set(ptr, len);
+  this->type_ = type;
+  this->base_ptr_ = base_ptr;
+  this->total_len_ = total_len;
+}
+
+
+void NSData::repr(std::ostream &os) const {
+  switch (this->type_) {
+    case  1: os << this->ip4(); break;  // A
+    case 28: os << this->ip6(); break;  // AAAA
+    case  2:  // NS
+    case  5:  // CNAME
+    case  6:  // SOA
+    case 12:  // PTR
+    case 15:  // MX
+    case 33:  // SRV
+      {
+        std::string s;
+        size_t len;
+        const byte_t* ptr = this->raw(&len);
+        const byte_t* rp = NameService::parse_label(ptr, len, this->base_ptr_,
+                                                    this->total_len_, &s);
+        if (rp == NULL) {
+          s.clear();
+        }
+
+        os << s;
+      }
+      break;
+
+    case 16:  // TXT
+      {
+        size_t len, d_len;
+        const byte_t* start_ptr = this->raw(&len);
+        debug(0, "len = %zd", len);
+        for (const byte_t *p = start_ptr; p - start_ptr < len; p += d_len) {
+          if (p > start_ptr) {
+            os << ",";
+          }
+          d_len = *p;
+          p += 1;
+          debug(0, "d_len = %zu, p - s (%ld)", d_len, p - start_ptr);
+
+          if (p - start_ptr + d_len > len) {
+            break;
+          }
+          os << std::string(reinterpret_cast<const char *>(p), d_len);
+        }
+      }
+      break;
+
+    default:
+      {
+        size_t len;
+        const byte_t *p, *start_ptr = this->raw(&len);
+        debug(0, "unsupported name service type: %d", this->type_);
+        for (p = start_ptr; p - start_ptr < len; p++) {
+          char c = static_cast<char>(*p);
+          os << (isprint(c) ? c : '.');
+        }
+      }
+      break;
+  }
+}
+
+void NSType::repr(std::ostream &os) const {
+  uint16_t type = static_cast<uint16_t>(this->uint());
+  switch (type) {
+    case  1: os << "A"; break;
+    case  2: os << "NS"; break;
+    case  5: os << "CNAME"; break;
+    case  6: os << "SOA"; break;
+    case 12: os << "PTR"; break;
+    case 15: os << "MX"; break;
+    case 16: os << "TXT"; break;
+    case 28: os << "AAAA"; break;
+    case 33: os << "SRV"; break;
+    default: os << type; break;
+  }
+}
 
 }   // namespace pm

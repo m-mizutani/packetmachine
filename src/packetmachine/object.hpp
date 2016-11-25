@@ -63,33 +63,6 @@ namespace pm {
 //
 
 
-class Object {
- public:
-  Object() = default;
-  virtual ~Object() {}
-
-  template <typename T> const T& as() const {
-    const T* ptr = dynamic_cast<const T*>(this);
-    if (ptr) {
-      return *ptr;
-    } else {
-      std::string msg = "Can not convert to ";
-      msg += typeid(T).name();
-      throw Exception::TypeError(msg);
-    }
-  }
-
-  template <typename T> bool is() const {
-    const T* ptr = dynamic_cast<const T*>(this);
-    return (ptr != nullptr);
-  }
-
-  virtual void clear() = 0;
-  virtual void repr(std::ostream &os) const = 0;
-  virtual std::string repr() const;
-  friend std::ostream& operator<<(std::ostream& os, const Object& obj);
-};
-
 class Value {
  public:
   enum Endian {
@@ -106,6 +79,10 @@ class Value {
   byte_t* buf_;
   size_t buf_len_;
   Endian endian_;
+
+  // DISALLOW COPY AND ASSIGN
+  Value(const Value&);
+  void operator=(const Value&);
 
  public:
   Value();
@@ -146,32 +123,53 @@ class Value {
   std::string mac() const;
   uint64_t uint() const;
   const byte_t* raw(size_t* len = nullptr) const;
+
+  virtual bool is_vector() const { return false; }
+  virtual bool is_map() const { return false; }
+  virtual const std::vector<Value*>& vector() const;
+  virtual const std::map<std::string, Value*>& map() const;
+
+  friend std::ostream& operator<<(std::ostream& os, const Value& obj);
 };
 
 
 class Array : public Value {
- private:
-  std::vector<Object*> array_;
+ protected:
+  std::vector<Value*> array_;
 
  public:
-  Array();
-  virtual ~Array();
-  void clear();
-  void repr(std::ostream &os) const;
-  void push(Object *obj);
+  Array() = default;
+  virtual ~Array() = default;
+  virtual void clear();
+  virtual void repr(std::ostream &os) const;
+  virtual void push(Value* obj);
+
+  bool is_vector() const { return true; }
+  virtual const std::vector<Value*>& vector() const {
+    return this->array_;
+  }
+  static Value* new_value() {
+    return new Array();
+  }
 };
 
 
 class Map : public Value {
- private:
-  std::map<std::string, Object*> map_;
+ protected:
+  std::map<std::string, Value*> map_;
 
  public:
-  Map();
-  virtual ~Map();
-  void clear();
-  void repr(std::ostream &os) const;
-  void insert(const std::string& key, Object* obj);
+  Map() = default;
+  virtual ~Map() = default;
+  virtual void clear();
+  virtual void repr(std::ostream &os) const;
+  virtual void insert(const std::string& key, Value* obj);
+
+  bool is_map() const { return true; }
+  virtual const std::map<std::string, Value*>& map() const {
+    return this->map_;
+  }
+  static Value* new_value() { return new Map(); }
 };
 
 

@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2016 Masayoshi Mizutani <mizutani@sfc.wide.ad.jp>
- * All rights reserved.
+ * Copyright (c) 2016 Masayoshi Mizutani <mizutani@sfc.wide.ad.jp> All
+ * rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -24,43 +24,20 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "./hash.hpp"
-#include "../debug.hpp"
+#include "./fixtures.hpp"
 
-namespace pm {
-  // from Chromium
-  // https://chromium.googlesource.com/chromium/src/base/+/master/hash.h
+TEST_F(ModuleTesterData1, NameService_DNS_query) {
+  const pm::Property* p;
+  p = get_property(73);   // packet #74
 
-inline uint32_t hash32_2value(uint32_t value1, uint32_t value2) {
-  uint64_t value1_64 = value1;
-  uint64_t hash64 = (value1_64 << 32) | value2;
-  if (sizeof(uint32_t) >= sizeof(uint64_t))
-    return static_cast<uint32_t>(hash64);
-  uint64_t odd_random = 481046412LL << 32 | 1025306955LL;
-  uint32_t shift_random = 10121U << 16;
-  hash64 = hash64 * odd_random + shift_random;
-  uint32_t high_bits = static_cast<uint32_t>
-  (hash64 >> (8 * (sizeof(uint64_t) - sizeof(uint32_t))));
-  return high_bits;
+  EXPECT_TRUE(p->has_value("DNS.tx_id"));
+  EXPECT_TRUE(p->has_value("DNS.question"));
+  EXPECT_FALSE(p->has_value("DNS.answer"));
+  EXPECT_FALSE(p->has_value("DNS.authority"));
+  EXPECT_FALSE(p->has_value("DNS.additional"));
+
+  const auto& rec = p->value("DNS.question");
+  // pm::Array *arr = dynamic_cast<pm::Array*>(&rec);
+  EXPECT_TRUE(rec.is_vector());
 }
 
-
-uint32_t hash32(const void *ptr, size_t data_len) {
-  const uint32_t *p = static_cast<const uint32_t*>(ptr);
-  uint32_t v = 0;
-  size_t len;
-  for (len = data_len; len >= 4; len -= 4, p++) {
-    v = hash32_2value(v, *p);
-  }
-
-  uint32_t r = *p;
-  if (len > 0) {
-    uint32_t a = r & (0xffffffff >> (8 * (4 - len)));
-    debug(false, "len:%zd, %08x, %08x", len, r, a);
-    v = hash32_2value(v, a);
-  }
-
-  return v;
-}
-
-}  // namespace pm
