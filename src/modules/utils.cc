@@ -67,7 +67,7 @@ NameService::NameService(const std::string& base_name)
 
 
   for (size_t i = 0; i < types.size(); i++) {
-    this->p_record_[i] = this->define_param(types[i], Array::new_value);
+    this->p_record_[i] = this->define_param(types[i], value::Array::new_value);
   }
 
   this->ev_query_ = this->define_event("query");
@@ -128,7 +128,7 @@ bool NameService::ns_decode(Payload* pd, Property* prop) {
     prop->push_event(this->ev_reply_);
   }
 
-  Array* arr = nullptr;
+  value::Array* arr = nullptr;
   // parsing resource record
   int target = 0, rr_c = 0;
   for (int c = 0; c < rr_total; c++) {
@@ -147,7 +147,8 @@ bool NameService::ns_decode(Payload* pd, Property* prop) {
     }
 
     if (arr == nullptr) {
-      arr = dynamic_cast<Array*>(prop->retain_value(this->p_record_[target]));
+      arr = dynamic_cast<value::Array*>
+        (prop->retain_value(this->p_record_[target]));
     }
 
     NSRecord *rec =

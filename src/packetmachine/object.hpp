@@ -125,13 +125,37 @@ class Value {
   const byte_t* raw(size_t* len = nullptr) const;
 
   virtual bool is_vector() const { return false; }
-  virtual bool is_map() const { return false; }
-  virtual const std::vector<Value*>& vector() const;
-  virtual const std::map<std::string, Value*>& map() const;
 
+  // ------------
+  // support Array and Map structure
+  virtual size_t size() const { return 0; }
+
+  // for Array
+  virtual bool is_array() const { return false; }
+  virtual const Value& get(size_t idx) const {
+    throw Exception::TypeError("not Array");
+  }
+  virtual void push(Value* val) {
+    throw Exception::TypeError("not Array");
+  }
+
+  // for Map
+  virtual bool is_map() const { return false; }
+  virtual const Value& find(const std::string& key) const {
+    throw Exception::TypeError("not Map");
+  }
+  virtual void insert(const std::string& key, Value* val) {
+    throw Exception::TypeError("not Map");
+  }
+
+  // Output stream
   friend std::ostream& operator<<(std::ostream& os, const Value& obj);
 };
 
+
+namespace value {
+
+static const Value NONE;
 
 class Array : public Value {
  protected:
@@ -142,15 +166,13 @@ class Array : public Value {
   virtual ~Array() = default;
   virtual void clear();
   virtual void repr(std::ostream &os) const;
-  virtual void push(Value* obj);
 
-  bool is_vector() const { return true; }
-  virtual const std::vector<Value*>& vector() const {
-    return this->array_;
-  }
-  static Value* new_value() {
-    return new Array();
-  }
+  virtual size_t size() const;
+  virtual bool is_array() const { return true; }
+  virtual const Value& get(size_t idx) const;
+  virtual void push(Value* val);
+
+  static Value* new_value() { return new Array(); }
 };
 
 
@@ -163,15 +185,14 @@ class Map : public Value {
   virtual ~Map() = default;
   virtual void clear();
   virtual void repr(std::ostream &os) const;
-  virtual void insert(const std::string& key, Value* obj);
 
-  bool is_map() const { return true; }
-  virtual const std::map<std::string, Value*>& map() const {
-    return this->map_;
-  }
+  virtual size_t size() const;
+  virtual bool is_map() const { return true; }
+  virtual const Value& find(const std::string& key) const;
+  virtual void insert(const std::string& key, Value* val);
+
   static Value* new_value() { return new Map(); }
 };
-
 
 
 
@@ -198,6 +219,7 @@ class PortNumber : public Value {
   static Value* new_value() { return new PortNumber(); }
 };
 
+}   // namespace value
 
 }   // namespace pm
 

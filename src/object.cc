@@ -39,49 +39,9 @@
 
 namespace pm {
 
-std::ostream& operator<<(std::ostream& os, const Value& obj) {
-  os << obj.repr();
-  return os;
-}
 
-
-void Array::clear() {
-  this->array_.resize(0);
-}
-
-void Array::repr(std::ostream &os) const {
-  os << "[";
-  for (auto it : this->array_) {
-    it->repr(os);
-    os << ", ";
-  }
-  os << "]";
-}
-
-void Array::push(Value *obj) {
-  this->array_.push_back(obj);
-}
-
-
-void Map::clear() {
-  this->map_.clear();
-}
-
-void Map::repr(std::ostream &os) const {
-  os << "{";
-  for (const auto& it : this->map_) {
-    os << "\"" << it.first << "\": ";
-    it.second->repr(os);
-    os << ", ";
-  }
-  os << "}";
-}
-
-void Map::insert(const std::string& key, Value* obj) {
-  // TODO(m-mizutani): implement
-}
-
-
+// --------------------------------
+// class Value
 
 Value::Value() :
     active_(false), ptr_(nullptr), len_(0), buf_(nullptr),
@@ -312,16 +272,83 @@ const byte_t* Value::raw(size_t* len) const {
   }
 }
 
-const std::vector<Value*>& Value::vector() const {
-  throw Exception::TypeError("not Vector value");
+
+namespace value {
+
+// --------------------------------
+// class Array
+
+std::ostream& operator<<(std::ostream& os, const Value& obj) {
+  os << obj.repr();
+  return os;
 }
 
-const std::map<std::string, Value*>& Value::map() const {
-  throw Exception::TypeError("not Map value");
+
+void Array::clear() {
+  this->array_.resize(0);
+}
+
+void Array::repr(std::ostream &os) const {
+  os << "[";
+  for (auto it : this->array_) {
+    it->repr(os);
+    os << ", ";
+  }
+  os << "]";
+}
+
+size_t Array::size() const {
+  return this->array_.size();
+}
+
+const Value& Array::get(size_t idx) const {
+  if (idx < this->array_.size()) {
+    return *(this->array_[idx]);
+  } else {
+    return NONE;
+  }
+}
+
+void Array::push(Value* val) {
+  this->array_.push_back(val);
 }
 
 
+// --------------------------------
+// class Map
+
+void Map::clear() {
+  this->map_.clear();
+}
+
+void Map::repr(std::ostream &os) const {
+  os << "{";
+  for (const auto& it : this->map_) {
+    os << "\"" << it.first << "\": ";
+    it.second->repr(os);
+    os << ", ";
+  }
+  os << "}";
+}
 
 
+size_t Map::size() const {
+  return this->map_.size();
+}
+
+const Value& Map::find(const std::string& key) const {
+  auto it = this->map_.find(key);
+  if (it == this->map_.end()) {
+    return NONE;
+  } else {
+    return *(it->second);
+  }
+}
+
+void Map::insert(const std::string& key, Value* val) {
+  this->map_.insert(std::make_pair(key, val));
+}
+
+}   // namespace value
 
 }   // namespace pm

@@ -109,7 +109,7 @@ class NSType : public Value {
 };
 
 
-class NSRecord : public Map {
+class NSRecord : public value::Map {
  private:
   std::map<std::string, Value*>::iterator it_type_;
   std::map<std::string, Value*>::iterator it_name_;

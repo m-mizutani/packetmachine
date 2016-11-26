@@ -81,9 +81,9 @@ class TCP : public Module {
  public:
   TCP() {
     this->p_src_port_ = this->define_param("src_port",
-                                           PortNumber::new_value);
+                                        value::PortNumber::new_value);
     this->p_dst_port_ = this->define_param("dst_port",
-                                           PortNumber::new_value);
+                                        value::PortNumber::new_value);
 
 #define DEFINE_PARAM(name) \
     this->p_ ## name ## _ = this->define_param(#name);

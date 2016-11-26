@@ -4,6 +4,7 @@ Makefile
 bin/
 cmake_install.cmake
 lib/
+install_manifest.txt
 
 # X-code files
 CMakeScripts/

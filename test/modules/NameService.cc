@@ -37,12 +37,6 @@ TEST_F(ModuleTesterData1, NameService_DNS_query) {
   EXPECT_FALSE(p->has_value("DNS.additional"));
 
   const auto& q = p->value("DNS.question");
-  EXPECT_TRUE(q.is_vector());
-
-  const auto& v = q.vector();
-  EXPECT_EQ(1, v.size());
-  for (auto& rec : v) {
-    EXPECT_TRUE(rec->is_map());
-  }
+  EXPECT_TRUE(q.is_array());
 }
 
