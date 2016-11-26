@@ -25,6 +25,7 @@
  */
 
 #include <assert.h>
+#include <arpa/inet.h>
 #include "./utils.hpp"
 
 namespace pm {
@@ -149,7 +150,6 @@ bool NameService::ns_decode(Payload* pd, Property* prop) {
       arr = dynamic_cast<Array*>(prop->retain_value(this->p_record_[target]));
     }
 
-    assert(arr != nullptr);
     NSRecord *rec =
       dynamic_cast<NSRecord*>(prop->retain_value(this->p_records_));
     NSName* v_name = dynamic_cast<NSName*>(prop->retain_value(this->p_name_));
@@ -159,6 +159,9 @@ bool NameService::ns_decode(Payload* pd, Property* prop) {
     rec->set_name(v_name);
     rec->set_data(v_data);
     rec->set_type(v_type);
+
+    assert(arr != nullptr);
+    arr->push(rec);
 
     v_name->set_param(ptr, remain, base_ptr, total_len);
 

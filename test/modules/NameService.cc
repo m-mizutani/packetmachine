@@ -36,8 +36,13 @@ TEST_F(ModuleTesterData1, NameService_DNS_query) {
   EXPECT_FALSE(p->has_value("DNS.authority"));
   EXPECT_FALSE(p->has_value("DNS.additional"));
 
-  const auto& rec = p->value("DNS.question");
-  // pm::Array *arr = dynamic_cast<pm::Array*>(&rec);
-  EXPECT_TRUE(rec.is_vector());
+  const auto& q = p->value("DNS.question");
+  EXPECT_TRUE(q.is_vector());
+
+  const auto& v = q.vector();
+  EXPECT_EQ(1, v.size());
+  for (auto& rec : v) {
+    EXPECT_TRUE(rec->is_map());
+  }
 }
 
