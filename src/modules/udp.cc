@@ -24,6 +24,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <arpa/inet.h>
 #include "../module.hpp"
 
 namespace pm {
@@ -77,7 +78,7 @@ class UDP : public Module {
     SET_PROP(this->p_chksum_,   hdr->chksum_);
 
     mod_id next = Module::NONE;
-    if (htons(hdr->src_port_) == 53 || htons(hdr->dst_port_) == 53) {
+    if (ntohs(hdr->src_port_) == 53 || ntohs(hdr->dst_port_) == 53) {
       next = this->mod_dns_;
     }
 
