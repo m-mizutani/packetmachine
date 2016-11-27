@@ -88,7 +88,8 @@ int main(int argc, char* argv[]) {
 
     std::cout << "[performance]" << std::endl
               << "\t" << period << " second" << std::endl
-              << "\t" << total_pkt_count / period << " pps" << std::endl
+              << "\t" << total_pkt_count / (1000 * period) << " Kpps"
+              << std::endl
               << "\t" << total_data_size * 8 / 1000000 / period
               << " Mbps" << std::endl;
   } catch (pm::Exception::Error &e) {
