@@ -92,8 +92,8 @@ class NSData : public Value {
  public:
   NSData() = default;
   ~NSData() = default;
-  void set_data(const byte_t * ptr, size_t len, uint16_t type,
-                const byte_t * base_ptr, size_t total_len);
+  void set_param(const byte_t * ptr, size_t len, uint16_t type,
+                 const byte_t * base_ptr, size_t total_len);
 
   void repr(std::ostream &os) const;
   static Value* new_value() { return new NSData(); }

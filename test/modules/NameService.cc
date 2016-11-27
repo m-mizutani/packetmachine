@@ -24,6 +24,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "../src/debug.hpp"
 #include "./fixtures.hpp"
 
 TEST_F(ModuleTesterData1, NameService_DNS_query) {
@@ -38,5 +39,53 @@ TEST_F(ModuleTesterData1, NameService_DNS_query) {
 
   const auto& q = p->value("DNS.question");
   EXPECT_TRUE(q.is_array());
+  EXPECT_EQ(1, q.size());
+
+  for (size_t i = 0; i < q.size(); i++) {
+    const auto& r = q.get(i);
+    EXPECT_FALSE(r.is_null());
+    EXPECT_EQ("www.nicovideo.jp.", r.find("name").repr());
+    EXPECT_EQ("A",               r.find("type").repr());
+  }
 }
 
+TEST_F(ModuleTesterData1, NameService_DNS_reply) {
+  const pm::Property* p;
+  p = get_property(1838);   // packet #77
+
+  EXPECT_TRUE(p->has_value("DNS.tx_id"));
+  EXPECT_TRUE(p->has_value("DNS.question"));
+  EXPECT_TRUE(p->has_value("DNS.answer"));
+  EXPECT_FALSE(p->has_value("DNS.authority"));
+  EXPECT_FALSE(p->has_value("DNS.additional"));
+
+  {
+    const auto& q = p->value("DNS.question");
+    EXPECT_TRUE(q.is_array());
+    EXPECT_EQ(1, q.size());
+
+    const auto& r = q.get(0);
+    EXPECT_FALSE(r.is_null());
+    EXPECT_EQ("y.one.impact-ad.jp.", r.find("name").repr());
+    EXPECT_EQ("A", r.find("type").repr());
+  }
+
+  {
+    const auto& a = p->value("DNS.answer");
+    EXPECT_FALSE(a.is_map());
+    EXPECT_TRUE(a.is_array());
+    EXPECT_EQ(8, a.size());
+
+    const auto& r0 = a.get(0);
+    EXPECT_TRUE(r0.is_map());
+    EXPECT_FALSE(r0.is_array());
+    EXPECT_EQ("y.one.impact-ad.jp.", r0.find("name").repr());
+    EXPECT_EQ("A",                   r0.find("type").repr());
+    EXPECT_EQ("54.65.207.193",       r0.find("data").repr());
+
+    const auto& r6 = a.get(7);
+    EXPECT_EQ("y.one.impact-ad.jp.", r6.find("name").repr());
+    EXPECT_EQ("A",                   r6.find("type").repr());
+    EXPECT_EQ("54.65.247.186",       r6.find("data").repr());
+  }
+}

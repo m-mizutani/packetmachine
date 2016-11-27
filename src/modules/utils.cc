@@ -184,13 +184,8 @@ bool NameService::ns_decode(Payload* pd, Property* prop) {
     const struct ns_rr_header * rr_hdr =
         reinterpret_cast<const struct ns_rr_header*>(ptr);
     ptr += sizeof(struct ns_rr_header);
+    v_type->set(&(rr_hdr->type_), sizeof (rr_hdr->type_));
 
-    // set value
-    // TODO(m-mizutani): retain map-type value and store data
-    /*
-    p->set (this->NS_TYPE[target], &(rr_hdr->type_),
-            sizeof (rr_hdr->type_));
-    */
 
     // has resource data field
     if (c >= rr_count[RR_QD]) {
@@ -217,6 +212,8 @@ bool NameService::ns_decode(Payload* pd, Property* prop) {
       assert (v != NULL);
       v->set_data (ptr, rd_len, htons (rr_hdr->type_), base_ptr, total_len);
       */
+      v_data->set_param(ptr, rd_len, htons(rr_hdr->type_), base_ptr,
+                        total_len);
 
       // seek pointer
       ptr += rd_len;
@@ -343,7 +340,7 @@ void NSName::repr(std::ostream &os) const {
   os << ((rp != NULL) ? s : "?");
 }
 
-void NSData::set_data(const byte_t * ptr, size_t len, u_int16_t type,
+void NSData::set_param(const byte_t * ptr, size_t len, u_int16_t type,
                        const byte_t * base_ptr, size_t total_len) {
   this->set(ptr, len);
   this->type_ = type;

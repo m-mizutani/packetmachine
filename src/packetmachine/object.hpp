@@ -88,6 +88,8 @@ class Value {
   Value();
   virtual ~Value();
 
+  virtual bool is_null() const { return false; }
+
   void set(const void* ptr, size_t len, Endian e = BIG);
   void cpy(const void* ptr, size_t len, Endian e = BIG);
 
@@ -155,7 +157,14 @@ class Value {
 
 namespace value {
 
-static const Value NONE;
+class NoneValue : public Value {
+ public:
+  NoneValue() {}
+  ~NoneValue() {}
+  bool is_null() const { return true; }
+};
+
+static const NoneValue NONE;
 
 class Array : public Value {
  protected:
@@ -163,7 +172,7 @@ class Array : public Value {
 
  public:
   Array() = default;
-  virtual ~Array() = default;
+  virtual ~Array() {}
   virtual void clear();
   virtual void repr(std::ostream &os) const;
 
@@ -182,7 +191,7 @@ class Map : public Value {
 
  public:
   Map() = default;
-  virtual ~Map() = default;
+  virtual ~Map() {}
   virtual void clear();
   virtual void repr(std::ostream &os) const;
 
