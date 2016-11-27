@@ -272,16 +272,16 @@ const byte_t* Value::raw(size_t* len) const {
   }
 }
 
+std::ostream& operator<<(std::ostream& os, const Value& obj) {
+  os << obj.repr();
+  return os;
+}
+
 
 namespace value {
 
 // --------------------------------
 // class Array
-
-std::ostream& operator<<(std::ostream& os, const Value& obj) {
-  os << obj.repr();
-  return os;
-}
 
 
 void Array::clear() {
