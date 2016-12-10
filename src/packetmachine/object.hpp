@@ -93,7 +93,7 @@ class Value {
   void set(const void* ptr, size_t len, Endian e = BIG);
   void cpy(const void* ptr, size_t len, Endian e = BIG);
 
-  virtual void clear();
+  virtual inline void clear() { this->active_ = false; }
   virtual void repr(std::ostream &os) const;
   virtual std::string repr() const;
 

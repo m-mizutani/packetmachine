@@ -79,11 +79,6 @@ void Value::cpy(const void* ptr, size_t len, Endian e) {
 }
 
 
-void Value::clear() {
-  this->active_ = false;
-}
-
-
 void Value::repr(std::ostream &os) const {
   if (this->active_) {
     for (size_t i = 0; i < this->len_; i++) {
