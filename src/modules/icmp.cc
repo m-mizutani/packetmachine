@@ -31,9 +31,9 @@ namespace pm {
 class ICMP : public Module {
  private:
   struct icmp_header {
-    u_int8_t type_;  // ICMP type
-    u_int8_t code_;  // ICMP code
-    u_int16_t chksum_;    // checksum
+    uint8_t type_;  // ICMP type
+    uint8_t code_;  // ICMP code
+    uint16_t chksum_;    // checksum
   } __attribute__((packed));
 
   const ParamDef* p_type_;

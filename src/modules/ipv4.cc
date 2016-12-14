@@ -30,25 +30,25 @@ namespace pm {
 
 class IPv4 : public Module {
  private:
-  static const u_int8_t PROTO_ICMP  = 1;
-  static const u_int8_t PROTO_TCP   = 6;
-  static const u_int8_t PROTO_UDP   = 17;
-  static const u_int8_t PROTO_IPV6  = 41;
-  static const u_int8_t PROTO_ICMP6 = 58;
+  static const uint8_t PROTO_ICMP  = 1;
+  static const uint8_t PROTO_TCP   = 6;
+  static const uint8_t PROTO_UDP   = 17;
+  static const uint8_t PROTO_IPV6  = 41;
+  static const uint8_t PROTO_ICMP6 = 58;
 
   struct ipv4_header {
     // little endian mode
-    u_int8_t  hdrlen_:4;
-    u_int8_t  ver_:4;
-    u_int8_t  tos_;
-    u_int16_t total_len_;  /* total length */
-    u_int16_t id_;
-    u_int16_t offset_;     /* fragment offset */
-    u_int8_t  ttl_;        /* Time To Live */
-    u_int8_t  proto_;      /* L4 Protocol */
-    u_int16_t chksum_;     /* ip header check sum */
-    u_int32_t src_;        /* source ip address */
-    u_int32_t dst_;        /* destination ip address */
+    uint8_t  hdrlen_:4;
+    uint8_t  ver_:4;
+    uint8_t  tos_;
+    uint16_t total_len_;  /* total length */
+    uint16_t id_;
+    uint16_t offset_;     /* fragment offset */
+    uint8_t  ttl_;        /* Time To Live */
+    uint8_t  proto_;      /* L4 Protocol */
+    uint16_t chksum_;     /* ip header check sum */
+    uint32_t src_;        /* source ip address */
+    uint32_t dst_;        /* destination ip address */
   } __attribute__((packed));
 
   const ParamDef* p_hdr_len_;

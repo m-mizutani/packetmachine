@@ -38,10 +38,10 @@ class TCPSession : public Module {
   const ParamDef* p_id_;;
   const EventDef* ev_new_;
 
-  static const u_int8_t FIN  = 0x01;
-  static const u_int8_t SYN  = 0x02;
-  static const u_int8_t RST  = 0x04;
-  static const u_int8_t ACK  = 0x10;
+  static const uint8_t FIN  = 0x01;
+  static const uint8_t SYN  = 0x02;
+  static const uint8_t RST  = 0x04;
+  static const uint8_t ACK  = 0x10;
 
   class Session {
    public:

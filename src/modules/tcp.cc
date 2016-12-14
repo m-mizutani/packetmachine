@@ -31,18 +31,18 @@ namespace pm {
 class TCP : public Module {
  private:
   struct tcp_header {
-    u_int16_t src_port_;  // source port
-    u_int16_t dst_port_;  // destination port
-    u_int32_t seq_;       // tcp sequence number
-    u_int32_t ack_;       // tcp ack number
+    uint16_t src_port_;  // source port
+    uint16_t dst_port_;  // destination port
+    uint32_t seq_;       // tcp sequence number
+    uint32_t ack_;       // tcp ack number
 
     // ToDo(Masa): 4 bit data field should be updated for little-endian
-    u_int8_t offset_;
+    uint8_t offset_;
 
-    u_int8_t flags_;      // flags
-    u_int16_t window_;    // window
-    u_int16_t chksum_;    // checksum
-    u_int16_t urgptr_;    // urgent pointer
+    uint8_t flags_;      // flags
+    uint16_t window_;    // window
+    uint16_t chksum_;    // checksum
+    uint16_t urgptr_;    // urgent pointer
   } __attribute__((packed));
 
   const ParamDef* p_src_port_;
@@ -68,14 +68,14 @@ class TCP : public Module {
   const ParamDef* p_optdata_;
   const ParamDef* p_segment_;
 
-  static const u_int8_t FIN  = 0x01;
-  static const u_int8_t SYN  = 0x02;
-  static const u_int8_t RST  = 0x04;
-  static const u_int8_t PUSH = 0x08;
-  static const u_int8_t ACK  = 0x10;
-  static const u_int8_t URG  = 0x20;
-  static const u_int8_t ECE  = 0x40;
-  static const u_int8_t CWR  = 0x80;
+  static const uint8_t FIN  = 0x01;
+  static const uint8_t SYN  = 0x02;
+  static const uint8_t RST  = 0x04;
+  static const uint8_t PUSH = 0x08;
+  static const uint8_t ACK  = 0x10;
+  static const uint8_t URG  = 0x20;
+  static const uint8_t ECE  = 0x40;
+  static const uint8_t CWR  = 0x80;
 
 
  public:

@@ -45,11 +45,11 @@ class ARP : public Module {
 #define ARPOP_INVREQUEST 8      /* request to identify peer */
 #define ARPOP_INVREPLY   9      /* response identifying peer */
 
-    u_int16_t hw_type_;
-    u_int16_t pr_type_;
-    u_int8_t  hw_size_;
-    u_int8_t  pr_size_;
-    u_int16_t op_;
+    uint16_t hw_type_;
+    uint16_t pr_type_;
+    uint8_t  hw_size_;
+    uint8_t  pr_size_;
+    uint16_t op_;
   } __attribute__((packed));
 
   const ParamDef* p_hw_type_;

@@ -31,22 +31,22 @@
 namespace pm {
 
 struct ns_header {
-  u_int16_t trans_id_;  // Transaction ID
-  u_int16_t flags_;     // Flags
-  u_int16_t qd_count_;  // Query Count
-  u_int16_t an_count_;  // Answer Count
-  u_int16_t ns_count_;  // Authory Count
-  u_int16_t ar_count_;  // Additional Record Count
+  uint16_t trans_id_;  // Transaction ID
+  uint16_t flags_;     // Flags
+  uint16_t qd_count_;  // Query Count
+  uint16_t an_count_;  // Answer Count
+  uint16_t ns_count_;  // Authory Count
+  uint16_t ar_count_;  // Additional Record Count
 } __attribute__((packed));
 
 struct ns_rr_header {
-  u_int16_t type_;    // Resource type
-  u_int16_t class_;   // Class (basically 0x0001)
+  uint16_t type_;    // Resource type
+  uint16_t class_;   // Class (basically 0x0001)
 } __attribute__((packed));
 
 struct ns_ans_header {
-  u_int32_t ttl_;     // Cache duration of resouce record
-  u_int16_t rd_len_;  // Resource data length
+  uint32_t ttl_;     // Cache duration of resouce record
+  uint16_t rd_len_;  // Resource data length
 } __attribute__((packed));
 
 
@@ -257,8 +257,8 @@ const byte_t * NameService::parse_label(const byte_t * p, size_t remain,
         return NULL;
       }
 
-      const u_int16_t * h = reinterpret_cast<const u_int16_t *>(p);
-      u_int16_t jmp = (ntohs(*h) & 0x3FFF);
+      const uint16_t * h = reinterpret_cast<const uint16_t *>(p);
+      uint16_t jmp = (ntohs(*h) & 0x3FFF);
 
       if (jmp >= total_len) {
         debug(DEBUG, "invalid jump point: %d", jmp);
@@ -340,7 +340,7 @@ void NSName::repr(std::ostream &os) const {
   os << ((rp != NULL) ? s : "?");
 }
 
-void NSData::set_param(const byte_t * ptr, size_t len, u_int16_t type,
+void NSData::set_param(const byte_t * ptr, size_t len, uint16_t type,
                        const byte_t * base_ptr, size_t total_len) {
   this->set(ptr, len);
   this->type_ = type;

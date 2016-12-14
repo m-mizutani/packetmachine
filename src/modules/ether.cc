@@ -62,9 +62,9 @@ class Ethernet : public Module {
   static const size_t ETHER_ADDR_LEN = 6;
 
   struct ether_header {
-    u_int8_t dst_[ETHER_ADDR_LEN];
-    u_int8_t src_[ETHER_ADDR_LEN];
-    u_int16_t type_;
+    uint8_t dst_[ETHER_ADDR_LEN];
+    uint8_t src_[ETHER_ADDR_LEN];
+    uint16_t type_;
   } __attribute__((packed));
 
   const ParamDef *p_type_, *p_src_, *p_dst_;

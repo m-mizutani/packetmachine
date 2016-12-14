@@ -32,10 +32,10 @@ namespace pm {
 class UDP : public Module {
  private:
   struct udp_header {
-    u_int16_t src_port_;  // source port
-    u_int16_t dst_port_;  // destination port
-    u_int16_t length_;    // length
-    u_int16_t chksum_;    // checksum
+    uint16_t src_port_;  // source port
+    uint16_t dst_port_;  // destination port
+    uint16_t length_;    // length
+    uint16_t chksum_;    // checksum
   } __attribute__((packed));
 
   const ParamDef* p_src_port_;
