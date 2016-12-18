@@ -121,52 +121,12 @@ class Module {
   void set_name(const std::string& name);
 };
 
-
-
-// Interface for factory template.
-class ModuleFactory {
- public:
-  ModuleFactory() = default;
-  ~ModuleFactory() = default;
-  virtual Module* create() = 0;
-};
-
-// Factory set that should be used as only one global variable.
-class ModuleBuilder {
- private:
-  std::map<std::string, ModuleFactory*> factory_;
-
- public:
-  ModuleBuilder() {}
-  ~ModuleBuilder() = default;
-  void add(const std::string& name, ModuleFactory *factory);
-  void build(std::map<std::string, Module*> *mod_map);
-};
-
-// Global variable and function.
-ModuleBuilder* __get_global_module_builder();
 void build_module_map(std::map<std::string, Module*> *mod_map);
 
-// Actual class of module factory.
-template<typename T>
-class ModuleFactoryEntry : public ModuleFactory {
- public:
-  Module* create() { return new T; }
-  ModuleFactoryEntry(const std::string& name,
-                     ModuleBuilder* mfs = nullptr) {
-    if (mfs == nullptr) {
-      mfs = __get_global_module_builder();
-    }
-    mfs->add(name, this);
-  }
-};
-
-#define INIT_MODULE(CNAME)                                      \
+#define INIT_MODULE(CNAME)                                          \
   Module* __new_module_##CNAME##_factory () { return new CNAME(); }
 
-//  ModuleFactoryEntry<CNAME> __module_##CNAME##_factory(#CNAME)
-
-#define NEW_MODULE(CNAME) \
+#define NEW_MODULE(CNAME)                       \
   __new_module_##CNAME##_factory ()
   
   

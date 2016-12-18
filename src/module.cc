@@ -30,24 +30,6 @@
 
 namespace pm {
 
-void ModuleBuilder::add(const std::string& name, ModuleFactory *factory) {
-  this->factory_.insert(std::make_pair(name, factory));
-}
-
-void ModuleBuilder::build(std::map<std::string, Module*> *mod_map) {
-  for (auto& f : this->factory_) {
-    const std::string& name = f.first;
-    Module* mod = (f.second)->create();
-
-    mod_map->insert(std::make_pair(name, mod));
-  }
-}
-
-ModuleBuilder* __get_global_module_builder() {
-  static ModuleBuilder __global_module_builder;
-  return &__global_module_builder;
-}
-
 void build_module_map(std::map<std::string, Module*> *mod_map) {
 #define INSTALL_MOD(CNAME)                                      \
   {                                                             \

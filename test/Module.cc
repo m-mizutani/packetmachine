@@ -15,7 +15,7 @@
  * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
  * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
  * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE FOUNDATION OR CONTRIBUTORS
- * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+n * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
  * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
  * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
  * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
@@ -29,24 +29,6 @@
 
 namespace module_test {
 
-class TestMod : public pm::Module {
- public:
-  void setup() {
-  }
-  pm::mod_id decode(pm::Payload* pd, pm::Property* prop) {
-    return pm::Module::NONE;
-  }
-};
-
-TEST(Module, basic) {
-  pm::ModuleBuilder builder;
-  pm::ModuleFactoryEntry<TestMod> tf("TestMod", &builder);
-
-  std::map<std::string, pm::Module*> mod_map;
-  builder.build(&mod_map);
-
-  EXPECT_EQ(1, mod_map.size());
-}
 
 TEST(Module, use_global_variable) {
   std::map<std::string, pm::Module*> mod_map;
