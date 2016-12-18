@@ -41,7 +41,7 @@ FILE(GLOB BASESRCS
 
 	# Internal code
 	"src/capture.cc"  "src/capture.hpp"
-	"src/channel.cc"  "src/channel.hpp"
+	"src/channel.hpp"
 	"src/packet.cc"   "src/packet.hpp"
 	"src/kernel.cc"   "src/kernel.hpp"
 	"src/module.cc"   "src/module.hpp"
@@ -60,7 +60,7 @@ FILE(GLOB BASESRCS
   "src/modules/utils.cc" "src/modules/utils.hpp"
 
 	# Decoding utilities
-	"src/utils/lru.cc"    "src/utils/lru.hpp"
+	"src/utils/lru.hpp"
 	"src/utils/buffer.cc" "src/utils/buffer.hpp"
 	"src/utils/hash.cc"   "src/utils/hash.hpp"
 )
@@ -83,31 +83,49 @@ FILE(GLOB PERFSRCS
   "perf/Channel.cc"
 )
 
+ADD_LIBRARY(objlib OBJECT ${BASESRCS} ${HEADERS})
+SET_PROPERTY(TARGET ${objlib} PROPERTY POSITION_INDEPENDENT_CODE 1)
+IF( CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" )
+  SET_TARGET_PROPERTIES(objlib PROPERTIES COMPILE_FLAGS "-fPIC")
+ENDIF( CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" )
+ADD_LIBRARY(pm-shared SHARED $<TARGET_OBJECTS:objlib>)
+ADD_LIBRARY(pm-static STATIC $<TARGET_OBJECTS:objlib>)
 
-ADD_LIBRARY(packetmachine SHARED ${BASESRCS} ${HEADERS})
 IF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-    TARGET_LINK_LIBRARIES(packetmachine pcap pthread rt)
+    TARGET_LINK_LIBRARIES(pm-shared pcap pthread rt)
+    TARGET_LINK_LIBRARIES(pm-static pcap pthread rt)
 ELSE(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-    TARGET_LINK_LIBRARIES(packetmachine pcap pthread)
+    TARGET_LINK_LIBRARIES(pm-shared pcap pthread)
+    TARGET_LINK_LIBRARIES(pm-static pcap pthread)
 ENDIF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 
-INSTALL(TARGETS packetmachine LIBRARY DESTINATION lib)
+SET_TARGET_PROPERTIES(pm-shared PROPERTIES OUTPUT_NAME packetmachine)
+SET_TARGET_PROPERTIES(pm-static PROPERTIES OUTPUT_NAME packetmachine)
+
+INSTALL(TARGETS pm-shared
+  EXPORT packetmachineConfig
+  INCLUDES DESTINATION include
+  LIBRARY DESTINATION lib
+)
+INSTALL(TARGETS pm-static DESTINATION lib)
+
 INSTALL(FILES src/packetmachine.hpp DESTINATION include/)
 INSTALL(FILES ${HEADERS} DESTINATION include/packetmachine)
+INSTALL(EXPORT packetmachineConfig DESTINATION cmake)
 
 # Test binary
 ADD_EXECUTABLE(packetmachine-test ${TESTSRCS})
-TARGET_LINK_LIBRARIES(packetmachine-test packetmachine)
+TARGET_LINK_LIBRARIES(packetmachine-test pm-static)
 
 # Performance check binary
 ADD_EXECUTABLE(packetmachine-perf ${PERFSRCS})
-TARGET_LINK_LIBRARIES(packetmachine-perf packetmachine)
+TARGET_LINK_LIBRARIES(packetmachine-perf pm-static)
 
 
 # Examples
 ADD_EXECUTABLE(pmdump example/pmdump.cc)
-TARGET_LINK_LIBRARIES(pmdump packetmachine)
+TARGET_LINK_LIBRARIES(pmdump pm-static)
 ADD_EXECUTABLE(pmfile example/pmfile.cc)
-TARGET_LINK_LIBRARIES(pmfile packetmachine)
+TARGET_LINK_LIBRARIES(pmfile pm-static)
 ADD_EXECUTABLE(pmbench example/pmbench.cc)
-TARGET_LINK_LIBRARIES(pmbench packetmachine)
+TARGET_LINK_LIBRARIES(pmbench pm-static)

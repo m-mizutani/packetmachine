@@ -49,8 +49,20 @@ ModuleBuilder* __get_global_module_builder() {
 }
 
 void build_module_map(std::map<std::string, Module*> *mod_map) {
-  ModuleBuilder* builder = __get_global_module_builder();
-  builder->build(mod_map);
+#define INSTALL_MOD(CNAME)                                      \
+  {                                                             \
+    extern Module* __new_module_##CNAME##_factory();            \
+    mod_map->insert(std::make_pair(#CNAME, NEW_MODULE(CNAME))); \
+  }
+
+  INSTALL_MOD(Ethernet);
+  INSTALL_MOD(ARP);
+  INSTALL_MOD(IPv4);
+  INSTALL_MOD(ICMP);
+  INSTALL_MOD(UDP);
+  INSTALL_MOD(TCP);
+  INSTALL_MOD(TCPSession);
+  INSTALL_MOD(DNS);  
 }
 
 

@@ -161,10 +161,15 @@ class ModuleFactoryEntry : public ModuleFactory {
   }
 };
 
-
 #define INIT_MODULE(CNAME)                                      \
-  ModuleFactoryEntry<CNAME> __module_##CNAME##_factory(#CNAME)
+  Module* __new_module_##CNAME##_factory () { return new CNAME(); }
 
+//  ModuleFactoryEntry<CNAME> __module_##CNAME##_factory(#CNAME)
+
+#define NEW_MODULE(CNAME) \
+  __new_module_##CNAME##_factory ()
+  
+  
 }   // namespace pm
 
 #endif   // __PACKETMACHINE_MODULE_HPP__
