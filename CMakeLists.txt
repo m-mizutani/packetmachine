@@ -114,8 +114,12 @@ INSTALL(FILES ${HEADERS} DESTINATION include/packetmachine)
 INSTALL(EXPORT packetmachineConfig DESTINATION cmake)
 
 # Test binary
-ADD_EXECUTABLE(packetmachine-test ${TESTSRCS})
-TARGET_LINK_LIBRARIES(packetmachine-test pm-static)
+ADD_LIBRARY(objtest OBJECT ${TESTSRCS})
+SET_PROPERTY(TARGET ${objtest} PROPERTY POSITION_INDEPENDENT_CODE 1)
+ADD_EXECUTABLE(packetmachine-static-test $<TARGET_OBJECTS:objtest>)
+TARGET_LINK_LIBRARIES(packetmachine-static-test pm-static)
+ADD_EXECUTABLE(packetmachine-shared-test $<TARGET_OBJECTS:objtest>)
+TARGET_LINK_LIBRARIES(packetmachine-shared-test pm-shared)
 
 # Performance check binary
 ADD_EXECUTABLE(packetmachine-perf ${PERFSRCS})

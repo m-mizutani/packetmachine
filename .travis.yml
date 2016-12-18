@@ -19,5 +19,6 @@ before_script:
 
 script:
   - make
-  - ./bin/packetmachine-test
-  - ./bin/packetmachine-perf
+  - ./bin/packetmachine-static-test
+  - ./bin/packetmachine-shared-test
+
