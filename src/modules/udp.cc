@@ -85,8 +85,7 @@ class UDP : public Module {
 
     if (sport == 53 || dport == 53) {
       next = this->mod_dns_;
-    } else if (ntohs(hdr->src_port_) == 5353 ||
-               ntohs(hdr->dst_port_) == 5353) {
+    } else if (sport == 5353 || dport == 5353) {
       next = this->mod_mdns_;
     }
 
