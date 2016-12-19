@@ -68,7 +68,7 @@ class Ethernet : public Module {
   } __attribute__((packed));
 
   const ParamDef *p_type_, *p_src_, *p_dst_;
-  mod_id mod_ipv4_, mod_arp_;
+  mod_id mod_ipv4_, mod_arp_, mod_pppoe_;
 
  public:
   Ethernet() {
@@ -83,6 +83,7 @@ class Ethernet : public Module {
   void setup() {
     this->mod_ipv4_ = this->lookup_module("IPv4");
     this->mod_arp_  = this->lookup_module("ARP");
+    this->mod_pppoe_ = this->lookup_module("PPPoE");
     debug(false, "ARP mod_id = %lld", this->mod_arp_);
   }
 
@@ -101,6 +102,7 @@ class Ethernet : public Module {
     switch (ntohs(hdr->type_)) {
       case ETHERTYPE_ARP: next = this->mod_arp_; break;
       case ETHERTYPE_IP:  next = this->mod_ipv4_; break;
+      case ETHERTYPE_PPPOE_SSN: next = this->mod_pppoe_; break;
     }
 
     return next;

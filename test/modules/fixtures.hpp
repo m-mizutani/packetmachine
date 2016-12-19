@@ -96,4 +96,10 @@ class ModuleTesterData2 : public ModuleTesterData {
   }  
 };
 
+class ModuleTesterData3 : public ModuleTesterData {
+  virtual const std::string fpath() const {
+    return "./test/data3.pcap";
+  }  
+};
+
 #endif    // __PACKETMACHINE_TEST_MODULES_FIXTURES_HPP__

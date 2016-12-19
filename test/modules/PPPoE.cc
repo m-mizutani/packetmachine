@@ -15,7 +15,7 @@
  * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
  * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
  * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE FOUNDATION OR CONTRIBUTORS
-n * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
  * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
  * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
  * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
@@ -24,27 +24,21 @@ n * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "./gtest/gtest.h"
-#include "../src/module.hpp"
-
-namespace module_test {
+#include "./fixtures.hpp"
 
 
-TEST(Module, use_global_variable) {
-  std::map<std::string, pm::Module*> mod_map;
-  build_module_map(&mod_map);
+TEST_F(ModuleTesterData3, PPPoE_simple) {
+  const pm::Property* p;
 
-  EXPECT_EQ(10, mod_map.size());
-  EXPECT_NE(mod_map.end(), mod_map.find("Ethernet"));
-  EXPECT_NE(mod_map.end(), mod_map.find("PPPoE"));
-  EXPECT_NE(mod_map.end(), mod_map.find("ARP"));
-  EXPECT_NE(mod_map.end(), mod_map.find("IPv4"));
-  EXPECT_NE(mod_map.end(), mod_map.find("UDP"));
-  EXPECT_NE(mod_map.end(), mod_map.find("ICMP"));
-  EXPECT_NE(mod_map.end(), mod_map.find("TCP"));
-  EXPECT_NE(mod_map.end(), mod_map.find("TCPSession"));
-  EXPECT_NE(mod_map.end(), mod_map.find("DNS"));
-  EXPECT_NE(mod_map.end(), mod_map.find("MDNS"));
+  p = get_property();   // packet #1
+  ASSERT_NE(nullptr, p);
+
+  EXPECT_EQ(1,      p->value("PPPoE.version").uint());
+  EXPECT_EQ(1,      p->value("PPPoE.type").uint());
+  EXPECT_EQ(0,      p->value("PPPoE.code").uint());
+  EXPECT_EQ(0x3f05, p->value("PPPoE.session_id").uint());
+  EXPECT_EQ(42,     p->value("PPPoE.payload_length").uint());
+
+  EXPECT_EQ("118.109.101.176", p->value("IPv4.src").ip4());
+  EXPECT_EQ("172.217.27.78",   p->value("IPv4.dst").ip4());
 }
-
-}   // namespace module_test

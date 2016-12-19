@@ -49,6 +49,7 @@ FILE(GLOB BASESRCS
 
 	# Decoder modules
 	"src/modules/ether.cc"
+	"src/modules/pppoe.cc"
 	"src/modules/arp.cc"
 	"src/modules/ipv4.cc"
 	"src/modules/udp.cc"
