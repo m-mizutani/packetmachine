@@ -15,7 +15,7 @@
  * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
  * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
  * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE FOUNDATION OR CONTRIBUTORS
-n * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
  * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
  * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
  * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
@@ -24,26 +24,37 @@ n * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "./gtest/gtest.h"
-#include "../src/module.hpp"
+#include "./fixtures.hpp"
 
-namespace module_test {
+TEST_F(ModuleTesterData2, MDNS_packet) {
+  const pm::Property* p;
+  p = get_property(27);   // # packet #28
 
+  EXPECT_TRUE(p->has_value("MDNS.tx_id"));
+  EXPECT_TRUE(p->has_value("MDNS.question"));
+  EXPECT_FALSE(p->has_value("MDNS.answer"));
+  EXPECT_TRUE(p->has_value("MDNS.authority"));
+  EXPECT_FALSE(p->has_value("MDNS.additional"));
 
-TEST(Module, use_global_variable) {
-  std::map<std::string, pm::Module*> mod_map;
-  build_module_map(&mod_map);
+  EXPECT_EQ(0, p->value("MDNS.tx_id").uint());
 
-  EXPECT_EQ(9, mod_map.size());
-  EXPECT_NE(mod_map.end(), mod_map.find("Ethernet"));
-  EXPECT_NE(mod_map.end(), mod_map.find("ARP"));
-  EXPECT_NE(mod_map.end(), mod_map.find("IPv4"));
-  EXPECT_NE(mod_map.end(), mod_map.find("UDP"));
-  EXPECT_NE(mod_map.end(), mod_map.find("ICMP"));
-  EXPECT_NE(mod_map.end(), mod_map.find("TCP"));
-  EXPECT_NE(mod_map.end(), mod_map.find("TCPSession"));
-  EXPECT_NE(mod_map.end(), mod_map.find("DNS"));
-  EXPECT_NE(mod_map.end(), mod_map.find("MDNS"));
+  const pm::value::Array& q_arr =
+      dynamic_cast<const pm::value::Array&>(p->value("MDNS.question"));
+  EXPECT_EQ(3, q_arr.size());
+
+  const pm::value::Map& rec1 =
+      dynamic_cast<const pm::value::Map&>(q_arr.get(1));
+  EXPECT_EQ(255,                  rec1.find("type").uint());
+  EXPECT_EQ("Interceptor.local.", rec1.find("name").repr());
+
+  const pm::value::Array& a_arr =
+      dynamic_cast<const pm::value::Array&>(p->value("MDNS.authority"));
+  EXPECT_EQ(3, a_arr.size());
+
+  const pm::value::Map& rec2 =
+      dynamic_cast<const pm::value::Map&>(a_arr.get(2));
+  EXPECT_EQ("A",                  rec2.find("type").repr());
+  EXPECT_EQ("Interceptor.local.", rec2.find("name").repr());
+  EXPECT_EQ("10.0.0.130",         rec2.find("data").repr());
 }
 
-}   // namespace module_test

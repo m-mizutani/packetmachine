@@ -34,15 +34,19 @@
 #include "../src/packet.hpp"
 #include "../src/packetmachine/property.hpp"
 
-class ModuleTesterData1 : public ::testing::Test {
+
+class ModuleTesterData : public ::testing::Test {
  public:
   pm::Decoder dec;
   pm::Packet pkt;
   pm::Payload pd;
   pm::Property *prop_;
-  pcap_t* pcap;  
+  pcap_t* pcap;
+
+  virtual const std::string fpath() const = 0;
+
   virtual void SetUp() {
-    const std::string fpath = "./test/data1.pcap";
+    const std::string fpath = this->fpath();
     char errbuf[PCAP_ERRBUF_SIZE];
     pcap = ::pcap_open_offline(fpath.c_str(), errbuf);
     prop_ = new pm::Property(&dec);
@@ -77,6 +81,18 @@ class ModuleTesterData1 : public ::testing::Test {
       dec.decode(&pd, prop_);
       return prop_;
     }
+  }  
+};
+
+class ModuleTesterData1 : public ModuleTesterData {
+  virtual const std::string fpath() const {
+    return "./test/data1.pcap";
+  }  
+};
+
+class ModuleTesterData2 : public ModuleTesterData {
+  virtual const std::string fpath() const {
+    return "./test/data2.pcap";
   }  
 };
 

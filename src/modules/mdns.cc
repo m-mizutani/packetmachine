@@ -15,7 +15,7 @@
  * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
  * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
  * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE FOUNDATION OR CONTRIBUTORS
-n * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
  * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
  * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
  * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
@@ -24,26 +24,17 @@ n * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "./gtest/gtest.h"
-#include "../src/module.hpp"
+#include "./utils.hpp"
 
-namespace module_test {
+namespace pm {
 
+class MDNS : public NameService {
+ public:
+  MDNS() : NameService("MDNS") {
+  }
+  ~MDNS() = default;
+};
 
-TEST(Module, use_global_variable) {
-  std::map<std::string, pm::Module*> mod_map;
-  build_module_map(&mod_map);
+INIT_MODULE(MDNS);
 
-  EXPECT_EQ(9, mod_map.size());
-  EXPECT_NE(mod_map.end(), mod_map.find("Ethernet"));
-  EXPECT_NE(mod_map.end(), mod_map.find("ARP"));
-  EXPECT_NE(mod_map.end(), mod_map.find("IPv4"));
-  EXPECT_NE(mod_map.end(), mod_map.find("UDP"));
-  EXPECT_NE(mod_map.end(), mod_map.find("ICMP"));
-  EXPECT_NE(mod_map.end(), mod_map.find("TCP"));
-  EXPECT_NE(mod_map.end(), mod_map.find("TCPSession"));
-  EXPECT_NE(mod_map.end(), mod_map.find("DNS"));
-  EXPECT_NE(mod_map.end(), mod_map.find("MDNS"));
-}
-
-}   // namespace module_test
+}   // namespace pm

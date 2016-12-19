@@ -44,6 +44,7 @@ class UDP : public Module {
   const ParamDef* p_chksum_;
 
   mod_id mod_dns_;
+  mod_id mod_mdns_;
 
  public:
   UDP() {
@@ -57,6 +58,7 @@ class UDP : public Module {
 
   void setup() {
     this->mod_dns_  = this->lookup_module("DNS");
+    this->mod_mdns_ = this->lookup_module("MDNS");
   }
 
 #define SET_PROP(PARAM, DATA) \
@@ -78,8 +80,14 @@ class UDP : public Module {
     SET_PROP(this->p_chksum_,   hdr->chksum_);
 
     mod_id next = Module::NONE;
-    if (ntohs(hdr->src_port_) == 53 || ntohs(hdr->dst_port_) == 53) {
+    uint16_t sport = ntohs(hdr->src_port_);
+    uint16_t dport = ntohs(hdr->dst_port_);
+
+    if (sport == 53 || dport == 53) {
       next = this->mod_dns_;
+    } else if (ntohs(hdr->src_port_) == 5353 ||
+               ntohs(hdr->dst_port_) == 5353) {
+      next = this->mod_mdns_;
     }
 
     return next;
