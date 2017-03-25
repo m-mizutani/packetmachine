@@ -62,6 +62,9 @@ class ARP : public Module {
   const ParamDef* p_pr_src_;
   const ParamDef* p_pr_dst_;
 
+  const EventDef* ev_request_;
+  const EventDef* ev_reply_;
+
  public:
   ARP() {
     this->p_hw_type_ = this->define_param("hw_type");
@@ -73,6 +76,9 @@ class ARP : public Module {
     this->p_hw_dst_  = this->define_param("hw_dst");
     this->p_pr_src_  = this->define_param("pr_src");
     this->p_pr_dst_  = this->define_param("pr_dst");
+
+    this->ev_request_ = this->define_event("request");
+    this->ev_reply_   = this->define_event("reply");
   }
   ~ARP() {
   }
@@ -99,6 +105,12 @@ class ARP : public Module {
 
     const size_t hw_len = static_cast<size_t>(hdr->hw_size_);
     const size_t pr_len = static_cast<size_t>(hdr->pr_size_);
+
+    if (ntohs(hdr->op_) == ARPOP_REQUEST) {
+      prop->push_event(this->ev_request_);
+    } else if (ntohs(hdr->op_) == ARPOP_REPLY) {
+      prop->push_event(this->ev_reply_);
+    }
 
 #define SET_ADDR(PARAM, LEN)                        \
     {                                               \
