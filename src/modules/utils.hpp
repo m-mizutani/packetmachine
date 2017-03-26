@@ -46,7 +46,7 @@ class NameService : public Module {
   const EventDef* ev_reply_;
   const std::string base_name_;
 
-  static const uint16_t NS_FLAG_MASK_QUERY = 0x8000;
+  static const uint16_t NS_FLAG_MASK_QUERY = 0x0100;
   static const uint16_t RR_QD  = 0;
   static const uint16_t RR_AN  = 1;
   static const uint16_t RR_NS  = 2;

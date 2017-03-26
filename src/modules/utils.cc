@@ -122,7 +122,7 @@ bool NameService::ns_decode(Payload* pd, Property* prop) {
   prop->retain_value(this->p_tx_id_)->set(&(hdr->trans_id_),
                                         sizeof(hdr->trans_id_));
 
-  if ((hdr->flags_ & NS_FLAG_MASK_QUERY) > 0) {
+  if ((ntohs(hdr->flags_) & NS_FLAG_MASK_QUERY) > 0) {
     prop->push_event(this->ev_query_);
   } else {
     prop->push_event(this->ev_reply_);
@@ -154,13 +154,10 @@ bool NameService::ns_decode(Payload* pd, Property* prop) {
     NSRecord *rec =
       dynamic_cast<NSRecord*>(prop->retain_value(this->p_records_));
     NSName* v_name = dynamic_cast<NSName*>(prop->retain_value(this->p_name_));
-    NSData* v_data = dynamic_cast<NSData*>(prop->retain_value(this->p_data_));
     Value* v_type = prop->retain_value(this->p_type_);
 
     rec->set_name(v_name);
-    rec->set_data(v_data);
     rec->set_type(v_type);
-
     assert(arr != nullptr);
     arr->push(rec);
 
@@ -212,11 +209,14 @@ bool NameService::ns_decode(Payload* pd, Property* prop) {
       assert (v != NULL);
       v->set_data (ptr, rd_len, htons (rr_hdr->type_), base_ptr, total_len);
       */
+      NSData* v_data = dynamic_cast<NSData*>(prop->retain_value(this->p_data_));
+      rec->set_data(v_data);
       v_data->set_param(ptr, rd_len, htons(rr_hdr->type_), base_ptr,
                         total_len);
 
       // seek pointer
       ptr += rd_len;
+    } else {
     }
   }
 
@@ -304,6 +304,8 @@ NSRecord::NSRecord() {
   this->it_type_ = this->map_.find("type");
   this->it_name_ = this->map_.find("name");
   this->it_data_ = this->map_.find("data");
+  
+  this->it_data_->second = const_cast<value::NoneValue*>(&(value::NONE));
 }
 
 NSRecord::~NSRecord() {
@@ -320,7 +322,7 @@ void NSRecord::set_data(NSData* data) {
 }
 
 void NSRecord::clear() {
-  // pass
+  this->it_data_->second = const_cast<value::NoneValue*>(&(value::NONE));
 }
 
 void NSName::set_param(const byte_t* ptr, size_t len,
