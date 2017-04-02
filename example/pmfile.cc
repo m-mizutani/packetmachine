@@ -46,13 +46,13 @@ int main(int argc, char* argv[]) {
 
   try {
     m.on("TCP", [&](const pm::Property& p) {
-        printf("TCP: %s:%llu > %s:%llu\n",
+        printf("TCP: %s:%u > %s:%u\n",
                p[ipv4_src].repr().c_str(), p[tcp_src].uint(),
                p[ipv4_dst].repr().c_str(), p[tcp_dst].uint());
       });
 
     m.on("UDP", [&](const pm::Property& p) {
-        printf("UDP: %s:%llu > %s:%llu\n",
+        printf("UDP: %s:%u > %s:%u\n",
                p[ipv4_src].repr().c_str(), p[udp_src].uint(),
                p[ipv4_dst].repr().c_str(), p[udp_dst].uint());
       });

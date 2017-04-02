@@ -27,6 +27,7 @@
 #include <assert.h>
 #include <arpa/inet.h>
 #include "./utils.hpp"
+#include "./../debug.hpp"
 
 namespace pm {
 
@@ -106,7 +107,6 @@ bool NameService::ns_decode(Payload* pd, Property* prop) {
   rr_count[RR_AR] = ntohs(hdr->ar_count_);
   int rr_total = rr_count[RR_QD] + rr_count[RR_AN] +
                  rr_count[RR_NS] + rr_count[RR_AR];
-
   for (int i = 0; i < 4; i++) {
     rr_delim[i] = (i == 0 ? 0 : (rr_delim[i - 1] + rr_count[i - 1]));
   }
@@ -421,7 +421,8 @@ void NSData::repr(std::ostream &os) const {
 }
 
 void NSType::repr(std::ostream &os) const {
-  uint16_t type = static_cast<uint16_t>(this->uint());
+  auto type = this->uint();
+
   switch (type) {
     case  1: os << "A"; break;
     case  2: os << "NS"; break;

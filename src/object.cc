@@ -165,7 +165,27 @@ bool Value::mac(std::ostream &os) const {
 }
 
 
-bool Value::uint(uint64_t* d) const {
+bool Value::uint(unsigned int* d) const {
+  uint64_t i;
+  if (this->uint64(&i)) {
+    *d = static_cast<unsigned int>(i);
+    return true;
+  } else {
+    return false;
+  }
+}
+
+bool Value::uint(unsigned long* d) const {
+  uint64_t i;
+  if (this->uint64(&i)) {
+    *d = static_cast<unsigned long>(i);
+    return true;
+  } else {
+    return false;
+  }
+}
+
+bool Value::uint64(uint64_t* d) const {
   if (this->is_uint()) {
     switch (this->len_) {
       // uint8_t
@@ -246,10 +266,21 @@ std::string Value::mac() const {
   return ss.str();
 }
 
-uint64_t Value::uint() const {
+unsigned int Value::uint() const {
+  if (this->active_ && this->is_uint()) {
+    unsigned int d;
+    if (this->uint(&d)) {
+      return d;
+    }
+  }
+
+  return 0;
+}
+
+uint64_t Value::uint64() const {
   if (this->active_ && this->is_uint()) {
     uint64_t d;
-    this->uint(&d);
+    this->uint64(&d);
     return d;
   } else {
     return 0;

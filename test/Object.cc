@@ -129,19 +129,19 @@ TEST(Value, uint) {
 
   v.set(a, 1);
   EXPECT_TRUE(v.is_uint());
-  EXPECT_EQ(1, v.uint());
+  EXPECT_EQ(1, v.uint64());
 
   v.set(a, 2);
   EXPECT_TRUE(v.is_uint());
-  EXPECT_EQ(0x102, v.uint());
+  EXPECT_EQ(0x102, v.uint64());
 
   v.set(a, 4);
   EXPECT_TRUE(v.is_uint());
-  EXPECT_EQ(0x01020304, v.uint());
+  EXPECT_EQ(0x01020304, v.uint64());
 
   v.set(a, 8);
   EXPECT_TRUE(v.is_uint());
-  EXPECT_EQ(0x0102030405060708, v.uint());
+  EXPECT_EQ(0x0102030405060708, v.uint64());
 
   v.set(a, 0);
   EXPECT_FALSE(v.is_uint());
@@ -162,29 +162,29 @@ TEST(Value, endian) {
 
   v.set(a, 2, pm::Value::BIG);
   EXPECT_TRUE(v.is_uint());
-  EXPECT_EQ(0x102, v.uint());
+  EXPECT_EQ(0x102, v.uint64());
 
   v.set(a, 2, pm::Value::LITTLE);
   EXPECT_TRUE(v.is_uint());
-  EXPECT_EQ(0x201, v.uint());
+  EXPECT_EQ(0x201, v.uint64());
 
 
   v.set(a, 4, pm::Value::BIG);
   EXPECT_TRUE(v.is_uint());
-  EXPECT_EQ(0x01020304, v.uint());
+  EXPECT_EQ(0x01020304, v.uint64());
 
   v.set(a, 4, pm::Value::LITTLE);
   EXPECT_TRUE(v.is_uint());
-  EXPECT_EQ(0x04030201, v.uint());
+  EXPECT_EQ(0x04030201, v.uint64());
 
 
   v.set(a, 8, pm::Value::BIG);
   EXPECT_TRUE(v.is_uint());
-  EXPECT_EQ(0x0102030405060708, v.uint());
+  EXPECT_EQ(0x0102030405060708, v.uint64());
 
   v.set(a, 8, pm::Value::LITTLE);
   EXPECT_TRUE(v.is_uint());
-  EXPECT_EQ(0x0807060504030201, v.uint());
+  EXPECT_EQ(0x0807060504030201, v.uint64());
 }
 
 

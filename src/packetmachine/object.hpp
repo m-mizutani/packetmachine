@@ -104,7 +104,9 @@ class Value {
   virtual bool ip4(std::ostream &os) const;
   virtual bool ip6(std::ostream &os) const;
   virtual bool mac(std::ostream &os) const;
-  virtual bool uint(uint64_t* d) const;
+  virtual bool uint64(uint64_t* d) const;
+  virtual bool uint(unsigned int* d) const;
+  virtual bool uint(unsigned long* d) const;
 
   inline bool is_hex() const { return this->active_; }
   inline bool is_ip4() const { return (this->active_ && this->len_ == 4); }
@@ -123,7 +125,8 @@ class Value {
   std::string ip4() const;
   std::string ip6() const;
   std::string mac() const;
-  uint64_t uint() const;
+  uint64_t uint64() const;
+  unsigned int uint() const;
   const byte_t* raw(size_t* len = nullptr) const;
 
   virtual bool is_vector() const { return false; }
@@ -222,7 +225,7 @@ class PortNumber : public Value {
   ~PortNumber() = default;
   void repr(std::ostream &os) const {
     uint64_t d;
-    this->uint(&d);
+    this->uint64(&d);
     os << d;
   }
   static Value* new_value() { return new PortNumber(); }
