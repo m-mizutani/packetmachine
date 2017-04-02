@@ -132,8 +132,8 @@ bool NameService::ns_decode(Payload* pd, Property* prop) {
     is_q = 1;
     prop->push_event(this->ev_query_);
   } else {
-    prop->push_event(this->ev_reply_);
     is_q = 0;
+    prop->push_event(this->ev_reply_);
   }
   prop->retain_value(this->p_is_query_)->cpy(&(is_q), sizeof(is_q),
                                              pm::Value::LITTLE);
