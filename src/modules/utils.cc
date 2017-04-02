@@ -53,6 +53,7 @@ struct ns_ans_header {
 NameService::NameService(const std::string& base_name)
     : base_name_(base_name) {
   this->p_tx_id_ = this->define_param("tx_id");
+  this->p_is_query_ = this->define_param("is_query");
   this->p_records_ = this->define_param("records", NSRecord::new_value);
   this->p_name_ = this->define_param("name", NSName::new_value);
   this->p_data_ = this->define_param("data", NSData::new_value);
@@ -126,12 +127,17 @@ bool NameService::ns_decode(Payload* pd, Property* prop) {
   printf("ntoh: %04X\n", ntohs(hdr->flags_));
   printf("mask: %04X\n", NS_FLAG_MASK_QUERY);
   */
+  int is_q = 0;
   if ((ntohs(hdr->flags_) & NS_FLAG_MASK_QUERY) == 0) {
+    is_q = 1;
     prop->push_event(this->ev_query_);
   } else {
     prop->push_event(this->ev_reply_);
+    is_q = 0;
   }
-
+  prop->retain_value(this->p_is_query_)->cpy(&(is_q), sizeof(is_q),
+                                             pm::Value::LITTLE);
+  
   value::Array* arr = nullptr;
   // parsing resource record
   int target = 0, rr_c = 0;

@@ -36,6 +36,7 @@ namespace pm {
 class NameService : public Module {
  private:
   const ParamDef* p_tx_id_;
+  const ParamDef* p_is_query_;
   const ParamDef* p_record_[4];
   const ParamDef* p_records_;
   const ParamDef* p_name_;
