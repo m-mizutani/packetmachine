@@ -121,8 +121,12 @@ bool NameService::ns_decode(Payload* pd, Property* prop) {
 
   prop->retain_value(this->p_tx_id_)->set(&(hdr->trans_id_),
                                         sizeof(hdr->trans_id_));
-
-  if ((ntohs(hdr->flags_) & NS_FLAG_MASK_QUERY) > 0) {
+  /*
+  printf("flag: %04X\n", hdr->flags_);
+  printf("ntoh: %04X\n", ntohs(hdr->flags_));
+  printf("mask: %04X\n", NS_FLAG_MASK_QUERY);
+  */
+  if ((ntohs(hdr->flags_) & NS_FLAG_MASK_QUERY) == 0) {
     prop->push_event(this->ev_query_);
   } else {
     prop->push_event(this->ev_reply_);
