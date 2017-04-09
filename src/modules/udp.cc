@@ -71,8 +71,8 @@ class UDP : public Module {
       return Module::NONE;
     }
 
-    prop->set_src_port(hdr->src_port_);
-    prop->set_dst_port(hdr->dst_port_);
+    prop->set_src_port(ntohs(hdr->src_port_));
+    prop->set_dst_port(ntohs(hdr->dst_port_));
 
     SET_PROP(this->p_src_port_, hdr->src_port_);
     SET_PROP(this->p_dst_port_, hdr->dst_port_);

@@ -24,6 +24,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <arpa/inet.h>
 #include "../module.hpp"
 
 namespace pm {
@@ -126,8 +127,8 @@ class TCP : public Module {
       return Module::NONE;
     }
 
-    prop->set_src_port(hdr->src_port_);
-    prop->set_dst_port(hdr->dst_port_);
+    prop->set_src_port(ntohs(hdr->src_port_));
+    prop->set_dst_port(ntohs(hdr->dst_port_));
 
 #define SET_PROP_FROM_HDR(NAME)                                         \
     prop->retain_value(this->p_ ## NAME)->set(&(hdr->NAME), sizeof(hdr->NAME));
