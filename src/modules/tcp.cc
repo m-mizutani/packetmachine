@@ -26,6 +26,7 @@
 
 #include <arpa/inet.h>
 #include "../module.hpp"
+#include "../../external/cpp-toolbox/src/cache.hpp"
 
 namespace pm {
 
@@ -45,6 +46,15 @@ class TCP : public Module {
     uint16_t chksum_;    // checksum
     uint16_t urgptr_;    // urgent pointer
   } __attribute__((packed));
+
+  static inline std::string flag2str(uint8_t f) {
+    std::string s;
+    s.append((f & FIN) > 0 ? "F" : "*");
+    s.append((f & SYN) > 0 ? "S" : "*");
+    s.append((f & RST) > 0 ? "R" : "*");
+    s.append((f & ACK) > 0 ? "A" : "*");
+    return s;
+  }
 
   const ParamDef* p_src_port_;
   const ParamDef* p_dst_port_;
@@ -78,9 +88,241 @@ class TCP : public Module {
   static const uint8_t ECE  = 0x40;
   static const uint8_t CWR  = 0x80;
 
+  static const bool DBG = false;
+  static const bool DBG_SEQ = false;
+  static const bool DBG_STAT = false;
+  const ParamDef* p_ssn_id_;;
+  const EventDef *ev_new_, *ev_estb_;
+
+  static const time_t TIMEOUT = 300;
+  byte_t* keybuf_;
+  static const size_t keybuf_len_ = 64;
+  uint64_t ssn_count_;
+  time_t curr_ts_;
+  bool init_ts_;
+
+  class Session {
+   public:
+    enum Status {
+      UNKNOWN,
+      SYN_SENT,
+      SYNACK_SENT,
+      ESTABLISHED,
+      CLOSING,
+      CLOSED,
+    };
+
+   private:
+    uint64_t id_;
+    Status status_;
+    struct timeval ts_init_;
+    struct timeval ts_estb_;
+    struct timeval ts_rtt_;
+
+    /* State Transition
+
+      -- Client -------------- Server --
+      [CLOSING]               [CLOSING]
+          |       ---(SYN)--->    |      => SYN_SENT
+      [SYN_SENT]              [LISTEN]
+          |       <-(SYN|ACK)-    |      => SYNACK_SENT
+      [SYN_SENT]              [SYN_RECV]
+          |       ---(ACK)-->     |      => ESTABLISHED
+      [ESTABLISH]             [SYN_RECV]
+          |    <--(ACK or Data)-- |
+    */
+
+    class Peer {
+     private:
+      bool has_base_seq_;
+      uint32_t base_seq_;
+      uint32_t next_seq_;
+      uint32_t win_size_;
+      byte_t *addr_;
+      size_t addr_len_;
+      uint16_t port_;
+
+     public:
+      Peer(const byte_t* addr, size_t addr_len, uint16_t port) :
+          has_base_seq_(false), base_seq_(0), next_seq_(0),
+          addr_len_(addr_len), port_(port) {
+        this->addr_ = static_cast<byte_t*>(::malloc(this->addr_len_));
+        ::memcpy(this->addr_, addr, this->addr_len_);
+      }
+      ~Peer() {
+        free(this->addr_);
+      }
+      bool is_src(const Property& p) {
+        size_t src_len;
+        const byte_t* src_addr = p.src_addr(&src_len);
+        const uint16_t src_port = p.src_port();
+        return this->match(src_addr, src_len, src_port);
+      }
+
+      void set_base_seq(uint32_t seq, size_t seg_len) {
+        this->has_base_seq_ = true;
+        this->base_seq_ = seq;
+        this->next_seq_ = 1 + seg_len;
+      }
+
+      void inc_seq(uint32_t step = 1) {
+        this->next_seq_ += step;
+      }
+
+      inline bool match(const byte_t* addr, size_t addr_len, uint16_t port) {
+        return (this->addr_len_ == addr_len && this->port_ == port &&
+                ::memcmp(addr, this->addr_, addr_len) == 0);
+      }
+
+      bool send(uint8_t flags, uint32_t seq, uint32_t ack, size_t data_len) {
+        if (!this->has_base_seq_) {
+          return true;
+        }
+
+        auto f = flag2str(flags);
+        const uint32_t rel_seq = seq - this->base_seq_;
+        debug(DBG_SEQ, "(%p) %s seq: %u, next: %u > %zu", this,
+              f.c_str(), rel_seq, this->next_seq_, data_len);
+
+        if (this->next_seq_ == rel_seq) {
+          this->next_seq_ += data_len;
+        } else {
+          debug(DBG_SEQ, "seq/ack mismatched");
+        }
+
+        return true;
+      }
+
+      void recv(uint32_t ack, uint32_t win_size) {
+        this->win_size_ = win_size;
+        return;
+      }
+    } *client_, *server_, *closing_;
+
+   public:
+    explicit Session(const Property& p, uint64_t ssn_id) :
+        id_(ssn_id), status_(UNKNOWN), closing_(nullptr) {
+      size_t src_len, dst_len;
+      const byte_t* src_addr = p.src_addr(&src_len);
+      const byte_t* dst_addr = p.dst_addr(&dst_len);
+      const uint16_t src_port = p.src_port();
+      const uint16_t dst_port = p.dst_port();
+      this->client_ = new Peer(src_addr, src_len, src_port);
+      this->server_ = new Peer(dst_addr, dst_len, dst_port);
+    }
+    ~Session() {
+      delete this->client_;
+      delete this->server_;
+    }
+
+    uint64_t id() const { return this->id_; }
+    Status status() const { return this->status_; }
+
+    void decode(Property* p, uint8_t flags, uint32_t seq, uint32_t ack,
+                size_t seg_len, const void* seg_ptr) {
+      Peer *sender, *recver;
+      if (this->client_->is_src(*p)) {
+        sender = this->client_;
+        recver = this->server_;
+      } else {
+        sender = this->server_;
+        recver = this->client_;
+      }
+
+      if (!sender->send(flags, seq, ack, seg_len)) {
+        return;  // Invalid sequence
+      }
+      recver->recv(ack, 0);
+
+      static const bool DBG = true;
+
+      switch (this->status_) {
+        case UNKNOWN:
+          if (flags == SYN && sender == this->client_) {
+            debug(DBG_STAT, "%p: SYN", this);
+            this->status_ = SYN_SENT;
+            ::memcpy(&this->ts_init_, &(p->tv()), sizeof(this->ts_init_));
+            sender->set_base_seq(seq, seg_len);
+          }
+          break;
+
+        case SYN_SENT:
+          if (flags == (SYN|ACK) && sender == this->server_) {
+            debug(DBG_STAT, "%p: SYN-ACK", this);
+            this->status_ = SYNACK_SENT;
+            sender->set_base_seq(seq, seg_len);
+          }
+          break;
+
+        case SYNACK_SENT:
+          if (flags == ACK && sender == this->client_) {
+            debug(DBG_STAT, "%p: ACK, ESTABLISHED", this);
+            this->status_ = ESTABLISHED;
+            ::memcpy(&this->ts_estb_, &(p->tv()), sizeof(this->ts_estb_));
+            timersub(&this->ts_estb_, &this->ts_init_, &this->ts_rtt_);
+          }
+          break;
+
+        case ESTABLISHED:
+          if ((flags & FIN) > 0) {
+            debug(DBG_STAT, "%p: FIN", this);
+            this->status_ = CLOSING;
+            this->closing_ = sender;
+            sender->inc_seq();
+          }
+          break;
+
+        case CLOSING:
+          if ((flags & FIN) > 0 && this->closing_ != sender) {
+            debug(DBG_STAT, "%p: CLOSED", this);
+            this->status_ = CLOSED;
+            sender->inc_seq();
+          }
+          break;
+
+        case CLOSED:
+        const std::string s = flag2str(flags);
+        debug(false, "already closed: %p -> %s", this, s.c_str());
+          break;  // pass
+      }
+    }
+
+    static void make_key(const Property& p, tb::HashKey* key) {
+      size_t src_len, dst_len;
+      const byte_t* src_addr = p.src_addr(&src_len);
+      const byte_t* dst_addr = p.dst_addr(&dst_len);
+      const uint16_t src_port = p.src_port();
+      const uint16_t dst_port = p.dst_port();
+      debug(false, "port: %d -> %d", src_port, dst_port);
+      assert(src_len == dst_len);
+      const size_t keylen = src_len + dst_len +
+                            sizeof(src_port) + sizeof(dst_port);
+      key->clear();
+      key->resize(keylen);
+
+      int rc = ::memcmp(src_addr, dst_addr, src_len);
+      if (rc > 0 || (rc == 0 && src_port > dst_port)) {
+        key->append(src_addr, src_len);
+        key->append(&src_port, sizeof(src_port));
+        key->append(dst_addr, dst_len);
+        key->append(&dst_port, sizeof(dst_port));
+      } else {
+        key->append(dst_addr, dst_len);
+        key->append(&dst_port, sizeof(dst_port));
+        key->append(src_addr, src_len);
+        key->append(&src_port, sizeof(src_port));
+      }
+
+      key->finalize();
+    }
+  };
+
+  tb::LruHash<Session*> ssn_table_;
+
 
  public:
-  TCP() {
+  TCP() : ssn_count_(0), curr_ts_(0), init_ts_(false),
+    ssn_table_(3600, 0xffff) {
     this->p_src_port_ = this->define_param("src_port",
                                         value::PortNumber::new_value);
     this->p_dst_port_ = this->define_param("dst_port",
@@ -112,6 +354,12 @@ class TCP : public Module {
 
     // Segment
     DEFINE_PARAM(segment);
+
+
+    this->p_ssn_id_ = this->define_param("id");
+    this->ev_new_ = this->define_event("new_session");
+    this->ev_estb_ = this->define_event("established");
+
   }
 
   mod_id mod_tcpssn_;
@@ -126,6 +374,9 @@ class TCP : public Module {
     if (hdr == nullptr) {   // Not enough packet size.
       return Module::NONE;
     }
+
+    // ----------------------------------------
+    // TCP header processing
 
     prop->set_src_port(ntohs(hdr->src_port_));
     prop->set_dst_port(ntohs(hdr->dst_port_));
@@ -173,12 +424,62 @@ class TCP : public Module {
       prop->retain_value(this->p_optdata_)->set(opt, optlen);
     }
 
+    const size_t seg_len = pd->length();
+    const byte_t* seg_ptr = nullptr;
+
     // Set segment data.
-    if (pd->length() > 0) {
-      prop->retain_value(this->p_segment_)->set(pd->ptr(), pd->length());
+    if (seg_len > 0) {
+      seg_ptr = pd->retain(seg_len);
+      prop->retain_value(this->p_segment_)->set(seg_ptr, seg_len);
     }
 
-    return this->mod_tcpssn_;
+    // ----------------------------------------
+    // TCP session management
+    tb::HashKey key;
+
+    time_t ts = prop->ts();
+    if (this->curr_ts_ < ts) {
+      time_t diff = ts - this->curr_ts_;
+      this->curr_ts_ = ts;
+      if (this->init_ts_) {
+        this->ssn_table_.step(diff);
+      } else {
+        this->init_ts_ = true;
+      }
+    }
+
+    uint8_t flags = hdr->flags_;
+    flags &= (SYN|ACK|FIN|RST);
+    uint32_t seq = ntohl(hdr->seq_);
+    uint32_t ack = ntohl(hdr->ack_);
+
+    Session::make_key(*prop, &key);
+    auto node = this->ssn_table_.get(key);
+
+    Session* ssn = nullptr;
+    if (node.is_null()) {
+      if (flags == SYN) {
+        this->ssn_count_ += 1;
+        ssn = new Session(*prop, this->ssn_count_);
+        this->ssn_table_.put(300, key, ssn);
+        debug(false, "new session: %p", ssn);
+        prop->push_event(this->ev_new_);
+      } else {
+        debug(false, "new session, but not syn packet");
+      }
+    } else {
+      ssn = node.data();
+      debug(false, "existing session: %p", ssn);
+    }
+
+    if (ssn) {
+      debug(DBG, "ssn = %p", ssn);
+      const uint64_t ssn_id = ssn->id();
+      prop->retain_value(this->p_ssn_id_)->cpy(&ssn_id, sizeof(ssn_id));
+      ssn->decode(prop, flags, seq, ack, seg_len, seg_ptr);
+    }
+
+    return Module::NONE;
   }
 };
 

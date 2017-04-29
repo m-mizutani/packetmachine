@@ -51,7 +51,7 @@ int main(int argc, char* argv[]) {
         total_data_size += p.pkt_size();
       });
 
-    m.on("TCPSession.new", [&](const pm::Property& p) {
+    m.on("TCP.new_session", [&](const pm::Property& p) {
         tcp_ssn_count += 1;
       });
 

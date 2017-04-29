@@ -44,7 +44,6 @@ void build_module_map(std::map<std::string, Module*> *mod_map) {
   INSTALL_MOD(ICMP);
   INSTALL_MOD(UDP);
   INSTALL_MOD(TCP);
-  INSTALL_MOD(TCPSession);
   INSTALL_MOD(DNS);
   INSTALL_MOD(MDNS);
 }
