@@ -27,21 +27,33 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <sys/time.h>
+
 #include "../module.hpp"
-#include "../utils/lru.hpp"
-#include "../utils/buffer.hpp"
+#include "../../external/cpp-toolbox/src/cache.hpp"
 
 namespace pm {
 
 class TCPSession : public Module {
  private:
+  static const bool DBG = false;
+  static const bool DBG_SEQ = false;
+  static const bool DBG_STAT = false;
   const ParamDef* p_id_;;
-  const EventDef* ev_new_;
+  const EventDef *ev_new_, *ev_estb_;
 
   static const uint8_t FIN  = 0x01;
   static const uint8_t SYN  = 0x02;
   static const uint8_t RST  = 0x04;
   static const uint8_t ACK  = 0x10;
+  static std::string flag2str(uint8_t f) {
+    std::string s;
+    s.append((f & FIN) > 0 ? "F" : "*");
+    s.append((f & SYN) > 0 ? "S" : "*");
+    s.append((f & RST) > 0 ? "R" : "*");
+    s.append((f & ACK) > 0 ? "A" : "*");
+    return s;
+  }
 
   class Session {
    public:
@@ -57,6 +69,9 @@ class TCPSession : public Module {
    private:
     uint64_t id_;
     Status status_;
+    struct timeval ts_init_;
+    struct timeval ts_estb_;
+    struct timeval ts_rtt_;
 
     /* State Transition
 
@@ -73,15 +88,18 @@ class TCPSession : public Module {
 
     class Peer {
      private:
+      bool has_base_seq_;
       uint32_t base_seq_;
-      uint32_t next_ack_;
+      uint32_t next_seq_;
+      uint32_t win_size_;
       byte_t *addr_;
       size_t addr_len_;
       uint16_t port_;
 
      public:
       Peer(const byte_t* addr, size_t addr_len, uint16_t port) :
-          base_seq_(0), next_ack_(0), addr_len_(addr_len), port_(port) {
+          has_base_seq_(false), base_seq_(0), next_seq_(0),
+          addr_len_(addr_len), port_(port) {
         this->addr_ = static_cast<byte_t*>(::malloc(this->addr_len_));
         ::memcpy(this->addr_, addr, this->addr_len_);
       }
@@ -95,17 +113,43 @@ class TCPSession : public Module {
         return this->match(src_addr, src_len, src_port);
       }
 
+      void set_base_seq(uint32_t seq, size_t seg_len) {
+        this->has_base_seq_ = true;
+        this->base_seq_ = seq;
+        this->next_seq_ = 1 + seg_len;
+      }
+
+      void inc_seq(uint32_t step = 1) {
+        this->next_seq_ += step;
+      }
+
       inline bool match(const byte_t* addr, size_t addr_len, uint16_t port) {
         return (this->addr_len_ == addr_len && this->port_ == port &&
                 ::memcmp(addr, this->addr_, addr_len) == 0);
       }
+
       bool send(uint8_t flags, uint32_t seq, uint32_t ack, size_t data_len) {
-        // TODO(m-mizutani): implement
+        if (!this->has_base_seq_) {
+          return true;
+        }
+
+        auto f = flag2str(flags);
+        const uint32_t rel_seq = seq - this->base_seq_;
+        debug(DBG_SEQ, "(%p) %s seq: %u, next: %u > %zu", this,
+              f.c_str(), rel_seq, this->next_seq_, data_len);
+
+        if (this->next_seq_ == rel_seq) {
+          this->next_seq_ += data_len;
+        } else {
+          debug(DBG_SEQ, "seq/ack mismatched");
+        }
+
         return true;
       }
-      bool recv(uint8_t flags, uint32_t seq, uint32_t ack, size_t data_len) {
-        // TODO(m-mizutani): implement
-        return true;
+
+      void recv(uint32_t ack, uint32_t win_size) {
+        this->win_size_ = win_size;
+        return;
       }
     } *client_, *server_, *closing_;
 
@@ -117,7 +161,6 @@ class TCPSession : public Module {
       const byte_t* dst_addr = p.dst_addr(&dst_len);
       const uint16_t src_port = p.src_port();
       const uint16_t dst_port = p.dst_port();
-
       this->client_ = new Peer(src_addr, src_len, src_port);
       this->server_ = new Peer(dst_addr, dst_len, dst_port);
     }
@@ -140,62 +183,71 @@ class TCPSession : public Module {
         recver = this->client_;
       }
 
-      if (!sender->send(flags, seq, ack, seg_len) ||
-          !recver->recv(flags, seq, ack, seg_len)) {
+      if (!sender->send(flags, seq, ack, seg_len)) {
         return;  // Invalid sequence
       }
+      recver->recv(ack, 0);
 
-      static const bool DBG = false;
+      static const bool DBG = true;
 
       switch (this->status_) {
         case UNKNOWN:
           if (flags == SYN && sender == this->client_) {
-            debug(DBG, "%p: SYN", this);
+            debug(DBG_STAT, "%p: SYN", this);
             this->status_ = SYN_SENT;
+            ::memcpy(&this->ts_init_, &(p->tv()), sizeof(this->ts_init_));
+            sender->set_base_seq(seq, seg_len);
           }
           break;
 
         case SYN_SENT:
           if (flags == (SYN|ACK) && sender == this->server_) {
-            debug(DBG, "%p: SYN-ACK", this);
+            debug(DBG_STAT, "%p: SYN-ACK", this);
             this->status_ = SYNACK_SENT;
+            sender->set_base_seq(seq, seg_len);
           }
           break;
 
         case SYNACK_SENT:
           if (flags == ACK && sender == this->client_) {
-            debug(DBG, "%p: ACK, ESTABLISHED", this);
+            debug(DBG_STAT, "%p: ACK, ESTABLISHED", this);
             this->status_ = ESTABLISHED;
+            ::memcpy(&this->ts_estb_, &(p->tv()), sizeof(this->ts_estb_));
+            timersub(&this->ts_estb_, &this->ts_init_, &this->ts_rtt_);
           }
           break;
 
         case ESTABLISHED:
           if ((flags & FIN) > 0) {
-            debug(DBG, "%p: FIN", this);
+            debug(DBG_STAT, "%p: FIN", this);
             this->status_ = CLOSING;
             this->closing_ = sender;
+            sender->inc_seq();
           }
           break;
 
         case CLOSING:
           if ((flags & FIN) > 0 && this->closing_ != sender) {
-            debug(DBG, "%p: CLOSED", this);
+            debug(DBG_STAT, "%p: CLOSED", this);
             this->status_ = CLOSED;
+            sender->inc_seq();
           }
           break;
 
         case CLOSED:
+        const std::string s = flag2str(flags);
+        debug(false, "already closed: %p -> %s", this, s.c_str());
           break;  // pass
       }
     }
 
-    static void make_key(const Property& p, LruHash<Session*>::Key* key) {
+    static void make_key(const Property& p, tb::HashKey* key) {
       size_t src_len, dst_len;
       const byte_t* src_addr = p.src_addr(&src_len);
       const byte_t* dst_addr = p.dst_addr(&dst_len);
       const uint16_t src_port = p.src_port();
       const uint16_t dst_port = p.dst_port();
-
+      debug(false, "port: %d -> %d", src_port, dst_port);
       assert(src_len == dst_len);
       const size_t keylen = src_len + dst_len +
                             sizeof(src_port) + sizeof(dst_port);
@@ -223,16 +275,19 @@ class TCPSession : public Module {
   param_id tcp_flags_, tcp_segment_, tcp_seq_, tcp_ack_;
   byte_t* keybuf_;
   static const size_t keybuf_len_ = 64;
-  LruHash<Session*> ssn_table_;
+  tb::LruHash<Session*> ssn_table_;
   uint64_t ssn_count_;
   time_t curr_ts_;
   bool init_ts_;
+
+
 
  public:
   TCPSession() : ssn_table_(3600, 0xffff), ssn_count_(0), curr_ts_(0),
                  init_ts_(false) {
     this->p_id_ = this->define_param("id");
     this->ev_new_ = this->define_event("new");
+    this->ev_estb_ = this->define_event("established");
 
     this->keybuf_ = static_cast<byte_t*>(::malloc(TCPSession::keybuf_len_));
   }
@@ -247,17 +302,18 @@ class TCPSession : public Module {
     this->tcp_ack_     = this->lookup_param_id("TCP.ack");
   }
 
-
+  /**
+   *
+   */
   mod_id decode(Payload* pd, Property* prop) {
-    static LruHash<Session*>::Key key;
-    // memory can be reused, but not thread safe
+    tb::HashKey key;
 
     time_t ts = prop->ts();
     if (this->curr_ts_ < ts) {
       time_t diff = ts - this->curr_ts_;
       this->curr_ts_ = ts;
       if (this->init_ts_) {
-        this->ssn_table_.update(diff);
+        this->ssn_table_.step(diff);
       } else {
         this->init_ts_ = true;
       }
@@ -269,6 +325,10 @@ class TCPSession : public Module {
     uint32_t ack = static_cast<uint32_t>(prop->value(this->tcp_ack_).uint());
     size_t seg_len;
     const void* seg_ptr = prop->value(this->tcp_segment_).raw(&seg_len);
+
+    if (seg_ptr == nullptr) {
+      seg_len = 0;
+    }
 
     Session::make_key(*prop, &key);
     auto node = this->ssn_table_.get(key);
@@ -290,6 +350,7 @@ class TCPSession : public Module {
     }
 
     if (ssn) {
+      debug(DBG, "ssn = %p", ssn);
       const uint64_t ssn_id = ssn->id();
       prop->retain_value(this->p_id_)->cpy(&ssn_id, sizeof(ssn_id));
       ssn->decode(prop, flags, seq, ack, seg_len, seg_ptr);
@@ -302,4 +363,3 @@ class TCPSession : public Module {
 INIT_MODULE(TCPSession);
 
 }   // namespace pm
-

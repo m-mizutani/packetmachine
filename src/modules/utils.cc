@@ -137,7 +137,7 @@ bool NameService::ns_decode(Payload* pd, Property* prop) {
   }
   prop->retain_value(this->p_is_query_)->cpy(&(is_q), sizeof(is_q),
                                              pm::Value::LITTLE);
-  
+
   value::Array* arr = nullptr;
   // parsing resource record
   int target = 0, rr_c = 0;
@@ -314,7 +314,6 @@ NSRecord::NSRecord() {
   this->it_type_ = this->map_.find("type");
   this->it_name_ = this->map_.find("name");
   this->it_data_ = this->map_.find("data");
-  
   this->it_data_->second = const_cast<value::NoneValue*>(&(value::NONE));
 }
 

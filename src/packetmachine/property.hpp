@@ -113,7 +113,8 @@ class Property {
 
   // timestamp
   time_t ts() const;
-	double ts_d() const;
+  double ts_d() const;
+  const struct timeval& tv() const;
 
   // values
   bool has_value(param_id pid) const;

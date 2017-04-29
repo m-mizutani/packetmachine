@@ -65,6 +65,14 @@ FILE(GLOB BASESRCS
 	"src/utils/lru.hpp"
 	"src/utils/buffer.cc" "src/utils/buffer.hpp"
 	"src/utils/hash.cc"   "src/utils/hash.hpp"
+
+	"./external/cpp-toolbox/src/buffer.cc"
+	"./external/cpp-toolbox/src/buffer.hpp"
+	"./external/cpp-toolbox/src/cache.hpp"
+	"./external/cpp-toolbox/src/debug.hpp"
+	"./external/cpp-toolbox/src/exception.hpp"
+	"./external/cpp-toolbox/src/hash.cc"
+	"./external/cpp-toolbox/src/hash.hpp"
 )
 FILE(GLOB HEADERS
   "src/packetmachine.hpp"

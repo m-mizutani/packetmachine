@@ -180,6 +180,10 @@ double Property::ts_d() const {
       (static_cast<double>(this->pkt_->tv().tv_usec) / 1000000);
 }
 
+const struct timeval& Property::tv() const {
+  return this->pkt_->tv();
+}
+
 bool Property::has_value(param_id pid) const {
   return (this->param_idx_[pid] > 0);
 }
