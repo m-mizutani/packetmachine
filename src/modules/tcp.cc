@@ -24,6 +24,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <string.h>
 #include <arpa/inet.h>
 #include "../module.hpp"
 #include "../../external/cpp-toolbox/src/cache.hpp"
