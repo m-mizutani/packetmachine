@@ -61,9 +61,6 @@ FILE(GLOB BASESRCS
   "src/modules/utils.cc" "src/modules/utils.hpp"
 
 	# Decoding utilities
-	"src/utils/lru.hpp"
-	"src/utils/buffer.cc" "src/utils/buffer.hpp"
-	"src/utils/hash.cc"   "src/utils/hash.hpp"
 
 	"./external/cpp-toolbox/src/buffer.cc"
 	"./external/cpp-toolbox/src/buffer.hpp"

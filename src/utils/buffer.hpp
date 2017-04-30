@@ -24,6 +24,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
 #ifndef PACKETMACHINE_UTILS_BUFFER_HPP__
 #define PACKETMACHINE_UTILS_BUFFER_HPP__
 
@@ -60,3 +61,4 @@ class Buffer {
 }  // namespace pm
 
 #endif  // PACKETMACHINE_UTILS_LRU_HPP__
+*/

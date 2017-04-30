@@ -30,7 +30,7 @@
 #include "./packetmachine/property.hpp"
 #include "./packet.hpp"
 #include "./decoder.hpp"
-#include "./utils/buffer.hpp"
+#include "../external/cpp-toolbox/src/buffer.hpp"
 
 namespace pm {
 
@@ -86,8 +86,8 @@ Property::Property(Decoder* dec) : dec_(dec) {
     this->param_idx_.push_back(0);
   }
 
-  this->src_addr_ = new Buffer();
-  this->dst_addr_ = new Buffer();
+  this->src_addr_ = new tb::Buffer();
+  this->dst_addr_ = new tb::Buffer();
 }
 
 Property::~Property() {

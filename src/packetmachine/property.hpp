@@ -33,6 +33,9 @@
 #include <functional>
 #include "./common.hpp"
 
+namespace tb {
+  class Buffer;
+}
 namespace pm {
 
 class Packet;
@@ -41,7 +44,6 @@ class Object;
 class Value;
 class ParamDef;
 class EventDef;
-class Buffer;
 
 class Payload {
  private:
@@ -79,8 +81,8 @@ class Property {
 
   const Packet* pkt_;
   static const Value null_;
-  Buffer* src_addr_;
-  Buffer* dst_addr_;
+  tb::Buffer* src_addr_;
+  tb::Buffer* dst_addr_;
   uint16_t src_port_;
   uint16_t dst_port_;
 

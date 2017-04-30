@@ -27,6 +27,8 @@
 #include <arpa/inet.h>
 #include "../module.hpp"
 #include "../../external/cpp-toolbox/src/cache.hpp"
+#include "../../external/cpp-toolbox/src/buffer.hpp"
+
 
 namespace pm {
 
@@ -78,6 +80,9 @@ class TCP : public Module {
 
   const ParamDef* p_optdata_;
   const ParamDef* p_segment_;
+  const ParamDef* p_ssn_id_;;
+  const ParamDef* p_data_;
+  const EventDef *ev_new_, *ev_estb_;
 
   static const uint8_t FIN  = 0x01;
   static const uint8_t SYN  = 0x02;
@@ -91,12 +96,9 @@ class TCP : public Module {
   static const bool DBG = false;
   static const bool DBG_SEQ = false;
   static const bool DBG_STAT = false;
-  const ParamDef* p_ssn_id_;;
-  const EventDef *ev_new_, *ev_estb_;
+  static const bool DBG_REASS = false;
 
   static const time_t TIMEOUT = 300;
-  byte_t* keybuf_;
-  static const size_t keybuf_len_ = 64;
   uint64_t ssn_count_;
   time_t curr_ts_;
   bool init_ts_;
@@ -104,20 +106,13 @@ class TCP : public Module {
   class Session {
    public:
     enum Status {
-      UNKNOWN,
+      NONE,
       SYN_SENT,
       SYNACK_SENT,
       ESTABLISHED,
       CLOSING,
       CLOSED,
     };
-
-   private:
-    uint64_t id_;
-    Status status_;
-    struct timeval ts_init_;
-    struct timeval ts_estb_;
-    struct timeval ts_rtt_;
 
     /* State Transition
 
@@ -132,11 +127,26 @@ class TCP : public Module {
           |    <--(ACK or Data)-- |
     */
 
+   private:
+    class Segment : public tb::Buffer {
+    private:
+      uint32_t seq_;
+      uint8_t flags_;
+    public:
+      Segment(const void* ptr, size_t len, uint32_t seq, uint8_t flags) :
+        tb::Buffer(ptr, len), seq_(seq), flags_(flags) {
+        }
+      virtual ~Segment() = default;
+      uint8_t flags() const { return this->flags_; }
+      uint32_t seq() const { return this->seq_; }
+    };
+
     class Peer {
      private:
       bool has_base_seq_;
       uint32_t base_seq_;
       uint32_t next_seq_;
+      uint32_t ack_;
       uint32_t win_size_;
       byte_t *addr_;
       size_t addr_len_;
@@ -152,11 +162,29 @@ class TCP : public Module {
       ~Peer() {
         free(this->addr_);
       }
+
+      uint32_t next_seq() const {
+        return this->next_seq_;
+      }
+
       bool is_src(const Property& p) {
         size_t src_len;
         const byte_t* src_addr = p.src_addr(&src_len);
         const uint16_t src_port = p.src_port();
         return this->match(src_addr, src_len, src_port);
+      }
+      bool in_window(uint32_t seq) {
+        const uint32_t rel_seq = seq - this->base_seq_;
+        const uint32_t rel_ack = this->ack_ - this->base_seq_;
+        debug(DBG_SEQ, "seq:%u, next:%u, win:%u, ack:%u", rel_seq, this->next_seq_, this->win_size_, rel_ack);
+
+        // return (rel_seq >= this->next_seq_ && (rel_seq - rel_ack) < this->win_size_);
+
+        // TODO: need to handle TCP option Window Scale properly
+        return true;
+      }
+      inline uint32_t to_rel_seq(uint32_t seq) {
+        return seq - this->base_seq_;
       }
 
       void set_base_seq(uint32_t seq, size_t seg_len) {
@@ -188,20 +216,32 @@ class TCP : public Module {
           this->next_seq_ += data_len;
         } else {
           debug(DBG_SEQ, "seq/ack mismatched");
+          return false;
         }
 
         return true;
       }
 
       void recv(uint32_t ack, uint32_t win_size) {
+        this->ack_ = ack;
         this->win_size_ = win_size;
         return;
       }
     } *client_, *server_, *closing_;
 
+    TCP *tcp_;
+    uint64_t id_;
+    Status status_;
+    struct timeval ts_init_;
+    struct timeval ts_estb_;
+    struct timeval ts_rtt_;
+    tb::Buffer *buf_;
+    std::map<uint32_t, Segment*> seg_map_;
+
    public:
-    explicit Session(const Property& p, uint64_t ssn_id) :
-        id_(ssn_id), status_(UNKNOWN), closing_(nullptr) {
+    explicit Session(const Property& p, TCP *tcp, uint64_t ssn_id) :
+        closing_(nullptr), tcp_(tcp), id_(ssn_id), status_(NONE),
+        buf_(nullptr) {
       size_t src_len, dst_len;
       const byte_t* src_addr = p.src_addr(&src_len);
       const byte_t* dst_addr = p.dst_addr(&dst_len);
@@ -213,35 +253,22 @@ class TCP : public Module {
     ~Session() {
       delete this->client_;
       delete this->server_;
+      delete this->buf_;
     }
 
     uint64_t id() const { return this->id_; }
     Status status() const { return this->status_; }
 
-    void decode(Property* p, uint8_t flags, uint32_t seq, uint32_t ack,
-                size_t seg_len, const void* seg_ptr) {
-      Peer *sender, *recver;
-      if (this->client_->is_src(*p)) {
-        sender = this->client_;
-        recver = this->server_;
-      } else {
-        sender = this->server_;
-        recver = this->client_;
-      }
-
-      if (!sender->send(flags, seq, ack, seg_len)) {
-        return;  // Invalid sequence
-      }
-      recver->recv(ack, 0);
-
-      static const bool DBG = true;
+    Status trans_state(uint8_t flags, Peer* sender, uint32_t seq,
+                       size_t seg_len, const struct timeval& tv) {
+      Status new_status = NONE;
 
       switch (this->status_) {
-        case UNKNOWN:
+        case NONE:
           if (flags == SYN && sender == this->client_) {
             debug(DBG_STAT, "%p: SYN", this);
-            this->status_ = SYN_SENT;
-            ::memcpy(&this->ts_init_, &(p->tv()), sizeof(this->ts_init_));
+            new_status = this->status_ = SYN_SENT;
+            ::memcpy(&this->ts_init_, &tv, sizeof(this->ts_init_));
             sender->set_base_seq(seq, seg_len);
           }
           break;
@@ -249,7 +276,7 @@ class TCP : public Module {
         case SYN_SENT:
           if (flags == (SYN|ACK) && sender == this->server_) {
             debug(DBG_STAT, "%p: SYN-ACK", this);
-            this->status_ = SYNACK_SENT;
+            new_status = this->status_ = SYNACK_SENT;
             sender->set_base_seq(seq, seg_len);
           }
           break;
@@ -257,8 +284,8 @@ class TCP : public Module {
         case SYNACK_SENT:
           if (flags == ACK && sender == this->client_) {
             debug(DBG_STAT, "%p: ACK, ESTABLISHED", this);
-            this->status_ = ESTABLISHED;
-            ::memcpy(&this->ts_estb_, &(p->tv()), sizeof(this->ts_estb_));
+            new_status = this->status_ = ESTABLISHED;
+            ::memcpy(&this->ts_estb_, &tv, sizeof(this->ts_estb_));
             timersub(&this->ts_estb_, &this->ts_init_, &this->ts_rtt_);
           }
           break;
@@ -266,7 +293,7 @@ class TCP : public Module {
         case ESTABLISHED:
           if ((flags & FIN) > 0) {
             debug(DBG_STAT, "%p: FIN", this);
-            this->status_ = CLOSING;
+            new_status = this->status_ = CLOSING;
             this->closing_ = sender;
             sender->inc_seq();
           }
@@ -275,7 +302,7 @@ class TCP : public Module {
         case CLOSING:
           if ((flags & FIN) > 0 && this->closing_ != sender) {
             debug(DBG_STAT, "%p: CLOSED", this);
-            this->status_ = CLOSED;
+            new_status = this->status_ = CLOSED;
             sender->inc_seq();
           }
           break;
@@ -285,6 +312,81 @@ class TCP : public Module {
         debug(false, "already closed: %p -> %s", this, s.c_str());
           break;  // pass
       }
+
+      return new_status;
+    }
+
+    bool decode_stream(Property* p, uint8_t flags, uint32_t seq, uint32_t ack,
+                size_t seg_len, const void* seg_ptr, uint16_t win_size,
+                Peer* sender, Peer* recver) {
+      if (!sender->send(flags, seq, ack, seg_len)) {
+        if (sender->in_window(seq)) {
+          Segment *seg = new Segment(seg_ptr, seg_len, seq, flags);
+          uint32_t rel_seq = sender->to_rel_seq(seq);
+          this->seg_map_.insert(std::make_pair(rel_seq, seg));
+          debug(DBG_SEQ, "in window!");
+        } else {
+          debug(DBG_SEQ, "out of window");
+        }
+
+        return false;  // Invalid sequence
+      }
+      recver->recv(ack, win_size);
+
+      // if (this->seg_map_.size() > 0) {
+      Status new_state = this->trans_state(flags, sender, seq, seg_len, p->tv());
+      if (new_state == ESTABLISHED) {
+        p->push_event(this->tcp_->ev_estb());
+      }
+
+      if (this->buf_) {
+        this->buf_->append(seg_ptr, seg_len);
+        p->retain_value(this->tcp_->p_data())->set(this->buf_->ptr(),
+                                                   this->buf_->len());
+      } else {
+        p->retain_value(this->tcp_->p_data())->set(seg_ptr, seg_len);
+      }
+
+      if (this->seg_map_.size() > 0) {
+        auto it = this->seg_map_.find(sender->next_seq());
+        debug(DBG_REASS, "next > %u, it > %u", sender->next_seq(), it->first);
+        if (it != this->seg_map_.end()) {
+
+          auto seg = it->second;
+          debug(DBG_REASS, "=== matched stored segment");
+          if (this->buf_ == nullptr) {
+            this->buf_ = new tb::Buffer();
+            this->buf_->append(seg_ptr, seg_len);
+          }
+
+          this->decode_stream(p, seg->flags(), seg->seq(), ack, seg->len(),
+                              seg->ptr(), win_size, sender, recver);
+          this->seg_map_.erase(it);
+        }
+
+      }
+
+      return true;
+    }
+
+    void decode(Property* p, uint8_t flags, uint32_t seq, uint32_t ack,
+                size_t seg_len, const void* seg_ptr, uint16_t win_size) {
+      if (this->buf_) {
+        delete this->buf_;
+        this->buf_ = nullptr;
+      }
+
+      Peer *sender, *recver;
+      if (this->client_->is_src(*p)) {
+        sender = this->client_;
+        recver = this->server_;
+      } else {
+        sender = this->server_;
+        recver = this->client_;
+      }
+
+      this->decode_stream(p, flags, seq, ack, seg_len, seg_ptr, win_size,
+                          sender, recver);
     }
 
     static void make_key(const Property& p, tb::HashKey* key) {
@@ -354,17 +456,26 @@ class TCP : public Module {
 
     // Segment
     DEFINE_PARAM(segment);
-
+    DEFINE_PARAM(data);
 
     this->p_ssn_id_ = this->define_param("id");
     this->ev_new_ = this->define_event("new_session");
     this->ev_estb_ = this->define_event("established");
-
   }
 
   mod_id mod_tcpssn_;
   void setup() {
     this->mod_tcpssn_ = this->lookup_module("TCPSession");
+  }
+
+  // ------------------------------------------
+  // Getter
+
+  const EventDef *ev_estb() const {
+    return this->ev_estb_;
+  }
+  const ParamDef* p_data() const {
+    return this->p_data_;
   }
 
 
@@ -448,35 +559,39 @@ class TCP : public Module {
       }
     }
 
-    uint8_t flags = hdr->flags_;
+    static const bool DBG_SSN = false;
+    while (this->ssn_table_.has_expired()) {
+      Session* old_ssn = this->ssn_table_.pop_expired();
+      debug(DBG_SSN, "expired: %p", old_ssn);
+      delete old_ssn;
+    }
+
+    uint8_t flags = (hdr->flags_ & (FIN | SYN | RST | ACK));
     flags &= (SYN|ACK|FIN|RST);
     uint32_t seq = ntohl(hdr->seq_);
     uint32_t ack = ntohl(hdr->ack_);
+    uint16_t win = ntohs(hdr->window_);
 
     Session::make_key(*prop, &key);
     auto node = this->ssn_table_.get(key);
 
     Session* ssn = nullptr;
     if (node.is_null()) {
-      if (flags == SYN) {
-        this->ssn_count_ += 1;
-        ssn = new Session(*prop, this->ssn_count_);
-        this->ssn_table_.put(300, key, ssn);
-        debug(false, "new session: %p", ssn);
-        prop->push_event(this->ev_new_);
-      } else {
-        debug(false, "new session, but not syn packet");
-      }
+      this->ssn_count_ += 1;
+      ssn = new Session(*prop, this, this->ssn_count_);
+      this->ssn_table_.put(300, key, ssn);
+      debug(DBG_SSN, "new session: %p", ssn);
+      prop->push_event(this->ev_new_);
     } else {
       ssn = node.data();
-      debug(false, "existing session: %p", ssn);
+      debug(DBG_SSN, "existing session: %p", ssn);
     }
 
     if (ssn) {
       debug(DBG, "ssn = %p", ssn);
       const uint64_t ssn_id = ssn->id();
       prop->retain_value(this->p_ssn_id_)->cpy(&ssn_id, sizeof(ssn_id));
-      ssn->decode(prop, flags, seq, ack, seg_len, seg_ptr);
+      ssn->decode(prop, flags, seq, ack, seg_len, seg_ptr, win);
     }
 
     return Module::NONE;
