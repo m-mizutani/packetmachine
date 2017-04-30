@@ -143,7 +143,7 @@ class TCP : public Module {
       uint32_t seq() const { return this->seq_; }
     };
 
-    class Peer {
+    class Stream {
      private:
       bool has_base_seq_;
       uint32_t base_seq_;
@@ -155,13 +155,13 @@ class TCP : public Module {
       uint16_t port_;
 
      public:
-      Peer(const byte_t* addr, size_t addr_len, uint16_t port) :
+      Stream(const byte_t* addr, size_t addr_len, uint16_t port) :
           has_base_seq_(false), base_seq_(0), next_seq_(0),
           addr_len_(addr_len), port_(port) {
         this->addr_ = static_cast<byte_t*>(::malloc(this->addr_len_));
         ::memcpy(this->addr_, addr, this->addr_len_);
       }
-      ~Peer() {
+      ~Stream() {
         free(this->addr_);
       }
 
@@ -249,8 +249,8 @@ class TCP : public Module {
       const byte_t* dst_addr = p.dst_addr(&dst_len);
       const uint16_t src_port = p.src_port();
       const uint16_t dst_port = p.dst_port();
-      this->client_ = new Peer(src_addr, src_len, src_port);
-      this->server_ = new Peer(dst_addr, dst_len, dst_port);
+      this->client_ = new Stream(src_addr, src_len, src_port);
+      this->server_ = new Stream(dst_addr, dst_len, dst_port);
     }
     ~Session() {
       delete this->client_;
@@ -261,7 +261,7 @@ class TCP : public Module {
     uint64_t id() const { return this->id_; }
     Status status() const { return this->status_; }
 
-    Status trans_state(uint8_t flags, Peer* sender, uint32_t seq,
+    Status trans_state(uint8_t flags, Stream* sender, uint32_t seq,
                        size_t seg_len, const struct timeval& tv) {
       Status new_status = NONE;
 
@@ -320,7 +320,7 @@ class TCP : public Module {
 
     bool decode_stream(Property* p, uint8_t flags, uint32_t seq, uint32_t ack,
                 size_t seg_len, const void* seg_ptr, uint16_t win_size,
-                Peer* sender, Peer* recver) {
+                Stream* sender, Stream* recver) {
       if (!sender->send(flags, seq, ack, seg_len)) {
         if (sender->in_window(seq)) {
           Segment *seg = new Segment(seg_ptr, seg_len, seq, flags);
@@ -378,7 +378,7 @@ class TCP : public Module {
         this->buf_ = nullptr;
       }
 
-      Peer *sender, *recver;
+      Stream *sender, *recver;
       if (this->client_->is_src(*p)) {
         sender = this->client_;
         recver = this->server_;
