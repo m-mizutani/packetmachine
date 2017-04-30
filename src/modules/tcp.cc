@@ -137,7 +137,8 @@ class TCP : public Module {
       Segment(const void* ptr, size_t len, uint32_t seq, uint8_t flags) :
         tb::Buffer(ptr, len), seq_(seq), flags_(flags) {
         }
-      virtual ~Segment() = default;
+      virtual ~Segment() {};
+       // means default, but g++ 4.6.3 does not allow "= default"
       uint8_t flags() const { return this->flags_; }
       uint32_t seq() const { return this->seq_; }
     };
