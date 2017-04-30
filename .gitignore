@@ -10,3 +10,8 @@ install_manifest.txt
 CMakeScripts/
 packetmachine.build/
 packetmachine.xcodeproj/
+
+# misc
+*.sh
+**/.DS_Store
+tmp
