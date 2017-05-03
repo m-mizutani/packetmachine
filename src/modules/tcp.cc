@@ -83,7 +83,11 @@ class TCP : public Module {
   const ParamDef* p_segment_;
   const ParamDef* p_ssn_id_;;
   const ParamDef* p_data_;
-  const EventDef *ev_new_, *ev_estb_;
+
+  const ParamDef* p_rtt_3wh_;
+  const ParamDef* p_tx_server_;
+  const ParamDef* p_tx_client_;
+  const EventDef *ev_new_, *ev_estb_, *ev_close_;
 
   static const uint8_t FIN  = 0x01;
   static const uint8_t SYN  = 0x02;
@@ -130,14 +134,14 @@ class TCP : public Module {
 
    private:
     class Segment : public tb::Buffer {
-    private:
+     private:
       uint32_t seq_;
       uint8_t flags_;
-    public:
+     public:
       Segment(const void* ptr, size_t len, uint32_t seq, uint8_t flags) :
         tb::Buffer(ptr, len), seq_(seq), flags_(flags) {
         }
-      virtual ~Segment() {};
+      virtual ~Segment() {}
        // means default, but g++ 4.6.3 does not allow "= default"
       uint8_t flags() const { return this->flags_; }
       uint32_t seq() const { return this->seq_; }
@@ -153,11 +157,12 @@ class TCP : public Module {
       byte_t *addr_;
       size_t addr_len_;
       uint16_t port_;
+      uint64_t tx_size_;
 
      public:
       Stream(const byte_t* addr, size_t addr_len, uint16_t port) :
           has_base_seq_(false), base_seq_(0), next_seq_(0),
-          addr_len_(addr_len), port_(port) {
+          addr_len_(addr_len), port_(port), tx_size_(0) {
         this->addr_ = static_cast<byte_t*>(::malloc(this->addr_len_));
         ::memcpy(this->addr_, addr, this->addr_len_);
       }
@@ -169,6 +174,10 @@ class TCP : public Module {
         return this->next_seq_;
       }
 
+      uint32_t tx_size() const {
+        return this->tx_size_;
+      }
+
       bool is_src(const Property& p) {
         size_t src_len;
         const byte_t* src_addr = p.src_addr(&src_len);
@@ -178,11 +187,9 @@ class TCP : public Module {
       bool in_window(uint32_t seq) {
         const uint32_t rel_seq = seq - this->base_seq_;
         const uint32_t rel_ack = this->ack_ - this->base_seq_;
-        debug(DBG_SEQ, "seq:%u, next:%u, win:%u, ack:%u", rel_seq, this->next_seq_, this->win_size_, rel_ack);
-
-        // return (rel_seq >= this->next_seq_ && (rel_seq - rel_ack) < this->win_size_);
-
-        // TODO: need to handle TCP option Window Scale properly
+        debug(DBG_SEQ, "seq:%u, next:%u, win:%u, ack:%u", rel_seq,
+         this->next_seq_, this->win_size_, rel_ack);
+        // TODO(m-mizutani): need to handle TCP option Window Scale properly
         return true;
       }
       inline uint32_t to_rel_seq(uint32_t seq) {
@@ -336,9 +343,17 @@ class TCP : public Module {
       recver->recv(ack, win_size);
 
       // if (this->seg_map_.size() > 0) {
-      Status new_state = this->trans_state(flags, sender, seq, seg_len, p->tv());
+      Status new_state = this->trans_state(flags, sender, seq, seg_len,
+                                           p->tv());
       if (new_state == ESTABLISHED) {
         p->push_event(this->tcp_->ev_estb());
+        const uint32_t ts = (this->ts_rtt_.tv_sec * 1000000) +
+                            this->ts_rtt_.tv_usec;
+        p->retain_value(this->tcp_->p_rtt_3wh())->cpy(&ts, sizeof(ts),
+                                                      Value::LITTLE);
+      }
+      if (new_state == CLOSED) {
+        p->push_event(this->tcp_->ev_close());
       }
 
       if (this->buf_) {
@@ -353,7 +368,6 @@ class TCP : public Module {
         auto it = this->seg_map_.find(sender->next_seq());
         debug(DBG_REASS, "next > %u, it > %u", sender->next_seq(), it->first);
         if (it != this->seg_map_.end()) {
-
           auto seg = it->second;
           debug(DBG_REASS, "=== matched stored segment");
           if (this->buf_ == nullptr) {
@@ -365,7 +379,6 @@ class TCP : public Module {
                               seg->ptr(), win_size, sender, recver);
           this->seg_map_.erase(it);
         }
-
       }
 
       return true;
@@ -389,6 +402,12 @@ class TCP : public Module {
 
       this->decode_stream(p, flags, seq, ack, seg_len, seg_ptr, win_size,
                           sender, recver);
+      uint32_t tx_c = this->server_->tx_size(); // from Server to Client
+      uint32_t tx_s = this->client_->tx_size(); // fron Client to Server
+      p->retain_value(this->tcp_->p_tx_server())->cpy(&tx_s, sizeof(tx_s),
+                                                      Value::LITTLE);
+      p->retain_value(this->tcp_->p_tx_client())->cpy(&tx_c, sizeof(tx_c),
+                                                      Value::LITTLE);
     }
 
     static void make_key(const Property& p, tb::HashKey* key) {
@@ -459,10 +478,14 @@ class TCP : public Module {
     // Segment
     DEFINE_PARAM(segment);
     DEFINE_PARAM(data);
+    DEFINE_PARAM(rtt_3wh);
+    DEFINE_PARAM(tx_server);
+    DEFINE_PARAM(tx_client);
 
     this->p_ssn_id_ = this->define_param("id");
     this->ev_new_ = this->define_event("new_session");
     this->ev_estb_ = this->define_event("established");
+    this->ev_close_ = this->define_event("closed");
   }
 
   mod_id mod_tcpssn_;
@@ -473,12 +496,12 @@ class TCP : public Module {
   // ------------------------------------------
   // Getter
 
-  const EventDef *ev_estb() const {
-    return this->ev_estb_;
-  }
-  const ParamDef* p_data() const {
-    return this->p_data_;
-  }
+  const EventDef *ev_estb() const     { return this->ev_estb_; }
+  const ParamDef* p_data() const      { return this->p_data_; }
+  const ParamDef* p_rtt_3wh() const   { return this->p_rtt_3wh_; }
+  const ParamDef* p_tx_server() const { return this->p_tx_server_; }
+  const ParamDef* p_tx_client() const { return this->p_tx_client_; }
+  const EventDef* ev_close() const    { return this->ev_close_; }
 
 
   mod_id decode(Payload* pd, Property* prop) {
