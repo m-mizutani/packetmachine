@@ -98,10 +98,10 @@ class TCP : public Module {
   static const uint8_t ECE  = 0x40;
   static const uint8_t CWR  = 0x80;
 
-  static const bool DBG = false;
-  static const bool DBG_SEQ = false;
-  static const bool DBG_STAT = false;
-  static const bool DBG_REASS = false;
+  static const bool DBG         = false;
+  static const bool DBG_SEQ     = false;
+  static const bool DBG_STAT    = false;
+  static const bool DBG_REASS   = false;
 
   static const time_t TIMEOUT = 300;
   uint64_t ssn_count_;
@@ -137,14 +137,29 @@ class TCP : public Module {
      private:
       uint32_t seq_;
       uint8_t flags_;
+      Segment *next_, *tail_;
+
      public:
       Segment(const void* ptr, size_t len, uint32_t seq, uint8_t flags) :
-        tb::Buffer(ptr, len), seq_(seq), flags_(flags) {
+          tb::Buffer(ptr, len), seq_(seq), flags_(flags),
+          next_(nullptr), tail_(this) {
         }
-      virtual ~Segment() {}
+      virtual ~Segment() {
+        if (this->next_) {
+          delete this->next_;
+        }
+      }
        // means default, but g++ 4.6.3 does not allow "= default"
       uint8_t flags() const { return this->flags_; }
       uint32_t seq() const { return this->seq_; }
+      void append(Segment *seg) {
+        this->tail_->next_ = seg;
+        this->tail_ = seg;
+      }
+      Segment *next() {
+        return this->next_;
+      }
+
     };
 
     class Stream {
@@ -263,6 +278,9 @@ class TCP : public Module {
       delete this->client_;
       delete this->server_;
       delete this->buf_;
+      for (auto it : this->seg_map_) {
+        delete it.second;
+      }
     }
 
     uint64_t id() const { return this->id_; }
@@ -330,10 +348,15 @@ class TCP : public Module {
                 Stream* sender, Stream* recver) {
       if (!sender->send(flags, seq, ack, seg_len)) {
         if (sender->in_window(seq)) {
-          Segment *seg = new Segment(seg_ptr, seg_len, seq, flags);
           uint32_t rel_seq = sender->to_rel_seq(seq);
-          this->seg_map_.insert(std::make_pair(rel_seq, seg));
-          debug(DBG_SEQ, "in window!");
+          auto it = this->seg_map_.find(rel_seq);
+          Segment *seg = new Segment(seg_ptr, seg_len, seq, flags);
+          if (it == this->seg_map_.end()) {
+            this->seg_map_.insert(std::make_pair(rel_seq, seg));
+            debug(DBG_SEQ, "in window!, inserted");
+          } else {
+            it->second->append(seg);
+          }
         } else {
           debug(DBG_SEQ, "out of window");
         }
@@ -375,9 +398,14 @@ class TCP : public Module {
             this->buf_->append(seg_ptr, seg_len);
           }
 
-          this->decode_stream(p, seg->flags(), seg->seq(), ack, seg->len(),
-                              seg->ptr(), win_size, sender, recver);
           this->seg_map_.erase(it);
+          Segment *tgt = seg;
+          while (tgt) {
+            this->decode_stream(p, tgt->flags(), tgt->seq(), ack, tgt->len(),
+                                tgt->ptr(), win_size, sender, recver);
+            tgt = tgt->next();
+          }
+          delete seg;
         }
       }
 
