@@ -27,6 +27,7 @@
 #ifndef __PACKETMACHINE_MODULE_HPP__
 #define __PACKETMACHINE_MODULE_HPP__
 
+#include <sys/time.h>
 #include <map>
 #include <vector>
 #include <string>

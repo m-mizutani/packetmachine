@@ -27,6 +27,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/time.h>
 #include "./packetmachine/property.hpp"
 #include "./packet.hpp"
 #include "./decoder.hpp"
