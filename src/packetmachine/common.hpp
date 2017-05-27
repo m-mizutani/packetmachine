@@ -35,12 +35,16 @@ typedef uint8_t byte_t;
 typedef int64_t param_id;
 typedef int64_t event_id;
 typedef int64_t mod_id;
+typedef int64_t hdlr_id;
 
 namespace Param {
 static const param_id NONE = -1;
 }
 namespace Event {
 static const event_id NONE = -2;
+}
+namespace Handler {
+static const hdlr_id  NONE = -1;
 }
 
 }   // namespace pm

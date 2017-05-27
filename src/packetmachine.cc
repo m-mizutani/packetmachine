@@ -151,10 +151,15 @@ void Machine::loop() {
   pthread_join(this->input_th_, nullptr);
 }
 
-bool Machine::on(const std::string& event_name,
+hdlr_id Machine::on(const std::string& event_name,
                  std::function<void(const Property&)>&& callback) {
   assert(this->kernel_);
   return this->kernel_->on(event_name, callback);
+}
+
+bool Machine::clear(hdlr_id hid) {
+  assert(this->kernel_);
+  return this->kernel_->clear(hid);
 }
 
 uint64_t Machine::recv_pkt() const {

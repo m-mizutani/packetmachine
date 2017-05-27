@@ -38,13 +38,31 @@
 
 namespace pm {
 
+namespace Handler {
+class Entry {
+ private:
+  Callback cb_;
+  event_id ev_id_;
+  hdlr_id id_;
+ public:
+  Entry(hdlr_id id, Callback cb, event_id ev_id);
+  ~Entry();
+  hdlr_id id() const { return this->id_; }
+  event_id ev_id() const { return this->ev_id_; }
+  Callback& callback() { return this->cb_; }
+};
+}
+
+
 class Kernel {
  private:
   Channel<Packet> channel_;
   Decoder dec_;
   uint64_t recv_pkt_;
   uint64_t recv_size_;
-  std::vector< std::vector<Callback> > callback_;
+  std::vector< std::vector<Handler::Entry*> > handlers_;
+  std::map<hdlr_id, Handler::Entry*> handler_map_;
+  hdlr_id global_hdlr_id_;
 
  public:
   Kernel();
@@ -53,8 +71,9 @@ class Kernel {
   static void* thread(void* obj);
   void run();
   void proc(Packet* pkt);
-  bool on(const std::string& event_name,
-          std::function<void(const Property&)>& callback);
+  hdlr_id on(const std::string& event_name,
+             std::function<void(const Property&)>& callback);
+  bool clear(hdlr_id hid);
 
   Channel<Packet>* channel() { return &this->channel_; }
   uint64_t recv_pkt()  const { return this->recv_pkt_; }

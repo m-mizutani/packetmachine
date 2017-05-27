@@ -155,7 +155,7 @@ const std::string& Decoder::lookup_param_name(param_id pid) const {
 event_id Decoder::lookup_event_id(const std::string& name) const {
   const auto& it = this->event_map_.find(name);
   if (it == this->event_map_.end()) {
-    return Param::NONE;
+    return Event::NONE;
   } else {
     return it->second->id();
   }  

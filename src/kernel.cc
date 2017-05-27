@@ -32,10 +32,26 @@
 
 namespace pm {
 
-Kernel::Kernel() : recv_pkt_(0), recv_size_(0) {
-  this->callback_.resize(this->dec_.event_size());
+namespace Handler {
+
+Entry::Entry(hdlr_id hid, Callback cb, event_id ev_id) :
+    cb_(cb), ev_id_(ev_id), id_(hid) {
+}
+Entry::~Entry() {
+}
+
+}
+
+
+Kernel::Kernel() : recv_pkt_(0), recv_size_(0), global_hdlr_id_(0) {
+  this->handlers_.resize(this->dec_.event_size());
 }
 Kernel::~Kernel() {
+  for (auto &handler_set : this->handlers_) {
+    for (auto entry : handler_set) {
+      delete entry;
+    }
+  }
 }
 
 void* Kernel::thread(void* obj) {
@@ -60,8 +76,10 @@ void Kernel::run() {
     size_t ev_size = prop.event_idx();
     for (size_t i = 0; i < ev_size; i++) {
       event_id eid = prop.event(i)->id();
-      for (auto cb : this->callback_[eid]) {
-        cb(prop);
+      for (auto entry : this->handlers_[eid]) {
+        if (entry != nullptr) {
+          (entry->callback())(prop);
+        }
       }
     }
   }
@@ -70,17 +88,43 @@ void Kernel::run() {
 void Kernel::proc(Packet* pkt) {
 }
 
-bool Kernel::on(const std::string& event_name, Callback& cb) {
+hdlr_id Kernel::on(const std::string& event_name, Callback& cb) {
   event_id eid = this->dec_.lookup_event_id(event_name);
 
   if (eid == Event::NONE) {
-    return false;
+    return Handler::NONE;
   }
 
-  this->callback_[eid].push_back(cb);
-  
-  return false;
+  hdlr_id hid = ++(this->global_hdlr_id_);
+  Handler::Entry *entry = new Handler::Entry(hid, cb, eid);
+  this->handler_map_.insert(std::make_pair(entry->id(), entry));  
+  this->handlers_[eid].push_back(entry);
+  return entry->id();
 }
+
+bool Kernel::clear(hdlr_id hid) {
+  auto it = this->handler_map_.find(hid);
+  if (it == this->handler_map_.end()) {
+    return false; // not found
+  }
+
+  auto entry = it->second;
+  this->handler_map_.erase(it);
+  event_id eid = entry->ev_id();
+  auto& handler_set = this->handlers_[eid];
+  for(size_t i = 0; i < handler_set.size(); i++) {
+    if (handler_set[i] != nullptr &&
+        handler_set[i]->id() == entry->id()) {
+      handler_set[i] = nullptr;
+      break;
+    }
+  }
+
+  delete entry;
+  
+  return true;    
+}
+
 
 
 }   // namespace pm
