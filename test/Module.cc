@@ -34,7 +34,7 @@ TEST(Module, use_global_variable) {
   std::map<std::string, pm::Module*> mod_map;
   build_module_map(&mod_map);
 
-  EXPECT_EQ(9, mod_map.size());
+  EXPECT_EQ(10, mod_map.size());
   EXPECT_NE(mod_map.end(), mod_map.find("Ethernet"));
   EXPECT_NE(mod_map.end(), mod_map.find("PPPoE"));
   EXPECT_NE(mod_map.end(), mod_map.find("ARP"));
@@ -44,6 +44,7 @@ TEST(Module, use_global_variable) {
   EXPECT_NE(mod_map.end(), mod_map.find("TCP"));
   EXPECT_NE(mod_map.end(), mod_map.find("DNS"));
   EXPECT_NE(mod_map.end(), mod_map.find("MDNS"));
+  EXPECT_NE(mod_map.end(), mod_map.find("DHCP"));
 }
 
 }   // namespace module_test

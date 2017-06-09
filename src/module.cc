@@ -46,6 +46,7 @@ void build_module_map(std::map<std::string, Module*> *mod_map) {
   INSTALL_MOD(TCP);
   INSTALL_MOD(DNS);
   INSTALL_MOD(MDNS);
+  INSTALL_MOD(DHCP);
 }
 
 

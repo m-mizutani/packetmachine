@@ -57,6 +57,7 @@ FILE(GLOB BASESRCS
 	"src/modules/icmp.cc"
   "src/modules/dns.cc"
   "src/modules/mdns.cc"
+  "src/modules/dhcp.cc"
 	# Decoder utilities
   "src/modules/utils.cc" "src/modules/utils.hpp"
 
