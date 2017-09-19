@@ -45,6 +45,7 @@ class UDP : public Module {
 
   mod_id mod_dns_;
   mod_id mod_mdns_;
+  mod_id mod_dhcp_;
 
  public:
   UDP() {
@@ -59,6 +60,7 @@ class UDP : public Module {
   void setup() {
     this->mod_dns_  = this->lookup_module("DNS");
     this->mod_mdns_ = this->lookup_module("MDNS");
+    this->mod_dhcp_ = this->lookup_module("DHCP");
   }
 
 #define SET_PROP(PARAM, DATA) \
@@ -87,6 +89,8 @@ class UDP : public Module {
       next = this->mod_dns_;
     } else if (sport == 5353 || dport == 5353) {
       next = this->mod_mdns_;
+    } else if (sport == 67 || sport == 68 || dport == 67 || dport == 68) {
+      next = this->mod_dhcp_;
     }
 
     return next;

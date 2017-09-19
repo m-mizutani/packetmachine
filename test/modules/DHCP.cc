@@ -35,12 +35,12 @@ TEST_F(ModuleTesterData1, DHCP_packet) {
   EXPECT_TRUE(p->has_value("DHCP.hw_addr_len"));
   EXPECT_TRUE(p->has_value("DHCP.hops"));
   EXPECT_TRUE(p->has_value("DHCP.trans_id"));
-  EXPECT_TRUE(p->has_value("DHCP.seconds_elapsed"));
+  EXPECT_TRUE(p->has_value("DHCP.seconds"));
   EXPECT_TRUE(p->has_value("DHCP.flags"));
-  EXPECT_TRUE(p->has_value("DHCP.client_ip_addr"));
+  EXPECT_TRUE(p->has_value("DHCP.client_addr"));
   EXPECT_TRUE(p->has_value("DHCP.your_client_addr"));
   EXPECT_TRUE(p->has_value("DHCP.next_server_addr"));
-  EXPECT_TRUE(p->has_value("DHCP.replay_agent_addr"));
+  EXPECT_TRUE(p->has_value("DHCP.relay_agent_addr"));
   EXPECT_TRUE(p->has_value("DHCP.client_hw_addr"));
   EXPECT_FALSE(p->has_value("DHCP.server_host_name"));
   EXPECT_FALSE(p->has_value("DHCP.boot_file_name"));
@@ -52,15 +52,14 @@ TEST_F(ModuleTesterData1, DHCP_packet) {
   EXPECT_EQ(6,                   p->value("DHCP.hw_addr_len").uint());
   EXPECT_EQ(1,                   p->value("DHCP.hops").uint());
   EXPECT_EQ(0x5aaca6d2,          p->value("DHCP.trans_id").uint());
-  EXPECT_EQ(12,                  p->value("DHCP.seconds_elapsed").uint());
+  EXPECT_EQ(12,                  p->value("DHCP.seconds").uint());
   EXPECT_EQ(0x8000,              p->value("DHCP.flags").uint());
   EXPECT_EQ("0.0.0.0",           p->value("DHCP.your_client_addr").ip4());
   EXPECT_EQ("182.248.219.15",    p->value("DHCP.next_server_addr").ip4());
-  EXPECT_EQ("10.139.96.6",       p->value("DHCP.replay_agent_addr").ip4());
+  EXPECT_EQ("10.139.96.6",       p->value("DHCP.relay_agent_addr").ip4());
   EXPECT_EQ("00:ac:ca:83:df:9e", p->value("DHCP.client_hw_addr").mac());
   size_t mc_len;
   auto mc_ptr = p->value("DHCP.magic_cookie").raw(&mc_len);
-  EXPECT_EQ(4, mc_len);
-  EXPECT_TRUE(memcmp(mc_ptr, "DHCP", 4) == 0);  
+  EXPECT_TRUE(memcmp(mc_ptr, "\x63\x82\x53\x63", 4) == 0);  
 }
 
