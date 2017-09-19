@@ -60,6 +60,7 @@ TEST_F(ModuleTesterData1, DHCP_packet) {
   EXPECT_EQ("00:ac:ca:83:df:9e", p->value("DHCP.client_hw_addr").mac());
   size_t mc_len;
   auto mc_ptr = p->value("DHCP.magic_cookie").raw(&mc_len);
+  EXPECT_EQ(4, mc_len);
   EXPECT_TRUE(memcmp(mc_ptr, "\x63\x82\x53\x63", 4) == 0);  
 }
 
