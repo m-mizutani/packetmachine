@@ -14,7 +14,7 @@ Prerequisites
 Build
 ------------------
 
-```
+```bash
 $ git clone --recurse-submodules https://github.com/m-mizutani/packetmachine.git
 $ cd packetmachine
 $ cmake .
@@ -24,7 +24,7 @@ $ sudo make install
 
 If you would like to debug
 
-```
+```bash
 $ cmake cmake -DCMAKE_BUILD_TYPE=Debug .
 ```
 
@@ -33,7 +33,7 @@ Test
 
 After building the library
 
-```
+```bash
 # with shared library (.so)
 $ ./bin/packetmachine-shared-test
 # with static library (.a)
