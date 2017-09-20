@@ -11,7 +11,7 @@ A high-performance and simplified network traffic decoding library in C++.
 int main(int argc, char* argv[]) {
   pm::Machine m;
 
-  m.on("TCP", [&](const pm::Property& p) {
+  m.on("TCP", [](const pm::Property& p) {
       std::cout << "TCP: " <<
           p["IPv4.src"] << ":" << p["TCP.src_port"] << " > " <<
           p["IPv4.dst"] << ":" << p["TCP.dst_port"] << std::endl;
@@ -38,11 +38,13 @@ How to use
 Note: Install libpcap before setup of PacketMachine.
 
 ```sh
-$ git clone https://github.com/m-mizutani/packetmachine.git
+$ git clone --recurse-submodules  https://github.com/m-mizutani/packetmachine.git
 $ cd packetmachine
 $ cmake . && make
 $ sudo make install
 ```
+
+See [install.md](docs/install.md) for more details.
 
 ### Compile
 
@@ -55,7 +57,7 @@ Prepare `example.cc` as below:
 int main(int argc, char* argv[]) {
   pm::Machine m;
 
-  m.on("TCP", [&](const pm::Property& p) {
+  m.on("TCP", [](const pm::Property& p) {
       std::cout << "TCP: " <<
           p["IPv4.src"] << ":" << p["TCP.src_port"] << " > " <<
           p["IPv4.dst"] << ":" << p["TCP.dst_port"] << std::endl;
@@ -77,3 +79,20 @@ TCP: 199.59.148.241:443 > 172.20.10.2:53227
 TCP: 172.20.10.2:53227 > 199.59.148.241:443
 ...
 ```
+
+Documents
+------------
+
+See [index.md](docs/index.md) in docs folder.
+
+License
+------------
+
+- main part: [2-clause BSD license](LICENSE.md)
+- `test/gtest*`: from **Google Test**, Google Inc. The BSD 3-Clause License
+- `src/utils/hash.cc`: from **Chromium**, Google Inc. The BSD 3-Clause License
+
+Author
+------------
+
+- Masayoshi Mizutani <mizutani@sfc.wide.ad.jp>
