@@ -25,7 +25,7 @@ $ sudo make install
 If you would like to debug
 
 ```bash
-$ cmake cmake -DCMAKE_BUILD_TYPE=Debug .
+$ cmake -DCMAKE_BUILD_TYPE=Debug .
 ```
 
 Test
