@@ -106,6 +106,8 @@ class IPv4 : public Module {
     prop->retain_value(this->p_hdr_len_)->cpy(&hdrlen, sizeof(hdrlen));
     prop->retain_value(this->p_ver_)->cpy(&version, sizeof(version));
 
+    // TODO(m-mizutani): shift and trim according to header and total length
+    
     SET_PROP(this->p_tos_,       hdr->tos_);
     SET_PROP(this->p_total_len_, hdr->total_len_);
     SET_PROP(this->p_id_,        hdr->id_);

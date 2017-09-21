@@ -82,14 +82,14 @@ Destination hardware address.
 
 Source protocol address.
 
-- Expected length: defined by `ARP.hw_size`
+- Expected length: defined by `ARP.pr_size`
 - Recommended formatting method: `hex()`. If `ARP.pr_type` is `0x0800`, then `ip4()`
 
 ### `ARP.pr_dst`
 
 Destination protocol address.
 
-- Expected length: defined by `ARP.hw_size`
+- Expected length: defined by `ARP.pr_size`
 - Recommended formatting method: `hex()`. If `ARP.pr_type` is `0x0800`, then `ip4()`
 
 PPPoE
@@ -100,7 +100,83 @@ to be written.
 IPv4
 ---------
 
-to be written.
+### `IPv4.hdr_len`
+
+IPv4 Header length. In IPv4 header, the header length field should be bit shift. PacketMachine must shift the bits before a user access.
+
+- Expected length: 1 byte (originally 4 bits)
+- Recommended formatting method: `uint()`
+
+### `IPv4.ver`
+
+IPv4 version
+
+- Expected length: 1 byte (originally 4 bits)
+- Recommended formatting method: `uint()`
+
+### `IPv4.tos`
+
+Type of services.
+
+- Expected length: 1 byte
+- Recommended formatting method: `uint()`
+
+### `IPv4.total_len`
+
+Total length of IP header and data.
+
+- Expected length: 2 byte
+- Recommended formatting method: `uint()`
+
+### `IPv4.id`
+
+ID of IP packet.
+
+- Expected length: 2 byte
+- Recommended formatting method: `uint()`
+
+### `IPv4.offset`
+
+Offset of IP fragmentation.
+
+- Expected length: 2 byte
+- Recommended formatting method: `uint()`
+
+### `IPv4.ttl`
+
+Time to Live.
+
+- Expected length: 1 byte
+- Recommended formatting method: `uint()`
+
+### `IPv4.proto`
+
+Protocol number of next layer.
+
+- Expected length: 1 byte
+- Recommended formatting method: `uint()`
+
+### `IPv4.chksum`
+
+Checksum of IP header.
+
+- Expected length: 2 byte
+- Recommended formatting method: `hex()`, `raw()` or `uint()`
+
+### `IPv4.src",
+
+Source IP address.
+
+- Expected length: 4 byte
+- Recommended formatting method: `ip4()`
+
+### `IPv4.dst",
+
+Destination IP address.
+
+- Expected length: 4 byte
+- Recommended formatting method: `ip4()`
+
 
 UDP
 ---------
