@@ -10,7 +10,7 @@ PacketMachine Developers Document
     - Ethernet
     - ARP
     - PPPoE
-    - IPv4/v6
+    - IP
     - TCP/UDP/ICMP
     - DNS
     - mDNS
