@@ -370,17 +370,138 @@ TCP data segment that is reassembled.
 ICMP
 ---------
 
-to be written.
+### `ICMP.type`
+
+ICMP type.
+
+- Expected length: 1 bytes
+- Recommended formatting method: `uint()`
+- Support `repr()` to convert from type number to description.
+    - e.g.) `3` to `Destination Unreachable`
+
+
+### `ICMP.code`
+
+ICMP code.
+
+- Expected length: 1 bytes
+- Recommended formatting method: `uint()`
+- Support `repr()` to convert from type number to description.
+    - e.g.) If `ICMP.type` is `3` and `ICMP.code` is `1`, then `Host Unreachable`
+
+### `ICMP.chksum`
+
+Checksum.
+
+- Expected length: 2 bytes
+- Recommended formatting method: `uint()` or `hex()`
+
 
 DNS
 ---------
 
-to be written.
+
+### `DNS.tx_id`
+
+Transaction ID.
+
+- Expected length: 2 bytes
+- Recommended formatting method: `uint()`
+
+
+### `DNS.is_query`
+
+If QUERY flag is on.
+
+- Expected length: 1 byte
+- Recommended formatting method: `uint()`
+
+### `DNS.question`
+
+DNS question section.
+
+- Type: `pm::value::Array`
+- The parameter has `pm::value::Map` type value(s) in the array as one DNS record
+- The `pm::value::Map` type value has following attributes
+    - `name`: DNS record name.
+	    - Expected length: N/A
+		- Recommended formatting method: `repr()`
+		- `repr()` method supports string reconstruction with label.
+	- `type`: 
+	    - Expected length: 2 bytes
+		- Recommended formatting method: `uint()` or `repr()`
+		- Support `repr()` to show record type name.
+		    - e.g.) convert `5` to `CNAME`
+	- `data`: 
+	    - Expected length: N/A
+		- Recommended formatting method: `repr()`
+		- `repr()` method supports string reconstruction with label.
+
+Example for `DNS.answer`
+
+```cpp
+void callback(const pm::Property& p) {
+  if (!p.has_value("DNS.answer")) {
+    return;
+  }
+  const auto& records = p.value("DNS.answer").asArray();
+  for (size_t i = 0; i < records.size(); i++) {
+    const auto& rec = records.get(i);
+	std::cout << "Answer No." << (i + 1) << std::endl 
+        << "Name: " << rec.find("name") << std::endl
+        << "Type: " << rec.find("type") << std::endl
+        << "Data: " << rec.find("data") << std::endl << std::endl;
+  }
+}
+```
+
+### `DNS.answer`
+
+DNS answer section in the same manner as `DNS.query`
+
+### `DNS.authority`
+
+DNS authority section in the same manner as `DNS.query`
+
+### `DNS.additional`
+
+DNS additional section in the same manner as `DNS.query`
+
 
 mDNS
 ---------
 
-to be written.
+### `mDNS.tx_id`
+
+Transaction ID.
+
+- Expected length: 2 bytes
+- Recommended formatting method: `uint()`
+
+
+### `mDNS.is_query`
+
+If QUERY flag is on.
+
+- Expected length: 1 byte
+- Recommended formatting method: `uint()`
+
+### `mDNS.question`
+
+DNS question section in the same manner as `DNS.query`
+
+### `mDNS.answer`
+
+DNS answer section in the same manner as `DNS.query`
+
+### `mDNS.authority`
+
+DNS authority section in the same manner as `DNS.query`
+
+### `mDNS.additional`
+
+DNS additional section in the same manner as `DNS.query`
+
 
 DHCP
 ---------
