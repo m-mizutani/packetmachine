@@ -121,6 +121,6 @@ bool is_map() const;
 const Value& find(const std::string& key);
 ```
 
-Additionally `pm::Value` supports an dictionary (map) structure. If the instance has dictionary type, `is_map()` returns `true` and a key of map is `std::string`. Available keys of each value are described in [protocol decode module documents](protocol/index.md).
+Additionally `pm::Value` supports an dictionary (map) structure. If the instance has dictionary type, `is_map()` returns `true` and a key of map is `std::string`. Available keys of each value are described in [protocol decode module documents](protocol/).
 
 each element of map structure can be accessed by `find()` method. If it's not map structure, `find()` throws `pm::Exception::TypeError`.

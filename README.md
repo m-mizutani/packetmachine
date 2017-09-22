@@ -83,7 +83,7 @@ TCP: 172.20.10.2:53227 > 199.59.148.241:443
 Documents
 ------------
 
-See [index.md](docs/index.md) in docs folder.
+See files in [docs](docs/) directory.
 
 License
 ------------
