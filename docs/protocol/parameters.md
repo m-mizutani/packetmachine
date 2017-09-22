@@ -163,14 +163,14 @@ Checksum of IP header.
 - Expected length: 2 byte
 - Recommended formatting method: `hex()`, `raw()` or `uint()`
 
-### `IPv4.src",
+### `IPv4.src`
 
 Source IP address.
 
 - Expected length: 4 byte
 - Recommended formatting method: `ip4()`
 
-### `IPv4.dst",
+### `IPv4.dst`
 
 Destination IP address.
 
@@ -181,12 +181,191 @@ Destination IP address.
 UDP
 ---------
 
-to be written.
+### `UDP.src_port`
+
+UDP source port number.
+
+- Expected length: 2 byte
+- Recommended formatting method: `uint()`
+
+### `UDP.dst_port`
+
+UDP destination port number.
+
+- Expected length: 2 byte
+- Recommended formatting method: `uint()`
+
+### `UDP.length`
+
+UDP header and data length.
+
+- Expected length: 2 byte
+- Recommended formatting method: `uint()`
+
+
+### `UDP.chksum`
+
+Checksum.
+
+- Expected length: 2 byte
+- Recommended formatting method: `uint()` or `hex()`
+
 
 TCP
 ---------
 
+### `TCP.src_port`
+
+TCP source port number.
+
+- Expected length: 2 byte
+- Recommended formatting method: `uint()`
+
+
+### `TCP.dst_port`
+
+TCP source port number.
+
+- Expected length: 2 byte
+- Recommended formatting method: `uint()`
+
+### `TCP.seq`
+
+Sequence number of TCP stream.
+
+- Expected length: 4 byte
+- Recommended formatting method: `uint()`
+
+
+### `TCP.ack`
+
+Acknowledgment number of TCP stream.
+
+- Expected length: 4 byte
+- Recommended formatting method: `uint()`
+
+
+### `TCP.offset`
+
+Data offset.
+
+- Expected length: 1 byte
+- Recommended formatting method: `uint()`
+
+
+### `TCP.flags`
+
+TCP flag section. See also `TCP.flag_{fin,syn,rst,push,ack,usrg,ece,cwr}`
+
+- Expected length: 1 byte
+- Recommended formatting method: `uint()`
+
+### `TCP.window`
+
+Window size.
+
+- Expected length: 2 byte
+- Recommended formatting method: `uint()`
+
+### `TCP.chksum`
+
+Checksum.
+
+- Expected length: 2 byte
+- Recommended formatting method: `uint()` or `hex()`
+
+
+### `TCP.urgptr`
+
+Urgent Pointer.
+
+- Expected length: 2 byte
+- Recommended formatting method: `uint()`.
+
+
+### `TCP.flag_fin`
+
+FIN flag status. If the flag is on, the parameter should be `1`. If not, `0`.
+
+- Expected length: 1 byte
+- Recommended formatting method: `uint()`.
+
+### `TCP.flag_syn`
+
+SYN flag status. If the flag is on, the parameter should be `1`. If not, `0`.
+
+- Expected length: 1 byte
+- Recommended formatting method: `uint()`.
+
+
+### `TCP.flag_rst`
+
+RST(Reset the connection) flag status. If the flag is on, the parameter should be `1`. If not, `0`.
+
+- Expected length: 1 byte
+- Recommended formatting method: `uint()`.
+
+### `TCP.flag_push`
+
+PSH(Push Function) flag status. If the flag is on, the parameter should be `1`. If not, `0`.
+
+- Expected length: 1 byte
+- Recommended formatting method: `uint()`.
+
+### `TCP.flag_ack`
+
+ACK(Acknowledgment field significant) flag status. If the flag is on, the parameter should be `1`. If not, `0`.
+
+- Expected length: 1 byte
+- Recommended formatting method: `uint()`.
+
+### `TCP.flag_urg`
+
+URG(Urgent Pointer field significant) flag status. If the flag is on, the parameter should be `1`. If not, `0`.
+
+- Expected length: 1 byte
+- Recommended formatting method: `uint()`.
+
+### `TCP.flag_ece`
+
+ECE(ECN Echo) flag status. If the flag is on, the parameter should be `1`. If not, `0`.
+
+- Expected length: 1 byte
+- Recommended formatting method: `uint()`.
+
+### `TCP.flag_cwr`
+
+CWR(Congestion window reduced) flag status. If the flag is on, the parameter should be `1`. If not, `0`.
+
+- Expected length: 1 byte
+- Recommended formatting method: `uint()`.
+
+### `TCP.optdata`
+
+TCP option field.
+
+- Expected length: `TCP.offset` - 28 bytes (fixed TCP header length)
+- Recommended formatting method: `hex()` or `raw()`
+
+### `TCP.segment`
+
+TCP data segment field. (Not reassembled)
+
+- Expected length: N/A
+- Recommended formatting method: `hex()` or `raw()`
+
+
+### `TCP.ssn_id`
+
 to be written.
+
+### `TCP.data`
+
+TCP data segment that is reassembled.
+
+- Expected length: N/A
+- Recommended formatting method: `hex()` or `raw()`
+
 
 ICMP
 ---------
