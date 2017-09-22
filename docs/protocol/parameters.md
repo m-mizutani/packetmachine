@@ -444,7 +444,7 @@ void callback(const pm::Property& p) {
   if (!p.has_value("DNS.answer")) {
     return;
   }
-  const auto& records = p.value("DNS.answer").asArray();
+  const auto& records = p.value("DNS.answer");
   for (size_t i = 0; i < records.size(); i++) {
     const auto& rec = records.get(i);
 	std::cout << "Answer No." << (i + 1) << std::endl 
