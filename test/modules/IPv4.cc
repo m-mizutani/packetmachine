@@ -54,3 +54,19 @@ TEST_F(ModuleTesterData1, IPv4_packet) {
   EXPECT_EQ("192.30.252.90", p->value("IPv4.dst").ip4());
 }
 
+TEST_F(ModuleTesterData2, IPv4_option) {
+  const pm::Property* p;
+  p = get_property(450);   // # packet #451
+
+  EXPECT_EQ(24, p->value("IPv4.hdr_len").uint());
+
+  size_t opt_len;
+  auto opt = p->value("IPv4.opt").raw(&opt_len);
+  EXPECT_EQ(4, opt_len);
+  EXPECT_EQ(0x94, opt[0]);
+  size_t data_len;
+  auto data = p->value("IPv4.data").raw(&data_len);
+  EXPECT_EQ(16, data_len);
+  EXPECT_EQ(0x22, data[0]);
+}
+

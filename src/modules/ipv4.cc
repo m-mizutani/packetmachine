@@ -24,6 +24,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include<assert.h>
 #include "../module.hpp"
 
 namespace pm {
@@ -62,7 +63,8 @@ class IPv4 : public Module {
   const ParamDef* p_chksum_;
   const ParamDef* p_src_;
   const ParamDef* p_dst_;
-
+  const ParamDef* p_opt_;
+  const ParamDef* p_data_;
   mod_id mod_tcp_, mod_udp_, mod_icmp_;
 
  public:
@@ -80,6 +82,8 @@ class IPv4 : public Module {
                                           value::IPv4Addr::new_value);
     this->p_dst_       = this->define_param("dst",
                                           value::IPv4Addr::new_value);
+    this->p_opt_       = this->define_param("opt");
+    this->p_data_      = this->define_param("data");
   }
 
   void setup() {
@@ -98,16 +102,24 @@ class IPv4 : public Module {
       return Module::NONE;
     }
 
-    prop->set_src_addr(&hdr->src_, sizeof(hdr->src_));
-    prop->set_dst_addr(&hdr->dst_, sizeof(hdr->dst_));
-
     uint8_t hdrlen  = hdr->hdrlen_ << 2;
     uint8_t version = hdr->ver_;
+    unsigned int total_len = ntohs(hdr->total_len_);
+    unsigned int hdr_len   = hdrlen;
+
+    if (total_len < hdr_len) {
+      return Module::NONE;
+    }
+
+    assert(total_len >= hdr_len);
+    uint16_t data_len = total_len - hdr_len;
+
+    // Set values
+    prop->set_src_addr(&hdr->src_, sizeof(hdr->src_));
+    prop->set_dst_addr(&hdr->dst_, sizeof(hdr->dst_));
     prop->retain_value(this->p_hdr_len_)->cpy(&hdrlen, sizeof(hdrlen));
     prop->retain_value(this->p_ver_)->cpy(&version, sizeof(version));
-
-    // TODO(m-mizutani): shift and trim according to header and total length
-    
+       
     SET_PROP(this->p_tos_,       hdr->tos_);
     SET_PROP(this->p_total_len_, hdr->total_len_);
     SET_PROP(this->p_id_,        hdr->id_);
@@ -118,6 +130,17 @@ class IPv4 : public Module {
     SET_PROP(this->p_src_,       hdr->src_);
     SET_PROP(this->p_dst_,       hdr->dst_);
 
+    // Set option field
+    if (hdrlen > sizeof(struct ipv4_header)) {
+      const size_t opt_len = hdrlen - sizeof(struct ipv4_header);
+      auto opt = pd->retain(opt_len);
+      prop->retain_value(this->p_opt_)->set(opt, opt_len);
+    }
+
+    // Adjust payload length
+    pd->shrink(data_len);
+    prop->retain_value(this->p_data_)->set(pd->ptr(), pd->length());
+    
     mod_id next = Module::NONE;
 
     switch (hdr->proto_) {
