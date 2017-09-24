@@ -32,8 +32,7 @@ namespace machine_test {
 TEST(Machine, ok) {
   pm::Machine *m = new pm::Machine();
   m->add_pcapfile("./test/data1.pcap");
-  m->start();
-  m->join();
+  m->loop();
 
   EXPECT_EQ(10000,   m->recv_pkt());
   EXPECT_EQ(5282080, m->recv_size());

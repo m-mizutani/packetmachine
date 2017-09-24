@@ -119,25 +119,6 @@ void Machine::add_pcapfile(const std::string &file_path) {
   this->cap_ = cap;
 }
 
-void Machine::start() {
-  if (!this->cap_) {
-    throw Exception::ConfigError("no input source is available");
-  }
-
-  this->input_  = new Input(this->cap_, this->kernel_->channel());
-
-  pthread_create(&this->kernel_th_, nullptr, Kernel::thread, this->kernel_);
-  pthread_create(&this->input_th_,  nullptr, Input::thread,  this->input_);
-}
-
-void Machine::join() {
-  pthread_join(this->input_th_,  nullptr);
-  pthread_join(this->kernel_th_, nullptr);
-}
-
-void Machine::shutdown() {
-}
-
 void Machine::loop() {
   if (!this->cap_) {
     throw Exception::ConfigError("no input source is available");
@@ -149,6 +130,7 @@ void Machine::loop() {
   
   this->kernel_->run();
   pthread_join(this->input_th_, nullptr);
+  pthread_join(this->kernel_th_, nullptr);
 }
 
 hdlr_id Machine::on(const std::string& event_name,

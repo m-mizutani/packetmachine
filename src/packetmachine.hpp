@@ -59,9 +59,6 @@ class Machine {
   void add_pcapfile(const std::string& file_path);
 
   // Contorl capture & packet decodeing.
-  void start();
-  void join();
-  void shutdown();
   void loop();
 
   hdlr_id on(const std::string& event_name,
