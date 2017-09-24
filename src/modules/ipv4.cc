@@ -24,7 +24,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include<assert.h>
+#include <assert.h>
+#include <arpa/inet.h>
 #include "../module.hpp"
 
 namespace pm {
