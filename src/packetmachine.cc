@@ -130,7 +130,6 @@ void Machine::loop() {
   
   this->kernel_->run();
   pthread_join(this->input_th_, nullptr);
-  pthread_join(this->kernel_th_, nullptr);
 }
 
 hdlr_id Machine::on(const std::string& event_name,
