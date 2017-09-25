@@ -125,11 +125,14 @@ void Machine::loop() {
   }
   debug(false, "enter loop");
 
-  this->input_ = new Input(this->cap_, this->kernel_->channel());
-  pthread_create(&this->input_th_, nullptr, Input::thread, this->input_);
+  pthread_create(&this->kernel_th_, nullptr, Kernel::thread, this->kernel_);
   
-  this->kernel_->run();
+  this->input_ = new Input(this->cap_, this->kernel_->channel());
+  pthread_create(&this->input_th_, nullptr, Input::thread, this->input_);  
+  
+  // this->kernel_->run();
   pthread_join(this->input_th_, nullptr);
+  pthread_join(this->kernel_th_, nullptr);
 }
 
 hdlr_id Machine::on(const std::string& event_name,
