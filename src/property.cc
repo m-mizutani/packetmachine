@@ -95,14 +95,21 @@ Property::Property(Decoder* dec) : dec_(dec) {
 
 Property::~Property() {
   debug(true, "start");
+  debug(true, "%p", this);
   for (size_t i = 0; i < this->param_.size(); i++) {
+    debug(true, "%d", i);
+    debug(true, "this->param_[i] = %p", this->param_[i]);
     for (auto obj : *(this->param_[i])) {
+      debug(true, "  obj = %p", obj);
       delete obj;
     }
+    debug(true, "remove %p", this->param_[i]);
     delete this->param_[i];
   }
 
+  debug(true, "remove src %p", this->src_addr_);
   delete this->src_addr_;
+  debug(true, "remove dst %p", this->dst_addr_);
   delete this->dst_addr_;
   debug(true, "end");
 }
