@@ -87,6 +87,7 @@ TEST(Decoder, basic) {
   printf("check values\n");
   EXPECT_EQ(22, count_mac_saddr);
   EXPECT_EQ(270, count_ipv4_saddr);
+  pcap_close(pcap);
   printf("exit\n");
 }
 

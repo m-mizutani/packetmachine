@@ -32,6 +32,7 @@
 #include "./packet.hpp"
 #include "./decoder.hpp"
 #include "../external/cpp-toolbox/src/buffer.hpp"
+#include "./debug.hpp"
 
 namespace pm {
 
@@ -39,6 +40,7 @@ Payload::Payload() : pkt_(nullptr) {
 }
 
 Payload::~Payload() {
+  debug(true, "done");
 }
 
 
@@ -92,6 +94,7 @@ Property::Property(Decoder* dec) : dec_(dec) {
 }
 
 Property::~Property() {
+  debug(true, "start");
   for (size_t i = 0; i < this->param_.size(); i++) {
     for (auto obj : *(this->param_[i])) {
       delete obj;
@@ -101,6 +104,7 @@ Property::~Property() {
 
   delete this->src_addr_;
   delete this->dst_addr_;
+  debug(true, "end");
 }
 
 void Property::init(const Packet *pkt) {

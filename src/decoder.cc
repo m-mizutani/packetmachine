@@ -91,6 +91,7 @@ Decoder::Decoder() : mod_ethernet_(Module::NONE) {
 
 
 Decoder::~Decoder() {
+  debug(true, "start");
   for (auto& m : this->modules_) {
     delete m;
   }
@@ -98,6 +99,7 @@ Decoder::~Decoder() {
   for (auto& pi : this->params_) {
     delete pi;
   }
+  debug(true, "exit");
 }
 
 
