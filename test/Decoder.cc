@@ -42,26 +42,22 @@ TEST(Decoder, basic) {
 
   if (!pcap) {
     printf("errbuf = %s\n", errbuf);
-    return;
   }
-
-  printf("pcap = %p\n", pcap);
+  
+  ASSERT_TRUE(pcap != nullptr);
   struct pcap_pkthdr* pkthdr;
   const u_char* data;
   int rc;
 
-  printf("initializing\n");
   pm::Decoder dec;
   pm::Packet pkt;
   pm::Payload pd;
   pm::Property prop(&dec);
-  printf("initialized\n");
   
   int count_ipv4_saddr = 0;
   int count_mac_saddr = 0;
 
   while (0 <= (rc = ::pcap_next_ex(pcap, &pkthdr, &data))) {
-    printf("reading rc=%d\n", rc);
     if (0 == rc) {
       continue;
     }
@@ -75,17 +71,23 @@ TEST(Decoder, basic) {
 
     dec.decode(&pd, &prop);
 
-    if ("50:a7:33:0c:5e:4c" == prop.value("Ethernet.src").mac()) {
+    const auto& eth_src = prop.value("Ethernet.src");
+    EXPECT_FALSE(eth_src.is_null());
+    if ("50:a7:33:0c:5e:4c" == eth_src.mac()) {
       count_mac_saddr++;
     }
 
-    if ("104.80.179.146" == prop.value("IPv4.src").ip4()) {
+    const auto& ipv4_src = prop.value("IPv4.src");
+    EXPECT_FALSE(eth_src.is_null());
+    if ("104.80.179.146" == ipv4_src.ip4()) {
       count_ipv4_saddr++;
     }
   }
 
+  printf("check values\n");
   EXPECT_EQ(22, count_mac_saddr);
   EXPECT_EQ(270, count_ipv4_saddr);
+  printf("exit\n");
 }
 
 TEST(Decoder, lookup_param) {
