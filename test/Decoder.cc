@@ -40,19 +40,28 @@ TEST(Decoder, basic) {
   char errbuf[PCAP_ERRBUF_SIZE];
   pcap_t* pcap = ::pcap_open_offline(fpath.c_str(), errbuf);
 
+  if (!pcap) {
+    printf("errbuf = %s\n", errbuf);
+    return;
+  }
+
+  printf("pcap = %p\n", pcap);
   struct pcap_pkthdr* pkthdr;
   const u_char* data;
   int rc;
 
+  printf("initializing\n");
   pm::Decoder dec;
   pm::Packet pkt;
   pm::Payload pd;
   pm::Property prop(&dec);
-
+  printf("initialized\n");
+  
   int count_ipv4_saddr = 0;
   int count_mac_saddr = 0;
 
   while (0 <= (rc = ::pcap_next_ex(pcap, &pkthdr, &data))) {
+    printf("reading rc=%d\n", rc);
     if (0 == rc) {
       continue;
     }
