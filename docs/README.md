@@ -22,6 +22,5 @@ Table of Contents
 ---------
 
 - [Install](install.md)
-- [Getting started](getting_started.md)
 - [Tutorial](tutorial.md)
 - [API guide](api.md)
