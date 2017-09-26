@@ -102,6 +102,7 @@ Property::~Property() {
     for (auto obj : *(this->param_[i])) {
       debug(true, "  obj = %p", obj);
       delete obj;
+      debug(true, "  deleted obj = %p", obj);
     }
     debug(true, "remove %p", this->param_[i]);
     delete this->param_[i];
