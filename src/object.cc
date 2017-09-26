@@ -49,10 +49,12 @@ Value::Value() :
 }
 
 Value::~Value() {
-  debug(true, "free %p", this->buf_);
+  debug(true, "buf = %p", this->buf_);
   if (this->buf_) {
+    debug(true, "free %p", this->buf_);
     free(this->buf_);
   }
+  debug(true, "%p destructed", this);
 }
 
 

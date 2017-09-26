@@ -97,9 +97,8 @@ Property::~Property() {
   debug(true, "start");
   debug(true, "%p", this);
   for (size_t i = 0; i < this->param_.size(); i++) {
-    debug(true, "%d", i);
     const auto& name = this->dec_->lookup_param_name(i);
-    debug(true, "this->param_[i] = %p (%s)", this->param_[i], name.c_str());
+    debug(true, "(%u) this->param_[i] = %p (%s)", i, this->param_[i], name.c_str());
     for (auto obj : *(this->param_[i])) {
       debug(true, "  obj = %p", obj);
       delete obj;
@@ -108,9 +107,7 @@ Property::~Property() {
     delete this->param_[i];
   }
 
-  debug(true, "remove src %p", this->src_addr_);
   delete this->src_addr_;
-  debug(true, "remove dst %p", this->dst_addr_);
   delete this->dst_addr_;
   debug(true, "end");
 }

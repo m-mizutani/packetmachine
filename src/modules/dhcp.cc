@@ -49,7 +49,7 @@ class DHCP : public Module {
       this->it_data_   = this->map_.find("data");
     }      
     ~Option() {
-      debug(true, "destruction");
+      debug(true, "%p destruction", this);
     }
 
     void set_type(Value* v)   { this->it_type_->second   = v; }
