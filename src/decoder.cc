@@ -91,7 +91,6 @@ Decoder::Decoder() : mod_ethernet_(Module::NONE) {
 
 
 Decoder::~Decoder() {
-  debug(true, "start");
   for (auto& m : this->modules_) {
     delete m;
   }
@@ -99,7 +98,6 @@ Decoder::~Decoder() {
   for (auto& pi : this->params_) {
     delete pi;
   }
-  debug(true, "exit");
 }
 
 
@@ -115,16 +113,8 @@ void Decoder::decode(Payload* pd, Property* prop) {
     prop->push_event(this->mod_event_[next]);
     next = mod->decode(pd, prop);
 
-    debug(false, "next=%lld, size=%zd", next, this->modules_.size());
-
     assert(next == Module::NONE ||
            (0 <= next && next < static_cast<mod_id>(this->modules_.size())));
-  }
-
-  for (size_t idx = 0; idx < prop->event_idx(); idx++) {
-    const EventDef* ev = prop->event(idx);
-    debug(false, "ev=%s", ev->name().c_str());
-    // TODO(m-mizutani): callback event handler
   }
 }
 

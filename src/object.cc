@@ -49,12 +49,9 @@ Value::Value() :
 }
 
 Value::~Value() {
-  debug(true, "buf = %p", this->buf_);
   if (this->buf_) {
-    debug(true, "free %p", this->buf_);
     free(this->buf_);
   }
-  debug(true, "%p destructed", this);
 }
 
 
@@ -313,7 +310,6 @@ namespace value {
 // class Array
 
 Array::~Array() {
-  debug(true, "desstruct");
 }
 
 void Array::clear() {
@@ -350,7 +346,6 @@ void Array::push(Value* val) {
 // class Map
 
 Map::~Map() {
-  debug(true, "destruction");
 }
   
 void Map::clear() {

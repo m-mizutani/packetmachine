@@ -37,11 +37,9 @@ Packet::Packet() : buf_len_(0), buf_(nullptr) {
 }
 
 Packet::~Packet() {
-  debug(true, "start");
   if (this->buf_) {
     ::free(this->buf_);
   }
-  debug(true, "end");
 }
 
 bool Packet::store(const byte_t* data, uint64_t len) {

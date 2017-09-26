@@ -47,19 +47,16 @@ class DHCP : public Module {
       this->it_type_   = this->map_.find("type");
       this->it_length_ = this->map_.find("length");
       this->it_data_   = this->map_.find("data");
-      debug(true, "created %p", this);
     }      
-    ~Option() {
-      debug(true, "%p destruction", this);
-    }
+    ~Option() = default;
 
     void set_type(Value* v)   { this->it_type_->second   = v; }
     void set_length(Value* v) { this->it_length_->second = v; }
     void set_data(Value* v)   { this->it_data_->second   = v; }
-    void celar() {
-      this->it_type_->second = nullptr;
+    void clear() {
+      this->it_type_->second   = nullptr;
       this->it_length_->second = nullptr;
-      this->it_data_->second = nullptr;
+      this->it_data_->second   = nullptr;
     }
     static Value* new_value() { return new Option(); }
   };
@@ -138,22 +135,6 @@ class DHCP : public Module {
   }
 
   void setup() {
-    // just for test
-    auto t = new Value();
-    auto l = new Value();
-    auto d = new Value();
-    
-    debug(true, "tset new");
-    auto p = new Option();
-    debug(true, "p = %p", p);
-    p->set_type(t);
-    p->set_length(l);
-    p->set_data(d);
-    delete t;
-    delete p;
-    delete l;
-    delete d;
-    debug(true, "deleted %p", p);
   }
 
   mod_id decode(Payload* pd, Property* prop) {

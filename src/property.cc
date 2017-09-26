@@ -40,7 +40,6 @@ Payload::Payload() : pkt_(nullptr) {
 }
 
 Payload::~Payload() {
-  debug(true, "done");
 }
 
 
@@ -94,23 +93,15 @@ Property::Property(Decoder* dec) : dec_(dec) {
 }
 
 Property::~Property() {
-  const bool DBG = false;
-  debug(DBG, "start %p", this);
   for (size_t i = 0; i < this->param_.size(); i++) {
-    const auto& name = this->dec_->lookup_param_name(i);
-    debug(DBG, "(%u) this->param_[i] = %p (%s)", i, this->param_[i], name.c_str());
     for (auto obj : *(this->param_[i])) {
-      debug(DBG, "  obj = %p", obj);
       delete obj;
-      debug(DBG, "  deleted obj = %p", obj);
     }
-    debug(DBG, "remove %p", this->param_[i]);
     delete this->param_[i];
   }
 
   delete this->src_addr_;
   delete this->dst_addr_;
-  debug(DBG, "end");
 }
 
 void Property::init(const Packet *pkt) {
