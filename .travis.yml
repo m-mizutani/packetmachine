@@ -29,6 +29,6 @@ before_script:
 
 script:
   - make
-  - ./bin/packetmachine-static-test --gtest_filter="Decoder.basic"
-  - ./bin/packetmachine-shared-test --gtest_filter="Decoder.basic"
+  - ./bin/packetmachine-static-test
+  - ./bin/packetmachine-shared-test
 
