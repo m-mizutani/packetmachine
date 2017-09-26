@@ -47,6 +47,7 @@ class DHCP : public Module {
       this->it_type_   = this->map_.find("type");
       this->it_length_ = this->map_.find("length");
       this->it_data_   = this->map_.find("data");
+      debug(true, "created %p", this);
     }      
     ~Option() {
       debug(true, "%p destruction", this);

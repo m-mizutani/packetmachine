@@ -94,23 +94,23 @@ Property::Property(Decoder* dec) : dec_(dec) {
 }
 
 Property::~Property() {
-  debug(true, "start");
-  debug(true, "%p", this);
+  const bool DBG = false;
+  debug(DBG, "start %p", this);
   for (size_t i = 0; i < this->param_.size(); i++) {
     const auto& name = this->dec_->lookup_param_name(i);
-    debug(true, "(%u) this->param_[i] = %p (%s)", i, this->param_[i], name.c_str());
+    debug(DBG, "(%u) this->param_[i] = %p (%s)", i, this->param_[i], name.c_str());
     for (auto obj : *(this->param_[i])) {
-      debug(true, "  obj = %p", obj);
+      debug(DBG, "  obj = %p", obj);
       delete obj;
-      debug(true, "  deleted obj = %p", obj);
+      debug(DBG, "  deleted obj = %p", obj);
     }
-    debug(true, "remove %p", this->param_[i]);
+    debug(DBG, "remove %p", this->param_[i]);
     delete this->param_[i];
   }
 
   delete this->src_addr_;
   delete this->dst_addr_;
-  debug(true, "end");
+  debug(DBG, "end");
 }
 
 void Property::init(const Packet *pkt) {
