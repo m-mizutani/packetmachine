@@ -71,6 +71,11 @@ class NoDataError : public Error {
   explicit NoDataError(const std::string &errmsg) : Error(errmsg) {}
 };
 
+class RunTimeError : public Error {
+ public:
+  explicit RunTimeError(const std::string &errmsg) : Error(errmsg) {}
+};
+
 }   // namespace Exception
 }   // namespace pm
 

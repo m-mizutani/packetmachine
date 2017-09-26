@@ -135,6 +135,15 @@ void Machine::loop() {
   pthread_join(this->kernel_th_, nullptr);
 }
 
+
+bool Machine::start() {
+}
+bool Machine::join(struct timeval* timeout = nullptr) {
+}
+bool Machine::shutdown() {
+}
+
+
 hdlr_id Machine::on(const std::string& event_name,
                  std::function<void(const Property&)>&& callback) {
   assert(this->kernel_);

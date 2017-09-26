@@ -61,6 +61,10 @@ class Machine {
   // Contorl capture & packet decodeing.
   void loop();
 
+  void start();
+  bool join(struct timeval* timeout = nullptr);
+  void shutdown();
+
   hdlr_id on(const std::string& event_name,
              std::function<void(const Property&)>&& callback);
   bool clear(hdlr_id hid);
