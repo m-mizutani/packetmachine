@@ -139,10 +139,20 @@ class DHCP : public Module {
 
   void setup() {
     // just for test
+    auto t = new Value();
+    auto l = new Value();
+    auto d = new Value();
+    
     debug(true, "tset new");
     auto p = new Option();
     debug(true, "p = %p", p);
+    p->set_type(t);
+    p->set_length(l);
+    p->set_data(d);
+    delete t;
     delete p;
+    delete l;
+    delete d;
     debug(true, "deleted %p", p);
   }
 
