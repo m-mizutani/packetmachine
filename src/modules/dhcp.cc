@@ -137,6 +137,12 @@ class DHCP : public Module {
   }
 
   void setup() {
+    // just for test
+    debug(true, "tset new");
+    auto p = new Option();
+    debug(true, "p = %p", p);
+    delete p;
+    debug(true, "deleted %p", p);
   }
 
   mod_id decode(Payload* pd, Property* prop) {
