@@ -49,6 +49,7 @@ Value::Value() :
 }
 
 Value::~Value() {
+  debug(true, "free %p", this->buf_);
   if (this->buf_) {
     free(this->buf_);
   }
@@ -309,6 +310,9 @@ namespace value {
 // --------------------------------
 // class Array
 
+Array::~Array() {
+  debug(true, "desstruct");
+}
 
 void Array::clear() {
   this->array_.resize(0);

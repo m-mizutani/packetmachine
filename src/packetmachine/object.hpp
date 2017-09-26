@@ -175,7 +175,7 @@ class Array : public Value {
 
  public:
   Array() = default;
-  virtual ~Array() {}
+  virtual ~Array();
   virtual void clear();
   virtual void repr(std::ostream &os) const;
 
