@@ -347,6 +347,10 @@ void Array::push(Value* val) {
 // --------------------------------
 // class Map
 
+Map::~Map() {
+  debug(true, "destruction");
+}
+  
 void Map::clear() {
   this->map_.clear();
 }

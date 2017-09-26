@@ -26,6 +26,7 @@
 
 #include <arpa/inet.h>
 #include "../module.hpp"
+#include "../debug.hpp"
 
 namespace pm {
 
@@ -48,6 +49,7 @@ class DHCP : public Module {
       this->it_data_   = this->map_.find("data");
     }      
     ~Option() {
+      debug(true, "destruction");
     }
 
     void set_type(Value* v)   { this->it_type_->second   = v; }

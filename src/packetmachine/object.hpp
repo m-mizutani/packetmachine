@@ -194,7 +194,7 @@ class Map : public Value {
 
  public:
   Map() = default;
-  virtual ~Map() {}
+  virtual ~Map();
   virtual void clear();
   virtual void repr(std::ostream &os) const;
 
