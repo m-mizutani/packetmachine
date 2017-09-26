@@ -53,32 +53,32 @@ TEST_F(ModuleTesterData1, TCP_packet) {
   EXPECT_TRUE(p->has_value("TCP.flag_cwr"));
 
   // TCP header values
-  EXPECT_EQ(443,         p->value("TCP.src_port").uint());
-  EXPECT_EQ(61301,       p->value("TCP.dst_port").uint());
-  EXPECT_EQ(0x310f035e,  p->value("TCP.seq").uint());
-  EXPECT_EQ(0xf597c00a,  p->value("TCP.ack").uint());
-  EXPECT_EQ(32,          p->value("TCP.offset").uint());
-  EXPECT_EQ(0x08 | 0x10, p->value("TCP.flags").uint());  // PUSH|ACK
-  EXPECT_EQ(66,          p->value("TCP.window").uint());
-  EXPECT_EQ(0xb820,      p->value("TCP.chksum").uint());
-  EXPECT_EQ(0,           p->value("TCP.urgptr").uint());
+  EXPECT_EQ(443u,         p->value("TCP.src_port").uint());
+  EXPECT_EQ(61301u,       p->value("TCP.dst_port").uint());
+  EXPECT_EQ(0x310f035eu,  p->value("TCP.seq").uint());
+  EXPECT_EQ(0xf597c00au,  p->value("TCP.ack").uint());
+  EXPECT_EQ(32u,          p->value("TCP.offset").uint());
+  EXPECT_EQ(0x08u|0x10u,  p->value("TCP.flags").uint());  // PUSH|ACK
+  EXPECT_EQ(66u,          p->value("TCP.window").uint());
+  EXPECT_EQ(0xb820u,      p->value("TCP.chksum").uint());
+  EXPECT_EQ(0u,           p->value("TCP.urgptr").uint());
 
-  EXPECT_EQ(0, p->value("TCP.flag_fin").uint());
-  EXPECT_EQ(0, p->value("TCP.flag_syn").uint());
-  EXPECT_EQ(0, p->value("TCP.flag_rst").uint());
-  EXPECT_LT(0, p->value("TCP.flag_push").uint());
-  EXPECT_LT(0, p->value("TCP.flag_ack").uint());
-  EXPECT_EQ(0, p->value("TCP.flag_urg").uint());
-  EXPECT_EQ(0, p->value("TCP.flag_ece").uint());
-  EXPECT_EQ(0, p->value("TCP.flag_cwr").uint());
+  EXPECT_EQ(0u, p->value("TCP.flag_fin").uint());
+  EXPECT_EQ(0u, p->value("TCP.flag_syn").uint());
+  EXPECT_EQ(0u, p->value("TCP.flag_rst").uint());
+  EXPECT_LT(0u, p->value("TCP.flag_push").uint());
+  EXPECT_LT(0u, p->value("TCP.flag_ack").uint());
+  EXPECT_EQ(0u, p->value("TCP.flag_urg").uint());
+  EXPECT_EQ(0u, p->value("TCP.flag_ece").uint());
+  EXPECT_EQ(0u, p->value("TCP.flag_cwr").uint());
 
   size_t optlen, seglen;
   const pm::byte_t *opt = p->value("TCP.optdata").raw(&optlen);
-  EXPECT_EQ(12, optlen);
-  EXPECT_EQ(0x01, opt[0]);  // NOP
+  EXPECT_EQ(12u, optlen);
+  EXPECT_EQ(0x01u, opt[0]);  // NOP
 
   const pm::byte_t *seg = p->value("TCP.segment").raw(&seglen);
-  EXPECT_EQ(1045, seglen);
-  EXPECT_EQ(0x17, seg[0]);  // SSL Content Type: Application Data
+  EXPECT_EQ(1045u, seglen);
+  EXPECT_EQ(0x17u, seg[0]);  // SSL Content Type: Application Data
 }
 

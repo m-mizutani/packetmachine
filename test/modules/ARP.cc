@@ -27,17 +27,16 @@
 #include "./fixtures.hpp"
 
 TEST_F(ModuleTesterData1, ARP_packet) {
-  const pm::Property* p;
-  p = get_property(1296);   // # packet #1297
+  const pm::Property* p = get_property(1296);   // # packet #1297
 
   EXPECT_TRUE(p->has_value("ARP.hw_type"));   // Ethernet
   EXPECT_TRUE(p->has_value("ARP.pr_type"));   // IPv4
   EXPECT_TRUE(p->has_value("ARP.hw_size"));   // MAC address (6 byte)
   EXPECT_TRUE(p->has_value("ARP.pr_size"));   // IPv4 address (4 byte)
 
-  EXPECT_EQ(0x001, p->value("ARP.hw_type").uint());   // Ethernet
-  EXPECT_EQ(0x800, p->value("ARP.pr_type").uint());   // IPv4
-  EXPECT_EQ(6,     p->value("ARP.hw_size").uint());   // MAC address (6 byte)
-  EXPECT_EQ(4,     p->value("ARP.pr_size").uint());   // IPv4 address (4 byte)
+  EXPECT_EQ(0x001u, p->value("ARP.hw_type").uint());   // Ethernet
+  EXPECT_EQ(0x800u, p->value("ARP.pr_type").uint());   // IPv4
+  EXPECT_EQ(6u,     p->value("ARP.hw_size").uint());   // MAC address (6 byte)
+  EXPECT_EQ(4u,     p->value("ARP.pr_size").uint());   // IPv4 address (4 byte)
 }
 

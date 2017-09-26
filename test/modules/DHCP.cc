@@ -47,20 +47,20 @@ TEST_F(ModuleTesterData1, DHCP_packet) {
   EXPECT_TRUE(p->has_value("DHCP.magic_cookie"));
   EXPECT_TRUE(p->has_value("DHCP.options"));
 
-  EXPECT_EQ(2,                   p->value("DHCP.msg_type").uint());
-  EXPECT_EQ(1,                   p->value("DHCP.hw_type").uint());
-  EXPECT_EQ(6,                   p->value("DHCP.hw_addr_len").uint());
-  EXPECT_EQ(1,                   p->value("DHCP.hops").uint());
-  EXPECT_EQ(0x5aaca6d2,          p->value("DHCP.trans_id").uint());
-  EXPECT_EQ(12,                  p->value("DHCP.seconds").uint());
-  EXPECT_EQ(0x8000,              p->value("DHCP.flags").uint());
+  EXPECT_EQ(2u,                  p->value("DHCP.msg_type").uint());
+  EXPECT_EQ(1u,                  p->value("DHCP.hw_type").uint());
+  EXPECT_EQ(6u,                  p->value("DHCP.hw_addr_len").uint());
+  EXPECT_EQ(1u,                  p->value("DHCP.hops").uint());
+  EXPECT_EQ(0x5aaca6d2u,         p->value("DHCP.trans_id").uint());
+  EXPECT_EQ(12u,                 p->value("DHCP.seconds").uint());
+  EXPECT_EQ(0x8000u,             p->value("DHCP.flags").uint());
   EXPECT_EQ("0.0.0.0",           p->value("DHCP.your_client_addr").ip4());
   EXPECT_EQ("182.248.219.15",    p->value("DHCP.next_server_addr").ip4());
   EXPECT_EQ("10.139.96.6",       p->value("DHCP.relay_agent_addr").ip4());
   EXPECT_EQ("00:ac:ca:83:df:9e", p->value("DHCP.client_hw_addr").mac());
   size_t mc_len;
   auto mc_ptr = p->value("DHCP.magic_cookie").raw(&mc_len);
-  EXPECT_EQ(4, mc_len);
+  EXPECT_EQ(4u, mc_len);
   EXPECT_TRUE(memcmp(mc_ptr, "\x63\x82\x53\x63", 4) == 0);  
 }
 

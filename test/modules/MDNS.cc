@@ -36,20 +36,20 @@ TEST_F(ModuleTesterData2, MDNS_packet) {
   EXPECT_TRUE(p->has_value("MDNS.authority"));
   EXPECT_FALSE(p->has_value("MDNS.additional"));
 
-  EXPECT_EQ(0, p->value("MDNS.tx_id").uint());
+  EXPECT_EQ(0u, p->value("MDNS.tx_id").uint());
 
   const pm::value::Array& q_arr =
       dynamic_cast<const pm::value::Array&>(p->value("MDNS.question"));
-  EXPECT_EQ(3, q_arr.size());
+  EXPECT_EQ(3u, q_arr.size());
 
   const pm::value::Map& rec1 =
       dynamic_cast<const pm::value::Map&>(q_arr.get(1));
-  EXPECT_EQ(255,                  rec1.find("type").uint());
+  EXPECT_EQ(255u,                 rec1.find("type").uint());
   EXPECT_EQ("Interceptor.local.", rec1.find("name").repr());
 
   const pm::value::Array& a_arr =
       dynamic_cast<const pm::value::Array&>(p->value("MDNS.authority"));
-  EXPECT_EQ(3, a_arr.size());
+  EXPECT_EQ(3u, a_arr.size());
 
   const pm::value::Map& rec2 =
       dynamic_cast<const pm::value::Map&>(a_arr.get(2));

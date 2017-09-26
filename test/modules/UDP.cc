@@ -35,9 +35,9 @@ TEST_F(ModuleTesterData1, UDP_packet) {
   EXPECT_TRUE(p->has_value("UDP.length"));
   EXPECT_TRUE(p->has_value("UDP.chksum"));
 
-  EXPECT_EQ(53805,  p->value("UDP.src_port").uint());
-  EXPECT_EQ(443,    p->value("UDP.dst_port").uint());
-  EXPECT_EQ(1358,   p->value("UDP.length").uint());
-  EXPECT_EQ(0x410c, p->value("UDP.chksum").uint());
+  EXPECT_EQ(53805u,  p->value("UDP.src_port").uint());
+  EXPECT_EQ(443u,    p->value("UDP.dst_port").uint());
+  EXPECT_EQ(1358u,   p->value("UDP.length").uint());
+  EXPECT_EQ(0x410cu, p->value("UDP.chksum").uint());
 }
 

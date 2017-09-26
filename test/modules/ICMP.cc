@@ -34,8 +34,8 @@ TEST_F(ModuleTesterData1, ICMP_packet) {
   EXPECT_TRUE(p->has_value("ICMP.code"));
   EXPECT_TRUE(p->has_value("ICMP.chksum"));
 
-  EXPECT_EQ(3,  p->value("ICMP.type").uint());
-  EXPECT_EQ(3,  p->value("ICMP.code").uint());
-  EXPECT_EQ(0x87c2, p->value("ICMP.chksum").uint());
+  EXPECT_EQ(3u,  p->value("ICMP.type").uint());
+  EXPECT_EQ(3u,  p->value("ICMP.code").uint());
+  EXPECT_EQ(0x87c2u, p->value("ICMP.chksum").uint());
 }
 
