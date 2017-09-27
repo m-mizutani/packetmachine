@@ -136,11 +136,33 @@ void Machine::loop() {
 }
 
 
-bool Machine::start() {
+void Machine::start() {
+  if (!this->cap_) {
+    throw Exception::ConfigError("no input source is available");
+  }
+
+  pthread_create(&this->kernel_th_, nullptr, Kernel::thread, this->kernel_);
+  
+  this->input_ = new Input(this->cap_, this->kernel_->channel());
+  pthread_create(&this->input_th_, nullptr, Input::thread, this->input_);
 }
-bool Machine::join(struct timeval* timeout = nullptr) {
+
+bool Machine::join(struct timeval* timeout) {
+  if (timeout) {
+    struct timeval tv, abs_ts;
+    ::gettimeofday(&tv, nullptr);
+    timeradd(&tv, timeout, &abs_ts);    
+  }
+  return false;
 }
-bool Machine::shutdown() {
+
+
+
+void Machine::halt() {
+  pthread_cancel(this->input_th_);
+  pthread_join(this->input_th_, nullptr);
+  pthread_cancel(this->kernel_th_);
+  pthread_join(this->kernel_th_, nullptr);
 }
 
 

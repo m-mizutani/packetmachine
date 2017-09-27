@@ -58,12 +58,13 @@ class Machine {
   void add_pcapdev(const std::string& dev_name);
   void add_pcapfile(const std::string& file_path);
 
-  // Contorl capture & packet decodeing.
+  // Run capture & packet decodeing and wait
   void loop();
 
+  // 
   void start();
   bool join(struct timeval* timeout = nullptr);
-  void shutdown();
+  void halt();
 
   hdlr_id on(const std::string& event_name,
              std::function<void(const Property&)>&& callback);

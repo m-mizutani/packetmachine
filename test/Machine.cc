@@ -34,8 +34,20 @@ TEST(Machine, ok) {
   m->add_pcapfile("./test/data1.pcap");
   m->loop();
 
-  EXPECT_EQ(10000,   m->recv_pkt());
-  EXPECT_EQ(5282080, m->recv_size());
+  EXPECT_EQ(10000u,   m->recv_pkt());
+  EXPECT_EQ(5282080u, m->recv_size());
+  delete m;
+}
+
+TEST(Machine, quit) {
+  pm::Machine *m = new pm::Machine();
+  m->add_pcapfile("./test/data1.pcap");
+  m->start();
+  m->halt();
+
+  EXPECT_GT(10000u,   m->recv_pkt());
+  EXPECT_GT(5282080u, m->recv_size());
+  delete m;  
 }
 
 }   // namespace machine_test
