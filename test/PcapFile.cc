@@ -34,7 +34,7 @@ TEST(PcapFile, ok) {
 
   pm::Packet pkt;
   int count = 0;
-  while (0 <= (pfile->read(&pkt))) {
+  while (pm::Capture::OK == (pfile->read(&pkt))) {
     count += 1;
   }
 
@@ -48,7 +48,7 @@ TEST(PcapFile, ok_with_super_class) {
 
   pm::Packet pkt;
   int count = 0;
-  while (0 <= (pfile->read(&pkt))) {
+  while (pm::Capture::OK == (pfile->read(&pkt))) {
     count += 1;
   }
 
@@ -63,7 +63,7 @@ TEST(PcapFile, ng_no_such_file) {
             "./test/no_such_file.pcap: No such file or directory");
 
   pm::Packet pkt;
-  EXPECT_EQ(pfile->read(&pkt), -1);
+  EXPECT_EQ(pfile->read(&pkt), pm::Capture::ERROR);
   EXPECT_EQ(pfile->error(), "pcap is not ready");
 }
 
@@ -74,6 +74,6 @@ TEST(PcapFile, ng_invalid_format) {
   EXPECT_EQ(pfile->error(), "unknown file format");
 
   pm::Packet pkt;
-  EXPECT_EQ(pfile->read(&pkt), -1);
+  EXPECT_EQ(pfile->read(&pkt), pm::Capture::ERROR);
   EXPECT_EQ(pfile->error(), "pcap is not ready");
 }

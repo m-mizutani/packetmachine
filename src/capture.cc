@@ -59,13 +59,13 @@ PcapDev::~PcapDev() {
   }
 }
 
-int PcapDev::read(Packet* pkt) {
+Capture::Result PcapDev::read(Packet* pkt) {
   struct pcap_pkthdr* pkthdr;
   const u_char* data;
 
   if (!this->ready()) {
     this->set_error("pcap is not ready");
-    return -1;
+    return ERROR;
   }
 
   int rc = ::pcap_next_ex(this->pd_, &pkthdr, &data);
@@ -74,33 +74,30 @@ int PcapDev::read(Packet* pkt) {
     // the packet was read without problems.
     if (pkt->store(data, pkthdr->caplen) == false) {
       this->set_error("memory allocation error");
-      return -1;
+      return ERROR;
     }
 
     pkt->set_cap_len(pkthdr->caplen);
     pkt->set_tv(pkthdr->ts);
 
-    return 1;
+    return OK;
   } else if (rc == 0) {
     // packets are being read from a live capture and the timeout expired.
-    return 0;
+    return NONE;
   } else if (rc == -1) {
     // an error occurred.
     char* e = pcap_geterr(this->pd_);
-    printf("%d, %s\n", rc, e);
     this->set_error(e);
     this->set_ready(false);
-    return -1;
+    return ERROR;
   } else if (rc == -2) {
     // exit normaly.
     this->set_ready(false);
-    return -1;
-  } else {
-    assert(0);   // invalid return code from pcap_next_ex.
-    return -3;
+    return EXIT;
   }
-
-  return 0;
+  
+  assert(0);
+  return ERROR;
 }
 
 
@@ -124,46 +121,44 @@ PcapFile::~PcapFile() {
   }
 }
 
-int PcapFile::read(Packet* pkt) {
+Capture::Result PcapFile::read(Packet* pkt) {
   struct pcap_pkthdr* pkthdr;
   const u_char* data;
 
   if (!this->ready()) {
     this->set_error("pcap is not ready");
-    return -1;
+    return ERROR;
   }
 
   int rc = ::pcap_next_ex(this->pd_, &pkthdr, &data);
-
   if (rc == 1) {
     // the packet was read without problems.
     if (pkt->store(data, pkthdr->caplen) == false) {
       this->set_error("memory allocation error");
-      return -1;
+      return ERROR;
     }
 
     pkt->set_cap_len(pkthdr->caplen);
     pkt->set_tv(pkthdr->ts);
 
-    return 1;
+    return OK;
   } else if (rc == 0) {
     // packets are being read from a live capture and the timeout expired.
-    return 0;
+    return NONE;
   } else if (rc == -1) {
     // an error occurred.
     char* e = pcap_geterr(this->pd_);
-    printf("%d, %s\n", rc, e);
     this->set_error(e);
     this->set_ready(false);
-    return -1;
+    return ERROR;
   } else if (rc == -2) {
     // exit normaly.
     this->set_ready(false);
-    return -1;
-  } else {
-    assert(0);   // invalid return code from pcap_next_ex.
-    return -3;
+    return EXIT;
   }
+
+  assert(0);
+  return ERROR;
 }
 
 

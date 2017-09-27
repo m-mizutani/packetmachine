@@ -57,21 +57,24 @@ class Input {
 
   void run() {
     Packet *pkt;
-    int rc = 0;
+    Capture::Result rc;
 
     for (;;) {
       pkt = this->channel_->retain();
 
-      while (0 == (rc = this->cap_->read(pkt))) {
+      while (Capture::NONE == (rc = this->cap_->read(pkt))) {
         // timeout read packet data.
         usleep(1);
       }
 
-      if (rc > 0) {
+      if (rc == Capture::OK) {
         this->channel_->push(pkt);
       } else {
-        // rc < 0, error occurred
         this->channel_->close();
+
+        if (rc == Capture::ERROR) {
+          throw Exception::RunTimeError(this->cap_->error());
+        }
         break;
       }
     }
@@ -147,13 +150,31 @@ void Machine::start() {
   pthread_create(&this->input_th_, nullptr, Input::thread, this->input_);
 }
 
-bool Machine::join(struct timeval* timeout) {
+bool Machine::join(struct timespec* timeout) {
+  static const long BILLION = 1e9;
   if (timeout) {
-    struct timeval tv, abs_ts;
-    ::gettimeofday(&tv, nullptr);
-    timeradd(&tv, timeout, &abs_ts);    
+    struct timespec tv;
+    ::clock_gettime(CLOCK_REALTIME, &tv);
+    tv.tv_sec += timeout->tv_sec;
+    tv.tv_nsec += timeout->tv_nsec;
+    if (tv.tv_nsec > BILLION) {
+      tv.tv_sec += static_cast<time_t>(tv.tv_nsec / BILLION);
+      tv.tv_nsec = tv.tv_nsec % BILLION;
+    }
+    int r = pthread_timedjoin_np(this->input_th_, nullptr, &tv);
+    assert(r == 0 || r == ETIMEDOUT);
+    
+    if (r == 0) {
+      pthread_join(this->kernel_th_, nullptr);
+      return true; // input thread exits before timeout
+    } else {
+      return false; // input thread is still running
+    }
+  } else {
+    pthread_join(this->input_th_, nullptr);
+    pthread_join(this->kernel_th_, nullptr);
+    return true;
   }
-  return false;
 }
 
 

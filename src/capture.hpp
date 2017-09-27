@@ -40,6 +40,14 @@ class Packet;
 // In order to abstract data source.
 
 class Capture {
+ public:
+  enum Result {
+    OK,
+    NONE,
+    ERROR,
+    EXIT,    
+  };
+  
  private:
   std::string error_;
   bool ready_;
@@ -56,7 +64,7 @@ class Capture {
   Capture();
   virtual ~Capture();
 
-  virtual int read(Packet *pkt) = 0;
+  virtual Result read(Packet *pkt) = 0;
 
   bool ready() const { return this->ready_; }
   const std::string& error() const { return this->error_; }
@@ -74,7 +82,7 @@ class PcapDev : public Capture {
   explicit PcapDev(const std::string& dev_name);
   ~PcapDev();
 
-  int read(Packet *pkt);
+  Result read(Packet *pkt);
 };
 
 
@@ -87,7 +95,7 @@ class PcapFile : public Capture {
   explicit PcapFile(const std::string& file_path);
   ~PcapFile();
 
-  int read(Packet *pkt);
+  Result read(Packet *pkt);
 };
 
 }   // namespace pm

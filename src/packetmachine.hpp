@@ -63,7 +63,7 @@ class Machine {
 
   // 
   void start();
-  bool join(struct timeval* timeout = nullptr);
+  bool join(struct timespec* timeout = nullptr);
   void halt();
 
   hdlr_id on(const std::string& event_name,
