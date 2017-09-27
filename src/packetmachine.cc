@@ -154,6 +154,7 @@ void Machine::start() {
 bool Machine::join(struct timespec* timeout) {
   static const long BILLION = 1e9;
   if (timeout) {
+#ifdef __linux__ 
     struct timespec tv;
     ::clock_gettime(CLOCK_REALTIME, &tv);
     tv.tv_sec += timeout->tv_sec;
@@ -171,6 +172,10 @@ bool Machine::join(struct timespec* timeout) {
     } else {
       return false; // input thread is still running
     }
+#else
+    throw Exception::RunTimeError("join() timeout is supported in only LInux");
+    return false;
+#endif
   } else {
     pthread_join(this->input_th_, nullptr);
     pthread_join(this->kernel_th_, nullptr);
