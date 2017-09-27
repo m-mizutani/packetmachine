@@ -39,14 +39,14 @@ TEST(Machine, ok) {
   delete m;
 }
 
-TEST(Machine, quit) {
+TEST(Machine, start_and_halt) {
   pm::Machine *m = new pm::Machine();
   m->add_pcapfile("./test/data1.pcap");
   m->start();
   m->halt();
 
-  EXPECT_GT(10000u,   m->recv_pkt());
-  EXPECT_GT(5282080u, m->recv_size());
+  EXPECT_GE(10000u,   m->recv_pkt());
+  EXPECT_GE(5282080u, m->recv_size());
   delete m;  
 }
 
