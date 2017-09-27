@@ -27,6 +27,7 @@
 #include <unistd.h>
 #include <assert.h>
 #include <sys/time.h>
+#include <time.h>
 #include "./packetmachine.hpp"
 #include "./capture.hpp"
 #include "./packet.hpp"
