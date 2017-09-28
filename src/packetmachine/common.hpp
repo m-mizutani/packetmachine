@@ -43,9 +43,6 @@ static const param_id NONE = -1;
 namespace Event {
 static const event_id NONE = -2;
 }
-namespace Handler {
-static const hdlr_id  NONE = -1;
-}
 
 }   // namespace pm
 

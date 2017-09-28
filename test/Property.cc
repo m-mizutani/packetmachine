@@ -41,21 +41,21 @@ TEST(Payload, ok) {
   pm::Payload pd;
   pd.reset(&pkt);
 
-  EXPECT_EQ(10, pd.length());
+  EXPECT_EQ(10u, pd.length());
   // get pointer of 0 byte index and move to forward 2 bytes.
   EXPECT_EQ(&ptr[0], pd.retain(2));
 
   EXPECT_FALSE(pd.eop());
 
-  EXPECT_EQ(8, pd.length());
+  EXPECT_EQ(8u, pd.length());
   EXPECT_EQ(&ptr[2], pd.retain(3));
 
-  EXPECT_EQ(5, pd.length());
+  EXPECT_EQ(5u, pd.length());
   EXPECT_TRUE(pd.shrink(4));
-  EXPECT_EQ(4, pd.length());
+  EXPECT_EQ(4u, pd.length());
 
   EXPECT_EQ(&ptr[5], pd.retain(4));
-  EXPECT_EQ(0, pd.length());
+  EXPECT_EQ(0u, pd.length());
   EXPECT_TRUE(pd.eop());
 }
 
@@ -73,7 +73,7 @@ TEST(Payload, ng) {
   // Set remain size over current length (1)
   pd.reset(&pkt);
   EXPECT_FALSE(pd.shrink(12));
-  EXPECT_EQ(10, pd.length());    // remain size is not changed.
+  EXPECT_EQ(10u, pd.length());    // remain size is not changed.
 }
 
 }   // namespace machine_test

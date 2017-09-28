@@ -38,7 +38,7 @@ TEST(Value, basic) {
   // set value
   v.set(a, 4);
   EXPECT_TRUE(v.active());
-  EXPECT_EQ(4, v.len());
+  EXPECT_EQ(4u, v.len());
   EXPECT_EQ("1.2.3.4", v.ip4());
 
   v.clear();
@@ -53,13 +53,13 @@ TEST(Value, set_cpy) {
   v1.set(a, 4);
   v2.cpy(a, 4);
 
-  EXPECT_EQ(40, v1.raw()[3]);
-  EXPECT_EQ(40, v2.raw()[3]);
+  EXPECT_EQ(40u, v1.raw()[3]);
+  EXPECT_EQ(40u, v2.raw()[3]);
 
   // replace original data
   a[3] = 13;
-  EXPECT_EQ(13, v1.raw()[3]);
-  EXPECT_EQ(40, v2.raw()[3]);
+  EXPECT_EQ(13u, v1.raw()[3]);
+  EXPECT_EQ(40u, v2.raw()[3]);
 }
 
 
@@ -129,19 +129,19 @@ TEST(Value, uint) {
 
   v.set(a, 1);
   EXPECT_TRUE(v.is_uint());
-  EXPECT_EQ(1, v.uint64());
+  EXPECT_EQ(1u, v.uint64());
 
   v.set(a, 2);
   EXPECT_TRUE(v.is_uint());
-  EXPECT_EQ(0x102, v.uint64());
+  EXPECT_EQ(0x102u, v.uint64());
 
   v.set(a, 4);
   EXPECT_TRUE(v.is_uint());
-  EXPECT_EQ(0x01020304, v.uint64());
+  EXPECT_EQ(0x01020304u, v.uint64());
 
   v.set(a, 8);
   EXPECT_TRUE(v.is_uint());
-  EXPECT_EQ(0x0102030405060708, v.uint64());
+  EXPECT_EQ(0x0102030405060708u, v.uint64());
 
   v.set(a, 0);
   EXPECT_FALSE(v.is_uint());
@@ -162,29 +162,29 @@ TEST(Value, endian) {
 
   v.set(a, 2, pm::Value::BIG);
   EXPECT_TRUE(v.is_uint());
-  EXPECT_EQ(0x102, v.uint64());
+  EXPECT_EQ(0x102u, v.uint64());
 
   v.set(a, 2, pm::Value::LITTLE);
   EXPECT_TRUE(v.is_uint());
-  EXPECT_EQ(0x201, v.uint64());
+  EXPECT_EQ(0x201u, v.uint64());
 
 
   v.set(a, 4, pm::Value::BIG);
   EXPECT_TRUE(v.is_uint());
-  EXPECT_EQ(0x01020304, v.uint64());
+  EXPECT_EQ(0x01020304u, v.uint64());
 
   v.set(a, 4, pm::Value::LITTLE);
   EXPECT_TRUE(v.is_uint());
-  EXPECT_EQ(0x04030201, v.uint64());
+  EXPECT_EQ(0x04030201u, v.uint64());
 
 
   v.set(a, 8, pm::Value::BIG);
   EXPECT_TRUE(v.is_uint());
-  EXPECT_EQ(0x0102030405060708, v.uint64());
+  EXPECT_EQ(0x0102030405060708u, v.uint64());
 
   v.set(a, 8, pm::Value::LITTLE);
   EXPECT_TRUE(v.is_uint());
-  EXPECT_EQ(0x0807060504030201, v.uint64());
+  EXPECT_EQ(0x0807060504030201u, v.uint64());
 }
 
 

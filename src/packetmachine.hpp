@@ -42,6 +42,15 @@ namespace pm {
 class Capture;
 class Input;
 class Kernel;
+class Handler;
+
+class HandlerPtr {
+ private:
+  std::weak_ptr<Handler> ptr_;
+ public:
+  HandlerPtr(std::shared_ptr<Handler> ptr);
+  ~HandlerPtr();
+};
 
 class Machine {
  private:

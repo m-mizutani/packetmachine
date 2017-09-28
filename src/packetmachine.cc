@@ -84,6 +84,14 @@ class Input {
 
 
 
+HandlerPtr::HandlerPtr(std::shared_ptr<Handler> ptr) : ptr_(ptr) {
+}
+    
+HandlerPtr::~HandlerPtr() {
+}
+
+
+
 Machine::Machine() : cap_(nullptr), input_(nullptr), kernel_(nullptr) {
   this->kernel_ = new Kernel();
 }

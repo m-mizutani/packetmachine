@@ -40,20 +40,19 @@
 
 namespace pm {
 
-namespace Handler {
-class Entry {
+class Handler {
  private:
   Callback cb_;
   event_id ev_id_;
   hdlr_id id_;
  public:
-  Entry(hdlr_id id, Callback cb, event_id ev_id);
-  ~Entry();
+  Handler(hdlr_id id, Callback cb, event_id ev_id);
+  ~Handler();
   hdlr_id id() const { return this->id_; }
   event_id ev_id() const { return this->ev_id_; }
   Callback& callback() { return this->cb_; }
 };
-}    // namespace Handler
+
 
 
 class Kernel {
@@ -62,8 +61,8 @@ class Kernel {
   Decoder dec_;
   uint64_t recv_pkt_;
   uint64_t recv_size_;
-  std::vector< std::vector<Handler::Entry*> > handlers_;
-  std::map<hdlr_id, Handler::Entry*> handler_map_;
+  std::vector< std::vector<Handler*> > handlers_;
+  std::map<hdlr_id, Handler*> handler_map_;
   hdlr_id global_hdlr_id_;
 
  public:

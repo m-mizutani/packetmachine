@@ -40,7 +40,7 @@ TEST(Handler, ok) {
   m->add_pcapfile("./test/data1.pcap");
   m->loop();
 
-  EXPECT_NE(pm::Handler::NONE, hid);
+  EXPECT_NE(0, hid);
   EXPECT_EQ(624, count);
 }
 
@@ -58,7 +58,7 @@ TEST(Handler, remove) {
   m->add_pcapfile("./test/data1.pcap");
   m->loop();
 
-  EXPECT_NE(pm::Handler::NONE, hid);
+  EXPECT_NE(0, hid);
   EXPECT_EQ(0, count);
 }
 

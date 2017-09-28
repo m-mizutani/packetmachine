@@ -42,15 +42,15 @@ TEST(Packet, store) {
   // clear original data
   ::memset(a, 0, sizeof(a));
   ::memset(&tv, 0, sizeof(tv));
-  EXPECT_EQ(0, a[0]);
+  EXPECT_EQ(0u, a[0]);
 
   // test
   auto tv_s = pkt.tv();
   const pm::byte_t* p = pkt.buf();
 
-  EXPECT_EQ(4, pkt.len());
-  EXPECT_EQ(1, p[0]);
-  EXPECT_EQ(4, p[3]);
-  EXPECT_EQ(100, tv_s.tv_sec);
-  EXPECT_EQ(200, tv_s.tv_usec);
+  EXPECT_EQ(4u, pkt.len());
+  EXPECT_EQ(1u, p[0]);
+  EXPECT_EQ(4u, p[3]);
+  EXPECT_EQ(100u, tv_s.tv_sec);
+  EXPECT_EQ(200u, tv_s.tv_usec);
 }

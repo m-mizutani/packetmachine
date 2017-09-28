@@ -32,15 +32,12 @@
 
 namespace pm {
 
-namespace Handler {
-
-Entry::Entry(hdlr_id hid, Callback cb, event_id ev_id) :
+Handler::Handler(hdlr_id hid, Callback cb, event_id ev_id) :
     cb_(cb), ev_id_(ev_id), id_(hid) {
 }
-Entry::~Entry() {
+Handler::~Handler() {
 }
 
-}
 
 
 Kernel::Kernel() : recv_pkt_(0), recv_size_(0), global_hdlr_id_(0) {
@@ -92,11 +89,11 @@ hdlr_id Kernel::on(const std::string& event_name, Callback&& cb) {
   event_id eid = this->dec_.lookup_event_id(event_name);
 
   if (eid == Event::NONE) {
-    return Handler::NONE;
+    return 0;
   }
 
   hdlr_id hid = ++(this->global_hdlr_id_);
-  Handler::Entry *entry = new Handler::Entry(hid, cb, eid);
+  Handler* entry = new Handler(hid, cb, eid);
   this->handler_map_.insert(std::make_pair(entry->id(), entry));
   this->handlers_[eid].push_back(entry);
   return entry->id();
