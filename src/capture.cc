@@ -42,7 +42,7 @@ Capture::~Capture() {
 
 PcapDev::PcapDev(const std::string &dev_name) :
     dev_name_(dev_name), pd_(nullptr) {
-  
+
   char errbuf[PCAP_ERRBUF_SIZE];
   this->pd_ = ::pcap_open_live(this->dev_name_.c_str(), 0xffff, 1, 1, errbuf);
 
@@ -69,7 +69,7 @@ Capture::Result PcapDev::read(Packet* pkt) {
   }
 
   int rc = ::pcap_next_ex(this->pd_, &pkthdr, &data);
-  
+
   if (rc == 1) {
     // the packet was read without problems.
     if (pkt->store(data, pkthdr->caplen) == false) {
@@ -95,7 +95,7 @@ Capture::Result PcapDev::read(Packet* pkt) {
     this->set_ready(false);
     return EXIT;
   }
-  
+
   assert(0);
   return ERROR;
 }

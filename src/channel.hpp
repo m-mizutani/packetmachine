@@ -122,7 +122,7 @@ class Channel {
 
       if ((wait & 0xffff) != 0) {
         wait *= 2;
-      }      
+      }
       usleep(wait);
     }
 

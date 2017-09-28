@@ -53,8 +53,8 @@ TEST(Handler, remove) {
     });
 
   EXPECT_TRUE(m->clear(hid));
-  EXPECT_FALSE(m->clear(hid)); // double clear
-  
+  EXPECT_FALSE(m->clear(hid));  // double clear
+
   m->add_pcapfile("./test/data1.pcap");
   m->loop();
 

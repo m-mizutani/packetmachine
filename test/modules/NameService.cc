@@ -39,7 +39,7 @@ TEST_F(ModuleTesterData1, NameService_DNS_query) {
 
   const auto& q = p->value("DNS.question");
   EXPECT_TRUE(q.is_array());
-  EXPECT_EQ(1, q.size());
+  EXPECT_EQ(1u, q.size());
 
   for (size_t i = 0; i < q.size(); i++) {
     const auto& r = q.get(i);
@@ -62,7 +62,7 @@ TEST_F(ModuleTesterData1, NameService_DNS_reply) {
   {
     const auto& q = p->value("DNS.question");
     EXPECT_TRUE(q.is_array());
-    EXPECT_EQ(1, q.size());
+    EXPECT_EQ(1u, q.size());
 
     const auto& r = q.get(0);
     EXPECT_FALSE(r.is_null());
@@ -74,7 +74,7 @@ TEST_F(ModuleTesterData1, NameService_DNS_reply) {
     const auto& a = p->value("DNS.answer");
     EXPECT_FALSE(a.is_map());
     EXPECT_TRUE(a.is_array());
-    EXPECT_EQ(8, a.size());
+    EXPECT_EQ(8u, a.size());
 
     const auto& r0 = a.get(0);
     EXPECT_TRUE(r0.is_map());

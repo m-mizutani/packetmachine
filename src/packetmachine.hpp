@@ -61,7 +61,7 @@ class Machine {
   // Run capture & packet decodeing and wait
   void loop();
 
-  // 
+  //
   void start();
   bool join(struct timespec* timeout = nullptr);
   void halt();

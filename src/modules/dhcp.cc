@@ -47,7 +47,7 @@ class DHCP : public Module {
       this->it_type_   = this->map_.find("type");
       this->it_length_ = this->map_.find("length");
       this->it_data_   = this->map_.find("data");
-    }      
+    }
     ~Option() = default;
 
     void set_type(Value* v)   { this->it_type_->second   = v; }
@@ -60,7 +60,7 @@ class DHCP : public Module {
     }
     static Value* new_value() { return new Option(); }
   };
-  
+
  private:
   struct dhcp_header {
     uint8_t msg_type_;
@@ -77,7 +77,7 @@ class DHCP : public Module {
     uint8_t client_hw_addr_[16];
     uint8_t server_host_name_[64];
     uint8_t boot_file_name_[128];
-    uint8_t magic_cookie_[4];    
+    uint8_t magic_cookie_[4];
   } __attribute__((packed));
 
   struct dhcp_opt_hdr {
@@ -101,12 +101,12 @@ class DHCP : public Module {
   const ParamDef* p_boot_file_name_;
   const ParamDef* p_magic_cookie_;
   const ParamDef* p_options_;
-  
+
   const ParamDef* p_option_;
   const ParamDef* p_opt_type_;
   const ParamDef* p_opt_length_;
   const ParamDef* p_opt_data_;
-  
+
  public:
   DHCP() {
     this->p_msg_type_         = this->define_param("msg_type");
@@ -177,8 +177,8 @@ class DHCP : public Module {
     for (;;) {
       auto opt_hdr = reinterpret_cast<const struct dhcp_opt_hdr*>
                      (pd->retain(sizeof(struct dhcp_opt_hdr)));
-      if (opt_hdr == nullptr || opt_hdr->opt_ == 0xFF) { // 0xFF means End of Option
-        break;
+      if (opt_hdr == nullptr || opt_hdr->opt_ == 0xFF) {
+        break;  // 0xFF means End of Option
       }
 
       auto opt_data = pd->retain(opt_hdr->length_);
@@ -196,7 +196,7 @@ class DHCP : public Module {
       option->set_type(v_type);
       option->set_length(v_length);
       option->set_data(v_data);
-      
+
       opt_arr->push(option);
     }
     return Module::NONE;

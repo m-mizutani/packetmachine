@@ -47,7 +47,7 @@ TEST(Machine, start_and_halt) {
 
   EXPECT_GE(10000u,   m->recv_pkt());
   EXPECT_GE(5282080u, m->recv_size());
-  delete m;  
+  delete m;
 }
 
 }   // namespace machine_test

@@ -43,7 +43,7 @@ TEST(Decoder, basic) {
   if (!pcap) {
     printf("errbuf = %s\n", errbuf);
   }
-  
+
   ASSERT_TRUE(pcap != nullptr);
   struct pcap_pkthdr* pkthdr;
   const u_char* data;
@@ -53,7 +53,7 @@ TEST(Decoder, basic) {
   pm::Packet pkt;
   pm::Payload pd;
   pm::Property prop(&dec);
-  
+
   int count_ipv4_saddr = 0;
   int count_mac_saddr = 0;
 

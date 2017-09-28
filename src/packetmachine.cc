@@ -130,10 +130,10 @@ void Machine::loop() {
   debug(false, "enter loop");
 
   pthread_create(&this->kernel_th_, nullptr, Kernel::thread, this->kernel_);
-  
+
   this->input_ = new Input(this->cap_, this->kernel_->channel());
-  pthread_create(&this->input_th_, nullptr, Input::thread, this->input_);  
-  
+  pthread_create(&this->input_th_, nullptr, Input::thread, this->input_);
+
   // this->kernel_->run();
   pthread_join(this->input_th_, nullptr);
   pthread_join(this->kernel_th_, nullptr);
@@ -146,15 +146,15 @@ void Machine::start() {
   }
 
   pthread_create(&this->kernel_th_, nullptr, Kernel::thread, this->kernel_);
-  
+
   this->input_ = new Input(this->cap_, this->kernel_->channel());
   pthread_create(&this->input_th_, nullptr, Input::thread, this->input_);
 }
 
 bool Machine::join(struct timespec* timeout) {
-  static const long BILLION = 1e9;
   if (timeout) {
-#ifdef __linux__ 
+#ifdef __linux__
+    static const long BILLION = 1e9;  // NOLINT, according to timespec.tv_nsec
     struct timespec tv;
     ::clock_gettime(CLOCK_REALTIME, &tv);
     tv.tv_sec += timeout->tv_sec;
@@ -165,12 +165,12 @@ bool Machine::join(struct timespec* timeout) {
     }
     int r = pthread_timedjoin_np(this->input_th_, nullptr, &tv);
     assert(r == 0 || r == ETIMEDOUT);
-    
+
     if (r == 0) {
       pthread_join(this->kernel_th_, nullptr);
-      return true; // input thread exits before timeout
+      return true;   // input thread exits before timeout
     } else {
-      return false; // input thread is still running
+      return false;  // input thread is still running
     }
 #else
     throw Exception::RunTimeError("join() timeout is supported in only LInux");
@@ -196,7 +196,7 @@ void Machine::halt() {
 hdlr_id Machine::on(const std::string& event_name,
                  std::function<void(const Property&)>&& callback) {
   assert(this->kernel_);
-  return this->kernel_->on(event_name, callback);
+  return this->kernel_->on(event_name, std::move(callback));
 }
 
 bool Machine::clear(hdlr_id hid) {

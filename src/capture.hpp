@@ -45,9 +45,9 @@ class Capture {
     OK,
     NONE,
     ERROR,
-    EXIT,    
+    EXIT,
   };
-  
+
  private:
   std::string error_;
   bool ready_;

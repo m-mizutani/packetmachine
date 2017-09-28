@@ -64,8 +64,8 @@ void Kernel::run() {
   Packet* pkt;
   Payload pd;
   Property prop(&(this->dec_));
-  
-  while (nullptr != (pkt = this->channel_.pull())) { 
+
+  while (nullptr != (pkt = this->channel_.pull())) {
     this->recv_pkt_  += 1;
     this->recv_size_ += pkt->cap_len();
 
@@ -88,7 +88,7 @@ void Kernel::run() {
 void Kernel::proc(Packet* pkt) {
 }
 
-hdlr_id Kernel::on(const std::string& event_name, Callback& cb) {
+hdlr_id Kernel::on(const std::string& event_name, Callback&& cb) {
   event_id eid = this->dec_.lookup_event_id(event_name);
 
   if (eid == Event::NONE) {
@@ -97,7 +97,7 @@ hdlr_id Kernel::on(const std::string& event_name, Callback& cb) {
 
   hdlr_id hid = ++(this->global_hdlr_id_);
   Handler::Entry *entry = new Handler::Entry(hid, cb, eid);
-  this->handler_map_.insert(std::make_pair(entry->id(), entry));  
+  this->handler_map_.insert(std::make_pair(entry->id(), entry));
   this->handlers_[eid].push_back(entry);
   return entry->id();
 }
@@ -105,14 +105,14 @@ hdlr_id Kernel::on(const std::string& event_name, Callback& cb) {
 bool Kernel::clear(hdlr_id hid) {
   auto it = this->handler_map_.find(hid);
   if (it == this->handler_map_.end()) {
-    return false; // not found
+    return false;  // not found
   }
 
   auto entry = it->second;
   this->handler_map_.erase(it);
   event_id eid = entry->ev_id();
   auto& handler_set = this->handlers_[eid];
-  for(size_t i = 0; i < handler_set.size(); i++) {
+  for (size_t i = 0; i < handler_set.size(); i++) {
     if (handler_set[i] != nullptr &&
         handler_set[i]->id() == entry->id()) {
       handler_set[i] = nullptr;
@@ -121,8 +121,8 @@ bool Kernel::clear(hdlr_id hid) {
   }
 
   delete entry;
-  
-  return true;    
+
+  return true;
 }
 
 

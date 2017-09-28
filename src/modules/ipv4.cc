@@ -120,7 +120,7 @@ class IPv4 : public Module {
     prop->set_dst_addr(&hdr->dst_, sizeof(hdr->dst_));
     prop->retain_value(this->p_hdr_len_)->cpy(&hdrlen, sizeof(hdrlen));
     prop->retain_value(this->p_ver_)->cpy(&version, sizeof(version));
-       
+
     SET_PROP(this->p_tos_,       hdr->tos_);
     SET_PROP(this->p_total_len_, hdr->total_len_);
     SET_PROP(this->p_id_,        hdr->id_);
@@ -141,7 +141,7 @@ class IPv4 : public Module {
     // Adjust payload length
     pd->shrink(data_len);
     prop->retain_value(this->p_data_)->set(pd->ptr(), pd->length());
-    
+
     mod_id next = Module::NONE;
 
     switch (hdr->proto_) {

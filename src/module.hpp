@@ -70,8 +70,8 @@ class EventDef {
   std::string local_name_;
 
  public:
-  EventDef(const std::string& local_name) : local_name_(local_name) {};
-  ~EventDef() {};
+  explicit EventDef(const std::string& local_name) : local_name_(local_name) {}
+  ~EventDef() {}
   void set_module_id(mod_id id) { this->module_id_ = id; }
   void set_id(param_id id) { this->id_ = id; }
   void set_name(const std::string& name) { this->name_ = name; }
@@ -128,9 +128,9 @@ void build_module_map(std::map<std::string, Module*> *mod_map);
   Module* __new_module_##CNAME##_factory () { return new CNAME(); }
 
 #define NEW_MODULE(CNAME)                       \
-  __new_module_##CNAME##_factory ()
-  
-  
+  __new_module_##CNAME##_factory()
+
+
 }   // namespace pm
 
 #endif   // __PACKETMACHINE_MODULE_HPP__

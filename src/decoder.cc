@@ -43,7 +43,7 @@ Decoder::Decoder() : mod_ethernet_(Module::NONE) {
     mod->set_decoder(this);
     mod->set_mod_id(id);
     mod->set_name(m.first);
-    
+
     this->modules_.push_back(mod);
     this->mod_event_.push_back(mod->define_event(""));
     this->mod_map_.insert(std::make_pair(m.first, id));
@@ -80,7 +80,7 @@ Decoder::Decoder() : mod_ethernet_(Module::NONE) {
       this->event_map_.insert(std::make_pair(def->name(), def));
     }
   }
-  
+
   // Setup modules.
   for (auto &m : this->modules_) {
     m->setup();
@@ -108,7 +108,7 @@ void Decoder::decode(Payload* pd, Property* prop) {
   // debug(true, "decoding");
 
   while (next != Module::NONE) {
-    // debug(true, "next = %lld", next);    
+    // debug(true, "next = %lld", next);
     mod = this->modules_[next];
     prop->push_event(this->mod_event_[next]);
     next = mod->decode(pd, prop);
@@ -150,7 +150,7 @@ event_id Decoder::lookup_event_id(const std::string& name) const {
     return Event::NONE;
   } else {
     return it->second->id();
-  }  
+  }
 }
 
 const std::string& Decoder::lookup_event_name(event_id eid) const {

@@ -34,8 +34,9 @@
 #include "./common.hpp"
 
 namespace tb {
-  class Buffer;
+class Buffer;
 }
+
 namespace pm {
 
 class Packet;

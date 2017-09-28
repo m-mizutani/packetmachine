@@ -27,6 +27,7 @@
 #ifndef __PACKETMACHINE_TEST_MODULES_FIXTURES_HPP__
 #define __PACKETMACHINE_TEST_MODULES_FIXTURES_HPP__
 
+#include <string>
 #include <pcap.h>
 #include "../gtest/gtest.h"
 #include "../src/module.hpp"
@@ -66,8 +67,8 @@ class ModuleTesterData : public ::testing::Test {
         break;
       }
       idx++;
-    };
-    
+    }
+
     if (rc < 0) {
       return nullptr;
     } else {
@@ -81,25 +82,25 @@ class ModuleTesterData : public ::testing::Test {
       dec.decode(&pd, prop_);
       return prop_;
     }
-  }  
+  }
 };
 
 class ModuleTesterData1 : public ModuleTesterData {
   virtual const std::string fpath() const {
     return "./test/data1.pcap";
-  }  
+  }
 };
 
 class ModuleTesterData2 : public ModuleTesterData {
   virtual const std::string fpath() const {
     return "./test/data2.pcap";
-  }  
+  }
 };
 
 class ModuleTesterData3 : public ModuleTesterData {
   virtual const std::string fpath() const {
     return "./test/data3.pcap";
-  }  
+  }
 };
 
 #endif    // __PACKETMACHINE_TEST_MODULES_FIXTURES_HPP__

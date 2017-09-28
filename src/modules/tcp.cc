@@ -159,7 +159,6 @@ class TCP : public Module {
       Segment *next() {
         return this->next_;
       }
-
     };
 
     class Stream {
@@ -430,8 +429,8 @@ class TCP : public Module {
 
       this->decode_stream(p, flags, seq, ack, seg_len, seg_ptr, win_size,
                           sender, recver);
-      uint32_t tx_c = this->server_->tx_size(); // from Server to Client
-      uint32_t tx_s = this->client_->tx_size(); // fron Client to Server
+      uint32_t tx_c = this->server_->tx_size();  // from Server to Client
+      uint32_t tx_s = this->client_->tx_size();  // fron Client to Server
       p->retain_value(this->tcp_->p_tx_server())->cpy(&tx_s, sizeof(tx_s),
                                                       Value::LITTLE);
       p->retain_value(this->tcp_->p_tx_client())->cpy(&tx_c, sizeof(tx_c),

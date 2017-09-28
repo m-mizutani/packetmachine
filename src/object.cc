@@ -167,7 +167,7 @@ bool Value::mac(std::ostream &os) const {
 
 bool Value::uint(unsigned int* d) const {
   uint64_t i;
-  if (this->uint64(&i)) {
+  if (this->uint64(&i)) {  // NOLINT
     *d = static_cast<unsigned int>(i);
     return true;
   } else {
@@ -175,17 +175,17 @@ bool Value::uint(unsigned int* d) const {
   }
 }
 
-bool Value::uint(unsigned long* d) const {
+bool Value::uint(unsigned long* d) const {  // NOLINT
   uint64_t i;
-  if (this->uint64(&i)) {
-    *d = static_cast<unsigned long>(i);
+  if (this->uint64(&i)) {  // NOLINT
+    *d = static_cast<unsigned long>(i);  // NOLINT
     return true;
   } else {
     return false;
   }
 }
 
-bool Value::uint64(uint64_t* d) const {
+bool Value::uint64(uint64_t* d) const {  // NOLINT
   if (this->is_uint()) {
     switch (this->len_) {
       // uint8_t
@@ -280,7 +280,7 @@ unsigned int Value::uint() const {
 uint64_t Value::uint64() const {
   if (this->active_ && this->is_uint()) {
     uint64_t d;
-    this->uint64(&d);
+    this->uint64(&d);  // NOLINT
     return d;
   } else {
     return 0;
@@ -347,7 +347,7 @@ void Array::push(Value* val) {
 
 Map::~Map() {
 }
-  
+
 void Map::clear() {
   this->map_.clear();
 }

@@ -30,6 +30,8 @@
 #include <pthread.h>
 #include <memory>
 #include <string>
+#include <vector>
+#include <map>
 
 #include "./packet.hpp"
 #include "./channel.hpp"
@@ -51,7 +53,7 @@ class Entry {
   event_id ev_id() const { return this->ev_id_; }
   Callback& callback() { return this->cb_; }
 };
-}
+}    // namespace Handler
 
 
 class Kernel {
@@ -71,8 +73,8 @@ class Kernel {
   static void* thread(void* obj);
   void run();
   void proc(Packet* pkt);
-  hdlr_id on(const std::string& event_name,
-             std::function<void(const Property&)>& callback);
+  hdlr_id on(const std::string& event_name, Callback&& callback);
+
   bool clear(hdlr_id hid);
 
   Channel<Packet>* channel() { return &this->channel_; }
