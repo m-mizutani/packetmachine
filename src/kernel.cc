@@ -32,10 +32,10 @@
 
 namespace pm {
 
-Handler::Handler(hdlr_id hid, Callback cb, event_id ev_id) :
+HandlerEntity::HandlerEntity(hdlr_id hid, Callback cb, event_id ev_id) :
     cb_(cb), ev_id_(ev_id), id_(hid) {
 }
-Handler::~Handler() {
+HandlerEntity::~HandlerEntity() {
 }
 
 
@@ -44,11 +44,13 @@ Kernel::Kernel() : recv_pkt_(0), recv_size_(0), global_hdlr_id_(0) {
   this->handlers_.resize(this->dec_.event_size());
 }
 Kernel::~Kernel() {
+  /*
   for (auto &handler_set : this->handlers_) {
     for (auto entry : handler_set) {
       delete entry;
     }
   }
+  */
 }
 
 void* Kernel::thread(void* obj) {
@@ -85,18 +87,18 @@ void Kernel::run() {
 void Kernel::proc(Packet* pkt) {
 }
 
-hdlr_id Kernel::on(const std::string& event_name, Callback&& cb) {
+HandlerPtr Kernel::on(const std::string& event_name, Callback&& cb) {
   event_id eid = this->dec_.lookup_event_id(event_name);
 
   if (eid == Event::NONE) {
-    return 0;
+    throw Exception::RunTimeError("no such event: " + event_name);
   }
 
   hdlr_id hid = ++(this->global_hdlr_id_);
-  Handler* entry = new Handler(hid, cb, eid);
+  HandlerPtr entry(new HandlerEntity(hid, cb, eid));
   this->handler_map_.insert(std::make_pair(entry->id(), entry));
   this->handlers_[eid].push_back(entry);
-  return entry->id();
+  return entry;
 }
 
 bool Kernel::clear(hdlr_id hid) {
@@ -116,8 +118,6 @@ bool Kernel::clear(hdlr_id hid) {
       break;
     }
   }
-
-  delete entry;
 
   return true;
 }

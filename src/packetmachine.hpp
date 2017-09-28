@@ -42,15 +42,17 @@ namespace pm {
 class Capture;
 class Input;
 class Kernel;
-class Handler;
+class HandlerEntity;
 
-class HandlerPtr {
+
+class Handler {
  private:
-  std::weak_ptr<Handler> ptr_;
+  std::weak_ptr<HandlerEntity> ptr_;
  public:
-  HandlerPtr(std::shared_ptr<Handler> ptr);
-  ~HandlerPtr();
+  Handler(std::shared_ptr<HandlerEntity> ptr);
+  ~Handler();
 };
+
 
 class Machine {
  private:
@@ -75,7 +77,7 @@ class Machine {
   bool join(struct timespec* timeout = nullptr);
   void halt();
 
-  hdlr_id on(const std::string& event_name,
+  Handler on(const std::string& event_name,
              std::function<void(const Property&)>&& callback);
   bool clear(hdlr_id hid);
 

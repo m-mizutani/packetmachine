@@ -40,20 +40,20 @@
 
 namespace pm {
 
-class Handler {
+class HandlerEntity {
  private:
   Callback cb_;
   event_id ev_id_;
   hdlr_id id_;
  public:
-  Handler(hdlr_id id, Callback cb, event_id ev_id);
-  ~Handler();
+  HandlerEntity(hdlr_id id, Callback cb, event_id ev_id);
+  ~HandlerEntity();
   hdlr_id id() const { return this->id_; }
   event_id ev_id() const { return this->ev_id_; }
   Callback& callback() { return this->cb_; }
 };
 
-
+typedef std::shared_ptr<HandlerEntity> HandlerPtr;
 
 class Kernel {
  private:
@@ -61,8 +61,8 @@ class Kernel {
   Decoder dec_;
   uint64_t recv_pkt_;
   uint64_t recv_size_;
-  std::vector< std::vector<Handler*> > handlers_;
-  std::map<hdlr_id, Handler*> handler_map_;
+  std::vector< std::vector<HandlerPtr > > handlers_;
+  std::map<hdlr_id, HandlerPtr > handler_map_;
   hdlr_id global_hdlr_id_;
 
  public:
@@ -72,7 +72,7 @@ class Kernel {
   static void* thread(void* obj);
   void run();
   void proc(Packet* pkt);
-  hdlr_id on(const std::string& event_name, Callback&& callback);
+  HandlerPtr on(const std::string& event_name, Callback&& callback);
 
   bool clear(hdlr_id hid);
 

@@ -84,10 +84,10 @@ class Input {
 
 
 
-HandlerPtr::HandlerPtr(std::shared_ptr<Handler> ptr) : ptr_(ptr) {
+Handler::Handler(std::shared_ptr<HandlerEntity> ptr) : ptr_(ptr) {
 }
     
-HandlerPtr::~HandlerPtr() {
+Handler::~Handler() {
 }
 
 
@@ -201,10 +201,12 @@ void Machine::halt() {
 }
 
 
-hdlr_id Machine::on(const std::string& event_name,
+Handler Machine::on(const std::string& event_name,
                  std::function<void(const Property&)>&& callback) {
   assert(this->kernel_);
-  return this->kernel_->on(event_name, std::move(callback));
+  HandlerPtr ptr = this->kernel_->on(event_name, std::move(callback));
+  Handler hdlr(ptr);
+  return hdlr;
 }
 
 bool Machine::clear(hdlr_id hid) {
