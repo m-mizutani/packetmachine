@@ -98,6 +98,10 @@ Decoder::~Decoder() {
   for (auto& pi : this->params_) {
     delete pi;
   }
+
+  for (auto& e : this->events_) {
+    delete e;
+  }
 }
 
 

@@ -72,6 +72,9 @@ class Channel {
           static_cast<uint32_t>(this->pull_idx_));
   }
   ~Channel() {
+    for (uint32_t i = 0; i < this->ring_size_; i++) {
+      delete this->ring_[i];
+    }
   }
 
   uint64_t push_wait() const { return this->push_wait_; }

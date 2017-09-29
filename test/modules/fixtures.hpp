@@ -54,6 +54,7 @@ class ModuleTesterData : public ::testing::Test {
   }
 
   virtual void TearDown() {
+    pcap_close(pcap);
     delete prop_;
   }
 
@@ -75,7 +76,7 @@ class ModuleTesterData : public ::testing::Test {
       EXPECT_TRUE(pkt.store(data, pkthdr->caplen));
       pkt.set_cap_len(pkthdr->caplen);
       pkt.set_tv(pkthdr->ts);
-
+      
       pd.reset(&pkt);
       prop_->init(&pkt);
 

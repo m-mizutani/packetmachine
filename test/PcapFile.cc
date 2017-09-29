@@ -40,6 +40,7 @@ TEST(PcapFile, ok) {
 
   EXPECT_TRUE(pfile->error().empty());
   EXPECT_EQ(count, 10000);
+  delete pfile;
 }
 
 TEST(PcapFile, ok_with_super_class) {
@@ -54,6 +55,7 @@ TEST(PcapFile, ok_with_super_class) {
 
   EXPECT_TRUE(pfile->error().empty());
   EXPECT_EQ(count, 10000);
+  delete pfile;
 }
 
 TEST(PcapFile, ng_no_such_file) {
@@ -65,6 +67,7 @@ TEST(PcapFile, ng_no_such_file) {
   pm::Packet pkt;
   EXPECT_EQ(pfile->read(&pkt), pm::Capture::ERROR);
   EXPECT_EQ(pfile->error(), "pcap is not ready");
+  delete pfile;
 }
 
 TEST(PcapFile, ng_invalid_format) {
@@ -76,4 +79,5 @@ TEST(PcapFile, ng_invalid_format) {
   pm::Packet pkt;
   EXPECT_EQ(pfile->read(&pkt), pm::Capture::ERROR);
   EXPECT_EQ(pfile->error(), "pcap is not ready");
+  delete pfile;
 }
