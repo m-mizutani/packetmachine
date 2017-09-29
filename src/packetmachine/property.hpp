@@ -30,6 +30,7 @@
 #include <stdio.h>
 #include <string>
 #include <vector>
+#include <memory>
 #include <functional>
 #include "./common.hpp"
 
