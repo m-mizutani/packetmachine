@@ -48,9 +48,15 @@ class HandlerEntity;
 class Handler {
  private:
   std::weak_ptr<HandlerEntity> ptr_;
+  std::weak_ptr<Kernel> kernel_;
  public:
-  Handler(std::shared_ptr<HandlerEntity> ptr);
+  Handler(std::shared_ptr<HandlerEntity> ptr,
+          std::shared_ptr<Kernel> kernel);
   ~Handler();
+  bool is_active() const;
+  bool activate();
+  bool deactivate();
+  bool destroy();
 };
 
 
@@ -58,7 +64,7 @@ class Machine {
  private:
   Capture *cap_;
   Input *input_;
-  Kernel *kernel_;
+  std::shared_ptr<Kernel> kernel_;
   pthread_t input_th_, kernel_th_;
 
  public:

@@ -43,26 +43,59 @@ TEST(Handler, ok) {
   EXPECT_EQ(624, count);
 }
 
-TEST(Handler, remove) {
+TEST(Handler, deactivate) {
   pm::Machine *m = new pm::Machine();
   int count = 0;
 
-  m->on("UDP", [&](const pm::Property& p) {
+  auto hdlr = m->on("UDP", [&](const pm::Property& p) {
       count++;
     });
 
-  /*
-  TODO: change test
-
-  EXPECT_TRUE(m->clear(hid));
-  EXPECT_FALSE(m->clear(hid));  // double clear
+  EXPECT_TRUE(hdlr.is_active());
+  EXPECT_TRUE(hdlr.deactivate());
+  EXPECT_FALSE(hdlr.deactivate());  // double deactivate
+  EXPECT_FALSE(hdlr.is_active());
 
   m->add_pcapfile("./test/data1.pcap");
   m->loop();
 
-  EXPECT_EQ(0, count);
-  */
-  
+  EXPECT_EQ(0, count); 
 }
+
+TEST(Handler, reactivate) {
+  pm::Machine *m = new pm::Machine();
+  int count = 0;
+
+  auto hdlr = m->on("UDP", [&](const pm::Property& p) {
+      count++;
+    });
+
+  EXPECT_TRUE(hdlr.deactivate());
+  EXPECT_TRUE(hdlr.activate());
+  EXPECT_FALSE(hdlr.activate());  // double activate
+
+  m->add_pcapfile("./test/data1.pcap");
+  m->loop();
+
+  EXPECT_EQ(624, count); 
+}
+
+TEST(Handler, destroy) {
+  pm::Machine *m = new pm::Machine();
+  int count = 0;
+  auto hdlr = m->on("UDP", [&](const pm::Property& p) {
+      count++;
+    });
+
+  EXPECT_TRUE(hdlr.destroy());
+  EXPECT_FALSE(hdlr.is_active());
+  EXPECT_FALSE(hdlr.activate());
+
+  m->add_pcapfile("./test/data1.pcap");
+  m->loop();
+
+  EXPECT_EQ(0, count); 
+}
+
 
 }   // namespace machine_test

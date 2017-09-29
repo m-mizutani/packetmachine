@@ -84,20 +84,54 @@ class Input {
 
 
 
-Handler::Handler(std::shared_ptr<HandlerEntity> ptr) : ptr_(ptr) {
+Handler::Handler(std::shared_ptr<HandlerEntity> ptr,
+                 std::shared_ptr<Kernel> kernel) :
+    ptr_(ptr), kernel_(kernel) {  
 }
     
 Handler::~Handler() {
 }
 
+bool Handler::is_active() const {
+  if (auto p = this->ptr_.lock()) {
+    return p->is_active();
+  } else {
+    return false;
+  }
+}
+
+bool Handler::activate() {
+  if (auto p = this->ptr_.lock()) {
+    return p->activate();
+  } else {
+    return false;
+  }
+}
+
+bool Handler::deactivate() {
+  if (auto p = this->ptr_.lock()) {
+    return p->deactivate();
+  } else {
+    return false;
+  }
+}
+
+bool Handler::destroy() {
+  if (auto p = this->ptr_.lock()) {
+    if (auto k = this->kernel_.lock()) {
+      return k->clear(p);
+    }
+  }
+
+  return false;
+}
 
 
-Machine::Machine() : cap_(nullptr), input_(nullptr), kernel_(nullptr) {
-  this->kernel_ = new Kernel();
+Machine::Machine() :
+    cap_(nullptr), input_(nullptr), kernel_(new Kernel) {
 }
 
 Machine::~Machine() {
-  delete this->kernel_;
   delete this->cap_;
 }
 
@@ -137,7 +171,8 @@ void Machine::loop() {
   }
   debug(false, "enter loop");
 
-  pthread_create(&this->kernel_th_, nullptr, Kernel::thread, this->kernel_);
+  pthread_create(&this->kernel_th_, nullptr, Kernel::thread,
+                 this->kernel_.get());
 
   this->input_ = new Input(this->cap_, this->kernel_->channel());
   pthread_create(&this->input_th_, nullptr, Input::thread, this->input_);
@@ -153,7 +188,8 @@ void Machine::start() {
     throw Exception::ConfigError("no input source is available");
   }
 
-  pthread_create(&this->kernel_th_, nullptr, Kernel::thread, this->kernel_);
+  pthread_create(&this->kernel_th_, nullptr, Kernel::thread,
+                 this->kernel_.get());
 
   this->input_ = new Input(this->cap_, this->kernel_->channel());
   pthread_create(&this->input_th_, nullptr, Input::thread, this->input_);
@@ -205,7 +241,7 @@ Handler Machine::on(const std::string& event_name,
                  std::function<void(const Property&)>&& callback) {
   assert(this->kernel_);
   HandlerPtr ptr = this->kernel_->on(event_name, std::move(callback));
-  Handler hdlr(ptr);
+  Handler hdlr(ptr, this->kernel_);
   return hdlr;
 }
 

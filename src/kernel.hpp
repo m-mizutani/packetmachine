@@ -45,12 +45,19 @@ class HandlerEntity {
   Callback cb_;
   event_id ev_id_;
   hdlr_id id_;
+  bool active_;
+  bool destroyed_;
+
  public:
   HandlerEntity(hdlr_id id, Callback cb, event_id ev_id);
   ~HandlerEntity();
-  hdlr_id id() const { return this->id_; }
-  event_id ev_id() const { return this->ev_id_; }
-  Callback& callback() { return this->cb_; }
+  inline hdlr_id id() const { return this->id_; }
+  inline event_id ev_id() const { return this->ev_id_; }
+  inline Callback& callback() { return this->cb_; }
+  inline bool is_active() const { return this->active_; }
+  bool activate();
+  bool deactivate();
+  void destroy();
 };
 
 typedef std::shared_ptr<HandlerEntity> HandlerPtr;
@@ -71,10 +78,10 @@ class Kernel {
 
   static void* thread(void* obj);
   void run();
-  void proc(Packet* pkt);
   HandlerPtr on(const std::string& event_name, Callback&& callback);
 
   bool clear(hdlr_id hid);
+  bool clear(HandlerPtr ptr);
 
   Channel<Packet>* channel() { return &this->channel_; }
   uint64_t recv_pkt()  const { return this->recv_pkt_; }

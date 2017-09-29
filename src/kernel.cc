@@ -24,6 +24,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <algorithm>
 #include <unistd.h>
 
 #include "./kernel.hpp"
@@ -33,24 +34,39 @@
 namespace pm {
 
 HandlerEntity::HandlerEntity(hdlr_id hid, Callback cb, event_id ev_id) :
-    cb_(cb), ev_id_(ev_id), id_(hid) {
+    cb_(cb), ev_id_(ev_id), id_(hid), active_(true), destroyed_(false) {
 }
 HandlerEntity::~HandlerEntity() {
 }
 
+bool HandlerEntity::activate() {
+  if (this->destroyed_ == true || this->active_ == true) {
+    return false;
+  }
+
+  this->active_ = true;
+  return true;
+}
+
+bool HandlerEntity::deactivate() {
+  if (this->destroyed_ == true || this->active_ == false) {
+    return false;
+  }
+
+  this->active_ = false;
+  return true;
+}
+
+void HandlerEntity::destroy() {
+  this->deactivate();
+  this->destroyed_ = true;
+}
 
 
 Kernel::Kernel() : recv_pkt_(0), recv_size_(0), global_hdlr_id_(0) {
   this->handlers_.resize(this->dec_.event_size());
 }
 Kernel::~Kernel() {
-  /*
-  for (auto &handler_set : this->handlers_) {
-    for (auto entry : handler_set) {
-      delete entry;
-    }
-  }
-  */
 }
 
 void* Kernel::thread(void* obj) {
@@ -76,7 +92,7 @@ void Kernel::run() {
     for (size_t i = 0; i < ev_size; i++) {
       event_id eid = prop.event(i)->id();
       for (auto entry : this->handlers_[eid]) {
-        if (entry != nullptr) {
+        if (entry != nullptr && entry->is_active()) {
           (entry->callback())(prop);
         }
       }
@@ -84,8 +100,6 @@ void Kernel::run() {
   }
 }
 
-void Kernel::proc(Packet* pkt) {
-}
 
 HandlerPtr Kernel::on(const std::string& event_name, Callback&& cb) {
   event_id eid = this->dec_.lookup_event_id(event_name);
@@ -122,6 +136,19 @@ bool Kernel::clear(hdlr_id hid) {
   return true;
 }
 
+bool Kernel::clear(HandlerPtr ptr) {
+  event_id eid = ptr->ev_id();
+  auto& arr = this->handlers_[eid];
+  std::vector<HandlerPtr>::iterator tgt = std::find(arr.begin(), arr.end(), ptr);
+  if (tgt == arr.end()) {
+    return false;
+  }
+
+  (*tgt)->destroy();
+  arr.erase(tgt);
+  
+  return true;
+}
 
 
 }   // namespace pm
