@@ -41,6 +41,7 @@ TEST(Handler, ok) {
   m->loop();
 
   EXPECT_EQ(624, count);
+  delete m;
 }
 
 TEST(Handler, deactivate) {
@@ -59,7 +60,8 @@ TEST(Handler, deactivate) {
   m->add_pcapfile("./test/data1.pcap");
   m->loop();
 
-  EXPECT_EQ(0, count); 
+  EXPECT_EQ(0, count);
+  delete m;
 }
 
 TEST(Handler, reactivate) {
@@ -78,6 +80,7 @@ TEST(Handler, reactivate) {
   m->loop();
 
   EXPECT_EQ(624, count); 
+  delete m;
 }
 
 TEST(Handler, destroy) {
@@ -95,6 +98,7 @@ TEST(Handler, destroy) {
   m->loop();
 
   EXPECT_EQ(0, count); 
+  delete m;
 }
 
 

@@ -133,6 +133,7 @@ Machine::Machine() :
 
 Machine::~Machine() {
   delete this->cap_;
+  delete this->input_;
 }
 
 void Machine::add_pcapdev(const std::string &dev_name) {
