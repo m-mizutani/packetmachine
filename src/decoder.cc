@@ -91,15 +91,15 @@ Decoder::Decoder() : mod_ethernet_(Module::NONE) {
 
 
 Decoder::~Decoder() {
-  for (auto& m : this->modules_) {
+  for (auto m : this->modules_) {
     delete m;
   }
 
-  for (auto& pi : this->params_) {
+  for (auto pi : this->params_) {
     delete pi;
   }
 
-  for (auto& e : this->events_) {
+  for (auto e : this->events_) {
     delete e;
   }
 }

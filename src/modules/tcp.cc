@@ -515,6 +515,14 @@ class TCP : public Module {
     this->ev_close_ = this->define_event("closed");
   }
 
+  ~TCP() {
+    this->ssn_table_.wipe();
+    while (this->ssn_table_.has_expired()) {
+      auto ssn = this->ssn_table_.pop_expired();
+      delete ssn;
+    }
+  }
+
   mod_id mod_tcpssn_;
   void setup() {
     this->mod_tcpssn_ = this->lookup_module("TCPSession");
