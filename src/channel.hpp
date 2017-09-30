@@ -114,7 +114,7 @@ class Channel {
            static_cast<uint32_t>(this->push_idx_),
            static_cast<uint32_t>(this->pull_idx_));
 
-    uint32_t wait = 100;
+    uint32_t wait = 1;
     while (n == this->next(this->push_idx_)) {
       if (this->closed()) {
         debug(DEBUG, "closed");
@@ -123,8 +123,8 @@ class Channel {
 
       this->pull_wait_ += 1;
 
-      if ((wait & 0xffff) != 0) {
-        wait *= 2;
+      if ((wait & 0xfffff) != 0) {
+        wait = wait << 1;
       }
       usleep(wait);
     }
