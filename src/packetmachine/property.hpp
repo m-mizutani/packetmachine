@@ -74,7 +74,7 @@ class Payload {
 
 class Property {
  private:
-  Decoder *dec_;
+  std::weak_ptr<Decoder> dec_;
   std::vector<size_t> param_idx_;
   std::vector< std::vector<Value*>* > param_;
   size_t event_idx_;
@@ -88,9 +88,10 @@ class Property {
   uint16_t dst_port_;
 
  public:
-  explicit Property(Decoder* dec);
+  Property();
   ~Property();
 
+  void set_decoder(std::shared_ptr<Decoder> dec);
   void init(const Packet* pkt);
 
   // Retain data

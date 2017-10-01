@@ -49,10 +49,11 @@ TEST(Decoder, basic) {
   const u_char* data;
   int rc;
 
-  pm::Decoder dec;
+  std::shared_ptr<pm::Decoder> dec(new pm::Decoder);
   pm::Packet pkt;
   pm::Payload pd;
-  pm::Property prop(&dec);
+  pm::Property prop;
+  prop.set_decoder(dec);
 
   int count_ipv4_saddr = 0;
   int count_mac_saddr = 0;
@@ -69,7 +70,7 @@ TEST(Decoder, basic) {
     pd.reset(&pkt);
     prop.init(&pkt);
 
-    dec.decode(&pd, &prop);
+    dec->decode(&pd, &prop);
 
     const auto& eth_src = prop.value("Ethernet.src");
     EXPECT_FALSE(eth_src.is_null());

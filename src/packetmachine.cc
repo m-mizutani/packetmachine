@@ -41,10 +41,10 @@ namespace pm {
 class Input {
  private:
   Capture* cap_;
-  Channel<Packet>* channel_;
+  PktChannel channel_;
 
  public:
-  Input(Capture* cap, Channel<Packet>* channel) :
+  Input(Capture* cap, PktChannel channel) :
       cap_(cap), channel_(channel) {
   }
   ~Input() {
@@ -167,20 +167,8 @@ void Machine::add_pcapfile(const std::string &file_path) {
 }
 
 void Machine::loop() {
-  if (!this->cap_) {
-    throw Exception::ConfigError("no input source is available");
-  }
-  debug(false, "enter loop");
-
-  pthread_create(&this->kernel_th_, nullptr, Kernel::thread,
-                 this->kernel_.get());
-
-  this->input_ = new Input(this->cap_, this->kernel_->channel());
-  pthread_create(&this->input_th_, nullptr, Input::thread, this->input_);
-
-  // this->kernel_->run();
-  pthread_join(this->input_th_, nullptr);
-  pthread_join(this->kernel_th_, nullptr);
+  this->start();
+  this->join();
 }
 
 
@@ -192,7 +180,7 @@ void Machine::start() {
   pthread_create(&this->kernel_th_, nullptr, Kernel::thread,
                  this->kernel_.get());
 
-  this->input_ = new Input(this->cap_, this->kernel_->channel());
+  this->input_ = new Input(this->cap_, this->kernel_->pkt_channel());
   pthread_create(&this->input_th_, nullptr, Input::thread, this->input_);
 }
 

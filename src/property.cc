@@ -81,13 +81,7 @@ bool Payload::shrink(size_t length) {
 
 const Value Property::null_;
 
-Property::Property(Decoder* dec) : dec_(dec) {
-  size_t psize = this->dec_->param_size();
-  for (size_t i = 0; i < psize; i++) {
-    this->param_.push_back(new std::vector<Value*>());
-    this->param_idx_.push_back(0);
-  }
-
+Property::Property() {
   this->src_addr_ = new tb::Buffer();
   this->dst_addr_ = new tb::Buffer();
 }
@@ -102,6 +96,10 @@ Property::~Property() {
 
   delete this->src_addr_;
   delete this->dst_addr_;
+}
+
+void Property::set_decoder(std::shared_ptr<Decoder> dec) {
+  this->dec_ = dec;
 }
 
 void Property::init(const Packet *pkt) {
@@ -119,10 +117,18 @@ Object* Property::retain_object(const ParamDef* def) {
 
 
 Value* Property::retain_value(const ParamDef* def) {
-  // Value* val = dynamic_cast<Value*>(this->retain_object(def));
   const param_id pid = def->id();
   Value* obj;
 
+  size_t psize = static_cast<size_t>(pid) + 1;
+  if (psize > this->param_.size()) {
+    for (size_t i = this->param_.size(); i < psize; i++) {
+      this->param_.push_back(new std::vector<Value*>());
+      this->param_idx_.push_back(0);
+    }
+  }
+
+  
   if (this->param_idx_[pid] < this->param_[pid]->size()) {
     obj = (*this->param_[pid])[this->param_idx_[pid]];
     obj->clear();
@@ -191,16 +197,19 @@ bool Property::has_value(param_id pid) const {
 }
 
 bool Property::has_value(const std::string& name) const {
-  param_id pid = this->dec_->lookup_param_id(name);
-  if (pid == Param::NONE) {
-    return false;
+  if (auto dec = this->dec_.lock()) {
+    param_id pid = dec->lookup_param_id(name);
+    if (pid == Param::NONE) {
+      return false;
+    } else {
+      return this->has_value(pid);
+    }
   } else {
-    return this->has_value(pid);
+    throw Exception::RunTimeError("Decoder module is not available");
   }
 }
 
 const Value& Property::value(param_id pid) const {
-  assert(0 <= pid && pid < static_cast<param_id>(this->param_.size()));
   if (this->param_idx_[pid] > 0) {
     Value* val = dynamic_cast<Value*>((*this->param_[pid])[0]);
     if (val) {
@@ -214,11 +223,15 @@ const Value& Property::value(param_id pid) const {
 }
 
 const Value& Property::value(const std::string& name) const {
-  param_id pid = this->dec_->lookup_param_id(name);
-  if (pid == Param::NONE) {
-    return Property::null_;
+  if (auto dec = this->dec_.lock()) {
+    param_id pid = dec->lookup_param_id(name);
+    if (pid == Param::NONE) {
+      return Property::null_;
+    } else {
+      return this->value(pid);
+    }
   } else {
-    return this->value(pid);
+    throw Exception::RunTimeError("Decoder module is not available");
   }
 }
 

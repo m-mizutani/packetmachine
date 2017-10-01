@@ -61,11 +61,14 @@ class HandlerEntity {
 };
 
 typedef std::shared_ptr<HandlerEntity> HandlerPtr;
+typedef std::shared_ptr<Channel<Packet> > PktChannel;
 
 class Kernel {
  private:
-  Channel<Packet> channel_;
-  Decoder dec_;
+  PktChannel pkt_channel_;
+  // Channel<Packet> pkt_channel_;
+  // Channel<Property> prop_channel_;
+  std::shared_ptr<Decoder> dec_;
   uint64_t recv_pkt_;
   uint64_t recv_size_;
   std::vector< std::vector<HandlerPtr > > handlers_;
@@ -83,11 +86,12 @@ class Kernel {
   bool clear(hdlr_id hid);
   bool clear(HandlerPtr ptr);
 
-  Channel<Packet>* channel() { return &this->channel_; }
+  PktChannel pkt_channel() { return this->pkt_channel_; }
+  
   uint64_t recv_pkt()  const { return this->recv_pkt_; }
   uint64_t recv_size() const { return this->recv_size_; }
 
-  const Decoder& dec() const { return this->dec_; }
+  const Decoder& dec() const { return *(this->dec_); }
 };
 
 }   // namespace pm

@@ -63,8 +63,10 @@ void HandlerEntity::destroy() {
 }
 
 
-Kernel::Kernel() : recv_pkt_(0), recv_size_(0), global_hdlr_id_(0) {
-  this->handlers_.resize(this->dec_.event_size());
+Kernel::Kernel() :
+    pkt_channel_(new Channel<Packet>), dec_(new Decoder),
+    recv_pkt_(0), recv_size_(0), global_hdlr_id_(0) {
+  this->handlers_.resize(this->dec_->event_size());
 }
 Kernel::~Kernel() {
 }
@@ -78,15 +80,17 @@ void* Kernel::thread(void* obj) {
 void Kernel::run() {
   Packet* pkt;
   Payload pd;
-  Property prop(&(this->dec_));
+  Property prop;
 
-  while (nullptr != (pkt = this->channel_.pull())) {
+  prop.set_decoder(this->dec_);
+  
+  while (nullptr != (pkt = this->pkt_channel_->pull())) {
     this->recv_pkt_  += 1;
     this->recv_size_ += pkt->cap_len();
 
     prop.init(pkt);
     pd.reset(pkt);
-    this->dec_.decode(&pd, &prop);
+    this->dec_->decode(&pd, &prop);
 
     size_t ev_size = prop.event_idx();
     for (size_t i = 0; i < ev_size; i++) {
@@ -102,7 +106,7 @@ void Kernel::run() {
 
 
 HandlerPtr Kernel::on(const std::string& event_name, Callback&& cb) {
-  event_id eid = this->dec_.lookup_event_id(event_name);
+  event_id eid = this->dec_->lookup_event_id(event_name);
 
   if (eid == Event::NONE) {
     throw Exception::RunTimeError("no such event: " + event_name);

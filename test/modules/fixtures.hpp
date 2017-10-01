@@ -38,7 +38,7 @@
 
 class ModuleTesterData : public ::testing::Test {
  public:
-  pm::Decoder dec;
+  std::shared_ptr<pm::Decoder> dec;
   pm::Packet pkt;
   pm::Payload pd;
   pm::Property *prop_;
@@ -47,10 +47,12 @@ class ModuleTesterData : public ::testing::Test {
   virtual const std::string fpath() const = 0;
 
   virtual void SetUp() {
+    dec = std::shared_ptr<pm::Decoder>(new pm::Decoder);
     const std::string fpath = this->fpath();
     char errbuf[PCAP_ERRBUF_SIZE];
     pcap = ::pcap_open_offline(fpath.c_str(), errbuf);
-    prop_ = new pm::Property(&dec);
+    prop_ = new pm::Property();
+    prop_->set_decoder(dec);
   }
 
   virtual void TearDown() {
@@ -80,7 +82,7 @@ class ModuleTesterData : public ::testing::Test {
       pd.reset(&pkt);
       prop_->init(&pkt);
 
-      dec.decode(&pd, prop_);
+      dec->decode(&pd, prop_);
       return prop_;
     }
   }
