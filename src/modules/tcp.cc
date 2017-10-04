@@ -34,6 +34,8 @@
 namespace pm {
 
 class TCP : public Module {
+  class Session;
+  
  private:
   struct tcp_header {
     uint16_t src_port_;  // source port
@@ -107,6 +109,7 @@ class TCP : public Module {
   uint64_t ssn_count_;
   time_t curr_ts_;
   bool init_ts_;
+  tb::LruHash<Session*> ssn_table_;
 
   class Session {
    public:
@@ -467,7 +470,6 @@ class TCP : public Module {
     }
   };
 
-  tb::LruHash<Session*> ssn_table_;
 
 
  public:
@@ -539,16 +541,11 @@ class TCP : public Module {
   const EventDef* ev_close() const    { return this->ev_close_; }
 
 
-  mod_id decode(Payload* pd, Property* prop) {
-    auto hdr = reinterpret_cast<const struct tcp_header*>
-               (pd->retain(sizeof(struct tcp_header)));
-    if (hdr == nullptr) {   // Not enough packet size.
-      return Module::NONE;
-    }
-
-    // ----------------------------------------
-    // TCP header processing
-
+  // ------------------------------------------
+  // Set header properties
+  
+  bool set_properties(Property* prop, const struct tcp_header* hdr,
+                      Payload* pd) {
     prop->set_src_port(ntohs(hdr->src_port_));
     prop->set_dst_port(ntohs(hdr->dst_port_));
 
@@ -589,10 +586,46 @@ class TCP : public Module {
     if (optlen > 0) {
       const byte_t* opt = pd->retain(optlen);
       if (opt == nullptr) {
-        return Module::NONE;
+        return false;
       }
 
       prop->retain_value(this->p_optdata_)->set(opt, optlen);
+    }
+
+    return true;
+  }
+
+
+  static Session* search_session(Property* prop,
+                                 tb::LruHash<Session*> *ssn_table,
+                                 const tb::HashKey& key, TCP* mod) {
+    auto node = ssn_table->get(key);
+
+    Session* ssn = nullptr;
+    if (node.is_null()) {
+      mod->ssn_count_++;
+      ssn = new Session(*prop, mod, mod->ssn_count_);
+      ssn_table->put(300, key, ssn);
+      prop->push_event(mod->ev_new_);
+    } else {
+      ssn = node.data();
+    }
+
+    return ssn;
+  }
+
+  
+  mod_id decode(Payload* pd, Property* prop) {
+    auto hdr = reinterpret_cast<const struct tcp_header*>
+               (pd->retain(sizeof(struct tcp_header)));
+    if (hdr == nullptr) {   // Not enough packet size.
+      return Module::NONE;
+    }
+
+    // ----------------------------------------
+    // TCP header processing
+    if (!set_properties(prop, hdr, pd)) {
+      return Module::NONE;
     }
 
     const size_t seg_len = pd->length();
@@ -606,7 +639,7 @@ class TCP : public Module {
 
     // ----------------------------------------
     // TCP session management
-    tb::HashKey key;
+    static tb::HashKey key;
 
     time_t ts = prop->ts();
     if (this->curr_ts_ < ts) {
@@ -619,35 +652,22 @@ class TCP : public Module {
       }
     }
 
-    static const bool DBG_SSN = false;
     while (this->ssn_table_.has_expired()) {
       Session* old_ssn = this->ssn_table_.pop_expired();
-      debug(DBG_SSN, "expired: %p", old_ssn);
       delete old_ssn;
     }
 
-    uint8_t flags = (hdr->flags_ & (FIN | SYN | RST | ACK));
-    flags &= (SYN|ACK|FIN|RST);
-    uint32_t seq = ntohl(hdr->seq_);
-    uint32_t ack = ntohl(hdr->ack_);
-    uint16_t win = ntohs(hdr->window_);
 
     Session::make_key(*prop, &key);
-    auto node = this->ssn_table_.get(key);
-
-    Session* ssn = nullptr;
-    if (node.is_null()) {
-      this->ssn_count_ += 1;
-      ssn = new Session(*prop, this, this->ssn_count_);
-      this->ssn_table_.put(300, key, ssn);
-      debug(DBG_SSN, "new session: %p", ssn);
-      prop->push_event(this->ev_new_);
-    } else {
-      ssn = node.data();
-      debug(DBG_SSN, "existing session: %p", ssn);
-    }
-
+    Session* ssn = this->search_session(prop, &(this->ssn_table_), key, this);
+    
     if (ssn) {
+      uint8_t flags = (hdr->flags_ & (FIN | SYN | RST | ACK));
+      flags &= (SYN|ACK|FIN|RST);
+      uint32_t seq = ntohl(hdr->seq_);
+      uint32_t ack = ntohl(hdr->ack_);
+      uint16_t win = ntohs(hdr->window_);
+      
       debug(DBG, "ssn = %p", ssn);
       const uint64_t ssn_id = ssn->id();
       prop->retain_value(this->p_ssn_id_)->cpy(&ssn_id, sizeof(ssn_id));
