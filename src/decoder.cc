@@ -32,12 +32,15 @@
 
 namespace pm {
 
-Decoder::Decoder() : mod_ethernet_(Module::NONE) {
-  std::map<std::string, Module*> mod_map;
-  build_module_map(&mod_map);
+Decoder::Decoder(ModMap *mod_map) : mod_ethernet_(Module::NONE) {
+  std::map<std::string, Module*> mod_map_local;
+  if (!mod_map) {
+    mod_map = &mod_map_local;
+    build_module_map(mod_map);
+  }
 
   // Building module map.
-  for (auto& m : mod_map) {
+  for (auto& m : *mod_map) {
     Module* mod = m.second;
     const mod_id id = this->modules_.size();
     mod->set_decoder(this);

@@ -39,6 +39,7 @@ namespace pm {
 class Module;
 class Property;
 class Packet;
+typedef std::map<std::string, Module*> ModMap;
 
 struct ParamInfo {
   mod_id mod_id_;
@@ -59,7 +60,7 @@ class Decoder {
   mod_id mod_ethernet_;
 
  public:
-  Decoder();
+  Decoder(ModMap *mod_map = nullptr);
   ~Decoder();
   void decode(Payload* pd, Property* prop);
   mod_id lookup_module(const std::string& name) const;
