@@ -84,12 +84,6 @@ FILE(GLOB TESTSRCS
   "test/modules/*.cc"
 )
 
-FILE(GLOB PERFSRCS
-  "perf/main.cc"
-  "perf/perf.cc"
-  "perf/Channel.cc"
-)
-
 ADD_LIBRARY(pm-obj OBJECT ${BASESRCS} ${HEADERS})
 SET_TARGET_PROPERTIES(pm-obj PROPERTIES COMPILE_FLAGS "-fPIC")
 
@@ -123,11 +117,6 @@ ADD_EXECUTABLE(packetmachine-static-test $<TARGET_OBJECTS:pm-test-obj>)
 TARGET_LINK_LIBRARIES(packetmachine-static-test pm-static)
 ADD_EXECUTABLE(packetmachine-shared-test $<TARGET_OBJECTS:pm-test-obj>)
 TARGET_LINK_LIBRARIES(packetmachine-shared-test pm-shared)
-
-# Performance check binary
-ADD_EXECUTABLE(packetmachine-perf ${PERFSRCS})
-TARGET_LINK_LIBRARIES(packetmachine-perf pm-static)
-
 
 # Examples
 ADD_EXECUTABLE(pmdump example/pmdump.cc)

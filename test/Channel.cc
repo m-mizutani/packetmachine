@@ -41,7 +41,7 @@ class Data {
 
 class Prop {
  public:
-  pm::Channel<Data> *ch_;
+  pm::RingBuffer<Data> *ch_;
 
   int send_load_;
   int recv_load_;
@@ -72,7 +72,7 @@ bool prime(int n) {
 
 void* provider(void* obj) {
   Prop *p = static_cast<Prop*>(obj);
-  pm::Channel<Data>* ch = p->ch_;
+  pm::RingBuffer<Data>* ch = p->ch_;
   std::random_device rnd;
 
   Data *d;
@@ -98,7 +98,7 @@ void* provider(void* obj) {
 
 void* consumer(void* obj) {
   Prop *p = static_cast<Prop*>(obj);
-  pm::Channel<Data>* ch = p->ch_;
+  pm::RingBuffer<Data>* ch = p->ch_;
   Data* d;
 
   int prev_idx = 0;
@@ -119,10 +119,10 @@ void* consumer(void* obj) {
   return nullptr;
 }
 
-TEST(Channel, ok) {
+TEST(RingBuffer, ok) {
   Prop p;
   const int count = 100000;
-  p.ch_ = new pm::Channel<Data>();
+  p.ch_ = new pm::RingBuffer<Data>();
   p.send_count_ = count;
 
   pthread_t t1, t2;
@@ -137,10 +137,10 @@ TEST(Channel, ok) {
   delete p.ch_;
 }
 
-TEST(Channel, ok_slow_provider) {
+TEST(RingBuffer, ok_slow_provider) {
   Prop p;
   const int count = 10000;
-  p.ch_ = new pm::Channel<Data>();
+  p.ch_ = new pm::RingBuffer<Data>();
   p.send_count_ = count;
   p.send_load_ = 0xffff;
 
@@ -158,10 +158,10 @@ TEST(Channel, ok_slow_provider) {
   delete p.ch_;
 }
 
-TEST(Channel, ok_slow_consumer) {
+TEST(RingBuffer, ok_slow_consumer) {
   Prop p;
   const int count = 10000;
-  p.ch_ = new pm::Channel<Data>();
+  p.ch_ = new pm::RingBuffer<Data>();
   p.send_count_ = count;
   p.recv_load_ = 0xffff;
 

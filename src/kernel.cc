@@ -64,7 +64,7 @@ void HandlerEntity::destroy() {
 
 
 Kernel::Kernel() :
-    pkt_channel_(new Channel<Packet>), dec_(new Decoder),
+    pkt_channel_(new RingBuffer<Packet>), dec_(new Decoder),
     recv_pkt_(0), recv_size_(0), global_hdlr_id_(0) {
   this->handlers_.resize(this->dec_->event_size());
 }

@@ -61,7 +61,7 @@ class HandlerEntity {
 };
 
 typedef std::shared_ptr<HandlerEntity> HandlerPtr;
-typedef std::shared_ptr<Channel<Packet> > PktChannel;
+typedef std::shared_ptr<RingBuffer<Packet> > PktChannel;
 
 class Kernel {
  private:

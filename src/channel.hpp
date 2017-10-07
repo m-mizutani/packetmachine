@@ -28,7 +28,6 @@
 #define __PACKETMACHINE_CHANNEL_HPP__
 
 #include <assert.h>
-
 #include <unistd.h>
 #include <vector>
 #include <atomic>
@@ -38,11 +37,11 @@
 
 namespace pm {
 
-// Channel is thread-safe and high performance data channel between
+// RingBufferl is thread-safe and high performance data channel between
 // packet capture thread and packet decoding thread.
 
 template <typename T>
-class Channel {
+class RingBuffer {
  private:
   static const bool DEBUG = false;
 
@@ -60,7 +59,7 @@ class Channel {
   }
 
  public:
-  Channel() : push_idx_(0), pull_idx_(0), ring_size_(0xfff),
+  RingBuffer() : push_idx_(0), pull_idx_(0), ring_size_(0xfff),
               push_wait_(0), pull_wait_(0), eos_(false) {
     this->ring_.resize(this->ring_size_);
     for (uint32_t i = 0; i < this->ring_size_; i++) {
@@ -71,7 +70,7 @@ class Channel {
           static_cast<uint32_t>(this->push_idx_),
           static_cast<uint32_t>(this->pull_idx_));
   }
-  ~Channel() {
+  ~RingBuffer() {
     for (uint32_t i = 0; i < this->ring_size_; i++) {
       delete this->ring_[i];
     }
@@ -147,6 +146,7 @@ class Channel {
     return this->eos_;
   }
 };
+
 
 }   // namespace pm
 
