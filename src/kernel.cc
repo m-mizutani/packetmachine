@@ -123,6 +123,7 @@ void Kernel::run() {
       }
     }
 
+    // Handle change request(s)
     if (this->msg_channel_->has_msg()) {
       ChangeRequest *req;
       while(this->msg_channel_->has_msg()) {

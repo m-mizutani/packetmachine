@@ -24,6 +24,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <unistd.h>
 #include "./gtest/gtest.h"
 #include "../src/packetmachine.hpp"
 
@@ -120,6 +121,25 @@ TEST(Handler, clear) {
   EXPECT_FALSE(hdlr.activate());
   
   EXPECT_EQ(11, count); 
+  delete m;
+}
+
+TEST(Handler, clear_async) {
+  pm::Machine *m = new pm::Machine();
+  int count = 0;
+  pm::Handler hdlr = m->on("UDP", [&](const pm::Property& p) {
+      count++;
+    });
+
+  m->add_pcapfile("./test/data1.pcap");
+  m->start();
+  usleep(100);
+  hdlr.destroy();
+  m->join();
+
+  EXPECT_FALSE(hdlr.is_active());
+  EXPECT_FALSE(hdlr.activate());
+  EXPECT_GT(624, count); 
   delete m;
 }
 
