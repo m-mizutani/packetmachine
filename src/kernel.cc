@@ -57,15 +57,33 @@ bool HandlerEntity::deactivate() {
   return true;
 }
 
-void HandlerEntity::destroy() {
-  this->deactivate();
+bool HandlerEntity::destroy() {
+  if (this->destroyed_ == true) {
+    return false;
+  }
+
+  this->active_ = false;
   this->destroyed_ = true;
+  return true;
+}  
+
+bool AddHandler::change(Kernel* kernel) {
+  return kernel->add_handler(this->ptr_);
+}
+
+bool DeleteHandler::change(Kernel* kernel) {
+  return kernel->delete_handler(this->ptr_);
 }
 
 
+// --------------------------------------------------------
+// Kenrel: main process of PacketMachine
+
 Kernel::Kernel() :
-    pkt_channel_(new RingBuffer<Packet>), dec_(new Decoder),
-    recv_pkt_(0), recv_size_(0), global_hdlr_id_(0) {
+    pkt_channel_(new RingBuffer<Packet>),
+    msg_channel_(new MsgQueue<ChangeRequest*>),
+    dec_(new Decoder),
+    recv_pkt_(0), recv_size_(0), global_hdlr_id_(0), running_(false) {
   this->handlers_.resize(this->dec_->event_size());
 }
 Kernel::~Kernel() {
@@ -81,7 +99,9 @@ void Kernel::run() {
   Packet* pkt;
   Payload pd;
   Property prop;
-
+  
+  this->running_ = true;
+  
   prop.set_decoder(this->dec_);
   
   while (nullptr != (pkt = this->pkt_channel_->pull())) {
@@ -92,6 +112,7 @@ void Kernel::run() {
     pd.reset(pkt);
     this->dec_->decode(&pd, &prop);
 
+    // Event handler
     size_t ev_size = prop.event_idx();
     for (size_t i = 0; i < ev_size; i++) {
       event_id eid = prop.event(i)->id();
@@ -101,7 +122,18 @@ void Kernel::run() {
         }
       }
     }
+
+    if (this->msg_channel_->has_msg()) {
+      ChangeRequest *req;
+      while(this->msg_channel_->has_msg()) {
+        req = this->msg_channel_->pull();
+        req->change(this);
+        delete req;
+      }
+    }
   }
+
+  this->running_ = false;
 }
 
 
@@ -114,8 +146,13 @@ HandlerPtr Kernel::on(const std::string& event_name, Callback&& cb) {
 
   hdlr_id hid = ++(this->global_hdlr_id_);
   HandlerPtr entry(new HandlerEntity(hid, cb, eid));
-  this->handler_map_.insert(std::make_pair(entry->id(), entry));
-  this->handlers_[eid].push_back(entry);
+
+  if (this->running_) {
+    auto *req = new AddHandler(entry);
+    this->msg_channel_->push(req);
+  } else {
+    this->add_handler(entry);
+  }
   return entry;
 }
 
@@ -141,6 +178,23 @@ bool Kernel::clear(hdlr_id hid) {
 }
 
 bool Kernel::clear(HandlerPtr ptr) {
+  if (this->running_) {
+    auto req = new DeleteHandler(ptr);
+    this->msg_channel_->push(req);
+    return true;
+  } else {
+    return this->delete_handler(ptr);
+  }
+}
+
+
+bool Kernel::add_handler(HandlerPtr ptr) {
+  this->handler_map_.insert(std::make_pair(ptr->id(), ptr));
+  this->handlers_[ptr->ev_id()].push_back(ptr);
+  return true;
+}
+
+bool Kernel::delete_handler(HandlerPtr ptr) {
   event_id eid = ptr->ev_id();
   auto& arr = this->handlers_[eid];
   std::vector<HandlerPtr>::iterator tgt = std::find(arr.begin(), arr.end(), ptr);
@@ -150,7 +204,7 @@ bool Kernel::clear(HandlerPtr ptr) {
 
   (*tgt)->destroy();
   arr.erase(tgt);
-  
+
   return true;
 }
 

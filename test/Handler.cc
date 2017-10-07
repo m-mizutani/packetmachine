@@ -101,5 +101,27 @@ TEST(Handler, destroy) {
   delete m;
 }
 
+TEST(Handler, clear) {
+  pm::Machine *m = new pm::Machine();
+  int count = 0;
+  pm::Handler hdlr = m->on("UDP", [&](const pm::Property& p) {
+      count++;
+      if (count > 10) {
+        hdlr.destroy();
+      }
+    });
+
+  EXPECT_TRUE(hdlr.is_active());
+  
+  m->add_pcapfile("./test/data1.pcap");
+  m->loop();
+
+  EXPECT_FALSE(hdlr.is_active());
+  EXPECT_FALSE(hdlr.activate());
+  
+  EXPECT_EQ(11, count); 
+  delete m;
+}
+
 
 }   // namespace machine_test

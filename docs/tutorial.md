@@ -121,5 +121,5 @@ int main(int argc, char* argv[]) {
 [Advanced Usage](#advanced-usage)
 -------------
 
-### [Faster parameter access](tutorial.md#faster-parameter-access)
+### [Faster parameter access](#faster-parameter-access)
 

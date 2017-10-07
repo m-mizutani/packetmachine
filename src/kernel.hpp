@@ -40,14 +40,16 @@
 
 namespace pm {
 
+class Kernel;
+
 class HandlerEntity {
  private:
   Callback cb_;
   event_id ev_id_;
   hdlr_id id_;
-  bool active_;
-  bool destroyed_;
-
+  std::atomic<bool> active_;
+  std::atomic<bool> destroyed_;
+  
  public:
   HandlerEntity(hdlr_id id, Callback cb, event_id ev_id);
   ~HandlerEntity();
@@ -57,15 +59,45 @@ class HandlerEntity {
   inline bool is_active() const { return this->active_; }
   bool activate();
   bool deactivate();
-  void destroy();
+  bool destroy();
 };
+
+class ChangeRequest {
+ public:
+  ChangeRequest() = default;
+  virtual ~ChangeRequest() = default;
+  virtual bool change(Kernel* kernel) = 0;
+};
+
 
 typedef std::shared_ptr<HandlerEntity> HandlerPtr;
 typedef std::shared_ptr<RingBuffer<Packet> > PktChannel;
+typedef std::shared_ptr<MsgQueue<ChangeRequest*> > MsgChannel;
+
+
+
+class AddHandler : public ChangeRequest {
+ private:
+  HandlerPtr ptr_;
+ public:
+  AddHandler(HandlerPtr ptr) : ptr_(ptr) {}
+  bool change(Kernel *kernel);
+};
+
+class DeleteHandler : public ChangeRequest {
+ private:
+  HandlerPtr ptr_;
+ public:
+  DeleteHandler(HandlerPtr ptr) : ptr_(ptr) {}
+  bool change(Kernel *kernel);
+};
+
+
 
 class Kernel {
  private:
   PktChannel pkt_channel_;
+  MsgChannel msg_channel_;
   // Channel<Packet> pkt_channel_;
   // Channel<Property> prop_channel_;
   std::shared_ptr<Decoder> dec_;
@@ -74,6 +106,7 @@ class Kernel {
   std::vector< std::vector<HandlerPtr > > handlers_;
   std::map<hdlr_id, HandlerPtr > handler_map_;
   hdlr_id global_hdlr_id_;
+  std::atomic<bool> running_;
 
  public:
   Kernel();
@@ -81,11 +114,14 @@ class Kernel {
 
   static void* thread(void* obj);
   void run();
-  HandlerPtr on(const std::string& event_name, Callback&& callback);
-
+  HandlerPtr on(const std::string& event_name, Callback&& ev_callback);
   bool clear(hdlr_id hid);
   bool clear(HandlerPtr ptr);
 
+  bool add_handler(HandlerPtr ptr);
+  bool delete_handler(HandlerPtr ptr);
+
+  
   PktChannel pkt_channel() { return this->pkt_channel_; }
   
   uint64_t recv_pkt()  const { return this->recv_pkt_; }
