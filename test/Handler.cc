@@ -124,6 +124,24 @@ TEST(Handler, clear) {
   delete m;
 }
 
+TEST(Handler, deactivate_async) {
+  pm::Machine *m = new pm::Machine();
+  int count = 0;
+  pm::Handler hdlr = m->on("UDP", [&](const pm::Property& p) {
+      count++;
+    });
+
+  m->add_pcapfile("./test/data1.pcap");
+  m->start();
+  usleep(10);
+  hdlr.deactivate();
+  m->join();
+
+  EXPECT_FALSE(hdlr.is_active());
+  EXPECT_GT(624, count); 
+  delete m;
+}
+
 TEST(Handler, clear_async) {
   pm::Machine *m = new pm::Machine();
   int count = 0;
@@ -133,7 +151,7 @@ TEST(Handler, clear_async) {
 
   m->add_pcapfile("./test/data1.pcap");
   m->start();
-  usleep(100);
+  usleep(10);
   hdlr.destroy();
   m->join();
 
