@@ -29,10 +29,11 @@
 
 #include <assert.h>
 #include <unistd.h>
+#include <pthread.h>
 #include <vector>
 #include <atomic>
-
-
+#include <deque>
+#include "./packetmachine/exception.hpp"
 #include "./debug.hpp"
 
 namespace pm {
@@ -147,6 +148,55 @@ class RingBuffer {
   }
 };
 
+
+template <typename T>
+class MsgQueue {
+ private:
+  std::atomic<bool> has_msg_;
+  pthread_mutex_t lock_;
+  std::deque<T> queue_;
+ public:
+  MsgQueue() : has_msg_(false) {
+    pthread_mutex_init(&this->lock_, nullptr);
+  }
+  ~MsgQueue() {
+    pthread_mutex_destroy(&this->lock_);
+  }
+
+  inline bool has_msg() const { return this->has_msg_; }
+  void push(T data) {
+    if (0 != pthread_mutex_lock(&this->lock_)) {
+      throw Exception::RunTimeError("fail to mutex lock");
+    }
+    
+    this->queue_.push_back(data);
+    this->has_msg_ = true;
+    
+    if (0 != pthread_mutex_unlock(&this->lock_)) {
+      throw Exception::RunTimeError("fail to mutex unlock");
+    }
+  }
+
+  T pull() {
+    if (0 != pthread_mutex_lock(&this->lock_)) {
+      throw Exception::RunTimeError("fail to mutex lock");
+    }
+    
+    if (this->queue_.empty()) {
+      throw Exception::RunTimeError("no data in queue");
+    }
+    T data = this->queue_.front();
+    this->queue_.pop_front();
+    if (this->queue_.empty()) {
+      this->has_msg_ = false;
+    }
+    
+    if (0 != pthread_mutex_unlock(&this->lock_)) {
+      throw Exception::RunTimeError("fail to mutex unlock");
+    }
+    return data;
+  }
+};
 
 }   // namespace pm
 

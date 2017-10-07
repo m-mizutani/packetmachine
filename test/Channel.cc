@@ -32,12 +32,24 @@
 
 namespace channel_test {
 
-class Data {
- public:
+struct Data {
   int idx_;
   int data_;
   bool prime_;
 };
+
+bool prime(int n) {
+  for (int i = 2; i < n; i++) {
+    if (n % i == 0) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+
+namespace ring_buffer {
 
 class Prop {
  public:
@@ -58,16 +70,6 @@ class Prop {
   }
   ~Prop() = default;
 };
-
-bool prime(int n) {
-  for (int i = 2; i < n; i++) {
-    if (n % i == 0) {
-      return false;
-    }
-  }
-
-  return true;
-}
 
 
 void* provider(void* obj) {
@@ -180,4 +182,75 @@ TEST(RingBuffer, ok_slow_consumer) {
 }
 
 
-}    // namespace channel_test
+}    // namespace ring_buffer
+
+namespace msg_queue {
+
+struct Data {
+  int p_;
+};
+
+class Args {
+ public:
+  pm::MsgQueue<Data*> *q_;
+  int wait_;
+  int recv_;
+  Args(pm::MsgQueue<Data*> *q) : q_(q), wait_(0), recv_(0) {}
+};
+
+int delay(int n) {
+  int c = 0;
+  for (int i = 2; i < n; i++) {
+    if (prime(i)) {
+      c++;
+    }
+  }
+  return c;
+}
+
+void* sender(void *obj) {
+  Args* args = static_cast<Args*>(obj);
+  for (int i = 0; i < 10; i++) {
+    auto d = new Data();
+    d->p_ = delay(0x2000);
+    args->q_->push(d);
+  }
+
+  return nullptr;
+}
+
+void* recver(void *obj) {
+  Args* args = static_cast<Args*>(obj);
+  for (int i = 0; i < 10; i++) {
+    while(!args->q_->has_msg()) {
+      args->wait_++;
+    }
+
+    auto d = args->q_->pull();
+    args->recv_++;
+    delete d;
+  }
+  
+  return nullptr;  
+}
+
+
+
+TEST(MsgQueue, ok){
+  pm::MsgQueue<Data*> q;
+  Args args(&q);
+  
+  pthread_t t1, t2;
+  pthread_create(&t1, nullptr, sender, &args);
+  pthread_create(&t2, nullptr, recver, &args);
+
+  pthread_join(t1, nullptr);
+  pthread_join(t2, nullptr);
+
+  EXPECT_LT(0, args.wait_);
+  EXPECT_EQ(10, args.recv_);
+}
+
+}   // namspace msg_queue
+
+}   // namespace channel_test
