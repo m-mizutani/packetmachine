@@ -151,7 +151,7 @@ TEST(Handler, clear_async) {
 
   m->add_pcapfile("./test/data1.pcap");
   m->start();
-  usleep(10);
+  usleep(1);
   hdlr.destroy();
   m->join();
 
