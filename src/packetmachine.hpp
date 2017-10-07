@@ -85,7 +85,6 @@ class Machine {
 
   Handler on(const std::string& event_name,
              std::function<void(const Property&)>&& callback);
-  bool clear(hdlr_id hid);
 
   uint64_t recv_pkt() const;
   uint64_t recv_size() const;

@@ -234,11 +234,6 @@ Handler Machine::on(const std::string& event_name,
   return hdlr;
 }
 
-bool Machine::clear(hdlr_id hid) {
-  assert(this->kernel_);
-  return this->kernel_->clear(hid);
-}
-
 uint64_t Machine::recv_pkt() const {
   assert(this->kernel_);
   return this->kernel_->recv_pkt();
