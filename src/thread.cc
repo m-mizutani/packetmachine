@@ -26,6 +26,7 @@
 
 #include "./thread.hpp"
 #include "./packetmachine/exception.hpp"
+#include <assert.h>
 
 namespace pm {
 
