@@ -33,12 +33,13 @@
 #include "./packet.hpp"
 #include "./channel.hpp"
 #include "./kernel.hpp"
+#include "./thread.hpp"
 
 #include "./debug.hpp"
 
 namespace pm {
 
-class Input {
+class Input : public Thread {
  private:
   Capture* cap_;
   PktChannel channel_;
@@ -50,13 +51,7 @@ class Input {
   ~Input() {
   }
 
-  static void* thread(void* obj) {
-    Input* p = static_cast<Input*>(obj);
-    p->run();
-    return nullptr;
-  }
-
-  void run() {
+  void thread_main() {
     Packet *pkt;
     Capture::Result rc;
 
@@ -177,52 +172,27 @@ void Machine::start() {
     throw Exception::ConfigError("no input source is available");
   }
 
-  pthread_create(&this->kernel_th_, nullptr, Kernel::thread,
-                 this->kernel_.get());
-
+  this->kernel_->start();
   this->input_ = new Input(this->cap_, this->kernel_->pkt_channel());
-  pthread_create(&this->input_th_, nullptr, Input::thread, this->input_);
+  this->input_->start();
 }
 
 bool Machine::join(struct timespec* timeout) {
   if (timeout) {
-#ifdef __linux__
-    static const long BILLION = 1e9;  // NOLINT, according to timespec.tv_nsec
-    struct timespec tv;
-    ::clock_gettime(CLOCK_REALTIME, &tv);
-    tv.tv_sec += timeout->tv_sec;
-    tv.tv_nsec += timeout->tv_nsec;
-    if (tv.tv_nsec > BILLION) {
-      tv.tv_sec += static_cast<time_t>(tv.tv_nsec / BILLION);
-      tv.tv_nsec = tv.tv_nsec % BILLION;
-    }
-    int r = pthread_timedjoin_np(this->input_th_, nullptr, &tv);
-    assert(r == 0 || r == ETIMEDOUT);
-
-    if (r == 0) {
-      pthread_join(this->kernel_th_, nullptr);
-      return true;   // input thread exits before timeout
-    } else {
-      return false;  // input thread is still running
-    }
-#else
-    throw Exception::RunTimeError("join() timeout is supported in only LInux");
-    return false;
-#endif
+    this->input_->join(*timeout);
   } else {
-    pthread_join(this->input_th_, nullptr);
-    pthread_join(this->kernel_th_, nullptr);
-    return true;
+    this->input_->join();
   }
+  
+  this->kernel_->join();
+  return true;
 }
 
 
 
 void Machine::halt() {
-  pthread_cancel(this->input_th_);
-  pthread_join(this->input_th_, nullptr);
-  pthread_cancel(this->kernel_th_);
-  pthread_join(this->kernel_th_, nullptr);
+  this->input_->stop();
+  this->kernel_->stop();
 }
 
 

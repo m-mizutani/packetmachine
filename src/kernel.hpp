@@ -37,6 +37,7 @@
 #include "./channel.hpp"
 #include "./packetmachine.hpp"
 #include "./decoder.hpp"
+#include "./thread.hpp"
 
 namespace pm {
 
@@ -94,7 +95,7 @@ class DeleteHandler : public ChangeRequest {
 
 
 
-class Kernel {
+class Kernel : public Thread {
  private:
   PktChannel pkt_channel_;
   MsgChannel msg_channel_;
@@ -113,7 +114,7 @@ class Kernel {
   ~Kernel();
 
   static void* thread(void* obj);
-  void run();
+  void thread_main();
   HandlerPtr on(const std::string& event_name, Callback&& ev_callback);
   bool clear(hdlr_id hid);
   bool clear(HandlerPtr ptr);

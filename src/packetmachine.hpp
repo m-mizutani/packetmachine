@@ -27,7 +27,6 @@
 #ifndef __PACKETMACHINE_HPP__
 #define __PACKETMACHINE_HPP__
 
-#include <pthread.h>
 #include <memory>
 #include <string>
 #include <functional>
@@ -65,7 +64,6 @@ class Machine {
   Capture *cap_;
   Input *input_;
   std::shared_ptr<Kernel> kernel_;
-  pthread_t input_th_, kernel_th_;
 
  public:
   Machine();

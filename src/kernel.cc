@@ -89,13 +89,7 @@ Kernel::Kernel() :
 Kernel::~Kernel() {
 }
 
-void* Kernel::thread(void* obj) {
-  Kernel* p = static_cast<Kernel*>(obj);
-  p->run();
-  return nullptr;
-}
-
-void Kernel::run() {
+void Kernel::thread_main() {
   Packet* pkt;
   Payload pd;
   Property prop;
