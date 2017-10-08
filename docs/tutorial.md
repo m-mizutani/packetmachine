@@ -45,9 +45,11 @@ This part of the documentation, which is mostly prose, begins with some backgrou
 
 
 - [Quick start](tutorial.md#quick-start)
+	- [Add input source (pcapfile or device)](tutorial.md#input-source)
 	- [Running in the background](tutorial.md#run-background)
 	- [Use data as various format](tutorial.md#use-data-format)
 	- [Access a structured parameter](tutorial.md#use-struct-parameter)
+    - [Enable/disable/destroy handler](tutorial.md#manage-handler)
 - [Advanced Usage](tutorial.md#advanced-usage)
     - [Faster parameter access](tutorial.md#faster-parameter-access)
 
