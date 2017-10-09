@@ -36,25 +36,43 @@ $ clang++ -std=c++11 example.cc -o example -lpacketmachine
 $ sudo ./example eth0
 ```
 
-Welcome to PacketMachine. If you did not install PacketMachine library, please see a [installation guide](install.md) before writing code.
-The PacketMachine allows you to write packet capture & analysis programs in C++. A simple example packet capture program is following.
-
-Above program captures packets from a network interface that is given as 1st argument, and output IPv4 source address, TCP source port, destination addresss and TCP destination port of each TCP packet.
+Welcome to PacketMachine. If you did not install PacketMachine library, please see a [installation guide](install.md) before writing code. The PacketMachine allows you to write packet capture & analysis programs in C++. A simple example packet capture program is above. The program captures packets from a network interface that is given as 1st argument, and output IPv4 source address, TCP source port, destination addresss and TCP destination port of each TCP packet.
 
 This part of the documentation, which is mostly prose, begins with some background information about PacketMachine, then focuses on step-by-step instructions for getting the most out of PacketMachine.
 
 
-- [Quick start](tutorial.md#quick-start)
-	- [Add input source (pcapfile or device)](tutorial.md#input-source)
-	- [Running in the background](tutorial.md#run-background)
-	- [Use data as various format](tutorial.md#use-data-format)
-	- [Access a structured parameter](tutorial.md#use-struct-parameter)
-    - [Enable/disable/destroy handler](tutorial.md#manage-handler)
-- [Advanced Usage](tutorial.md#advanced-usage)
-    - [Faster parameter access](tutorial.md#faster-parameter-access)
-
-[Quick Start](#quick-start)
+Case Studies
 ----------------
+
+- [Add input source to read pcapfile](tutorial.md#input-source)
+- [Running in the background](tutorial.md#run-background)
+- [Enable/disable/destroy handler](tutorial.md#manage-handler)
+- [Use data as various format (integer, byte sequence, etc)](tutorial.md#use-data-format)
+- [Access a structured parameter (Array and Map)](tutorial.md#use-struct-parameter)
+- [Faster parameter access](tutorial.md#faster-parameter-access)
+
+### [Add input source (pcapfile or device)](#input-source)
+
+```cpp
+#include <iostream>
+#include <packetmachine.hpp>
+#include <unistd.h>
+
+int main(int argc, char* argv[]) {
+  pm::Machine m;
+  m.on("IPv4", [](const pm::Property& p) {
+      std::cout << p["IPv4.src"] << " -> " << p["IPv4.dst"] << std::endl;
+  });
+
+  // Add a Pcap (tcpdump) based file as input source
+  m.add_pcapfile(argv[1]);
+
+  m.loop();
+  return 0;
+}
+```
+
+PacketMachine supports 2 input sources: Capturing a network traffic via device OR Reading a pcap format file. `pm::Machine::add_pcapdev()` can be used for a network device, and `pm::Machine::add_pcapfile()` can be used for a pcap format file.
 
 ### [Running in the background](#run-background)
 
@@ -93,7 +111,59 @@ int main(int argc, char* argv[]) {
 
 Please note the callback functions should be called in the background thread and you need lock like `pthread_mutex_lock` to share variable(s) among threads in order to avoid race condition.
 
-### [Use a parameter as various format](#use-data-format)
+
+### [Enable/disable/destroy handler](#manage-handler)
+
+```cpp
+#include <iostream>
+#include <packetmachine.hpp>
+#include <unistd.h>
+
+int main(int argc, char* argv[]) {
+  pm::Machine m;
+  // Add IPv4 handler as a flow printer
+  pm::Handler hdlr = m.on("IPv4", [](const pm::Property& p) {
+      std::cout << p["IPv4.src"] << " -> " << p["IPv4.dst"] << std::endl;
+  });
+
+  m.add_pcapdev(argv[1]);
+  
+  // Starting thread in the background
+  m.start();
+  
+  std::cout << "Waiting 5 seconds (enabled IPv4 printer)" << std::endl;
+  sleep(5);
+  
+  // Disable the handler
+  hdlr.deactivate(); 
+  
+  std::cout << "Waiting 5 seconds (disabled IPv4 printer)" << std::endl;
+  sleep(5);
+  
+  // Enable the handler again
+  hdlr.activate(); 
+
+  std::cout << "Waiting 5 seconds (re-enabled IPv4 printer)" << std::endl;
+  sleep(5);
+
+  // Enable the handler again
+  hdlr.destory();
+
+  std::cout << "Waiting 5 seconds (removed IPv4 printer)" << std::endl;
+  sleep(5);
+
+  // Shutdown
+  m.halt();
+  return 0;
+}
+```
+
+The `pm::Machine::on()` function returns `pm::Handler` object to manage a registered callback. A registered callback is enabled as default. `pm::Handler::deactivate()` makes the callback disabled, and `pm::Handler::activate()` makes the callback enabled.
+
+Also, `pm::Handler::destroy()` can remove the callback and the callback will never be re-enabled. `pm::Handler::destroy()` frees allocated memory for the handler. Please consider if you need to register many callbacks and manage memory tightly.
+
+
+### [Use a parameter as various format (integer, byte sequence, etc)](#use-data-format)
 
 ```cpp
 #include <iostream>
@@ -126,7 +196,7 @@ int main(int argc, char* argv[]) {
 }
 ```
 
-The `pm::Property::value()` function returns `pm::Value` object and it can convert data by `hex()`, `ip4()` and so on. Please see [description of pm::Value](api.md#value) to know more detail.
+The `pm::Property::value()` function returns `pm::Value` object and it can convert data by `hex()`, `ip4()` and so on. Please see [description of pm::Value](api.md#value) and [a list of parameter](protocol/parameters.md) to know more detail.
 
 ### [Access a structured parameter](#use-struct-parameter)
 
@@ -161,11 +231,27 @@ int main(int argc, char* argv[]) {
 }
 ```
 
-PacketMachine's property has not only key-value based parameter (e.g. `IPv4.src`) but also structured data (e.g. `DNS.question` returns array). Please see [description of pm::Value](api.md#value) to know more detail.
+PacketMachine's property has not only key-value based parameter (e.g. `IPv4.src`) but also structured data (e.g. `DNS.question` returns array). Please see [description of pm::Value](api.md#value) and [a list of parameter](protocol/parameters.md) to know more detail.
 
 
-[Advanced Usage](#advanced-usage)
--------------
 
 ### [Faster parameter access](#faster-parameter-access)
 
+```cpp
+include <packetmachine.hpp>
+#include <iostream>
+
+int main(int argc, char* argv[]) {
+  pm::Machine m;
+  pm::param_id ipv4_src = m.lookup_param_id("IPv4.src");
+  m.on("IPv4", [ipv4_src](const pm::Property &p) {
+    std::cout << p.value(ipv4_src).repr() << std::endl;
+  });
+  
+  m.add_pcapdev(argv[1]);  
+  m.loop();
+  return 0;
+}
+```
+
+The `pm::Machine::lookup_param_id()` function returns a parameter ID as `pm::param_id`. `pm::Property::value()` accepts both of `std::string` and `pm::param_id` to lookup parameter value from a captured packet. Looking up a parameter by `pm::param_id` is faster than `std::string` because conversion `std::string` to `pm::param_id` is required each time for a `std::string` argument of `pm::Property::value()`.
