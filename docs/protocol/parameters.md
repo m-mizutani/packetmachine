@@ -6,7 +6,7 @@ Ethernet
 
 | Parameter name           | Description                                 | Expected length               | Recommended formatting |
 |:-------------------------|:--------------------------------------------|:------------------------------|:-----------------------|
-| `Ethernet.type`          | Ethernet frame type                         | 2 bytes                       | `uint()`               |
+| `Ethernet.type`          | Ethernet frame type                         | 2 byte                       | `uint()`               |
 | `Ethernet.src`           | Source hardware address                     | 6 byte                        | `mac()`
 | `Ethernet.dst`           | Destination hardware address.               |  6 byte | `mac()` |
 | `Ethernet.type`          | Ethernet frame type.                        |  2 byte |  `uint()`|
@@ -77,7 +77,7 @@ TCP
 | `TCP.flag_urg`  | URG(Urgent Pointer field significant) flag status. If the flag is on, the parameter should be `1`. If not, `0`. |  1 byte |  `uint()` |
 | `TCP.flag_ece`  | ECE(ECN Echo) flag status. If the flag is on, the parameter should be `1`. If not, `0`.                         |  1 byte |  `uint()` |
 | `TCP.flag_cwr`  | CWR(Congestion window reduced) flag status. If the flag is on, the parameter should be `1`. If not, `0`.        |  1 byte |  `uint()` |
-| `TCP.optdata`   | TCP option field.                         |  `TCP.offset` - 28 bytes (fixed TCP header length) |  `hex()` or `raw()` |
+| `TCP.optdata`   | TCP option field.                         |  `TCP.offset` - 28 byte (fixed TCP header length) |  `hex()` or `raw()` |
 | `TCP.segment`   | TCP data segment field. (Not reassembled) |  N/A | `hex()` or `raw()` |
 | `TCP.data`      | TCP data segment that is reassembled.     |  N/A | `hex()` or `raw()` |
 | `TCP.ssn_id`    | TBW | TBW | TBW |
@@ -88,9 +88,9 @@ ICMP
 
 | Parameter name  | Description | Expected length   | Recommended formatting |
 |:----------------|:------------|:------------------|:-----------------------|
-| `ICMP.type`     | ICMP type.  |  1 bytes          |  `uint()`, Support `repr()` to convert from type number to description.  (e.g. `3` to `Destination Unreachable`) |
-| `ICMP.code`     | ICMP code.  |  1 bytes          |  `uint()`,  Support `repr()` to convert from code number to description. (e.g. If `ICMP.type` is `3` and `ICMP.code` is `1`, then `Host Unreachable`) |
-| `ICMP.chksum`   | Checksum.   |  2 bytes          |  `uint()` or `hex()` |
+| `ICMP.type`     | ICMP type.  |  1 byte          |  `uint()`, Support `repr()` to convert from type number to description.  (e.g. `3` to `Destination Unreachable`) |
+| `ICMP.code`     | ICMP code.  |  1 byte          |  `uint()`,  Support `repr()` to convert from code number to description. (e.g. If `ICMP.type` is `3` and `ICMP.code` is `1`, then `Host Unreachable`) |
+| `ICMP.chksum`   | Checksum.   |  2 byte          |  `uint()` or `hex()` |
 
 
 DNS
@@ -98,7 +98,7 @@ DNS
 
 | Parameter name   | Description                                       | Expected length   | Recommended formatting |
 |:-----------------|:--------------------------------------------------|:------------------|:-----------------------|
-| `DNS.tx_id`      | Transaction ID.                                   |  2 bytes |  `uint()` |
+| `DNS.tx_id`      | Transaction ID.                                   |  2 byte |  `uint()` |
 | `DNS.is_query`   | If QUERY flag is on.                              |  1 byte |  `uint()` |
 | `DNS.question`   | DNS question section. (Type: `pm::value::Array`)  | N/A | see below | 
 | `DNS.answer`     | DNS answer section (Type: `pm::value::Array`)     | N/A | see below |
@@ -115,7 +115,7 @@ DNS
 | Key name | Description      | Expected length   | Recommended formatting |
 |:---------|:-----------------|:------------------|:-----------------------|
 | `name`   | DNS record name. |  N/A     | `repr()` method supports string reconstruction with label. |
-| `type`   | DNS record type. |  2 bytes | `uint()` or `repr()`, `repr()` method supports to show record type name. (e.g. convert `5` to `CNAME`) |
+| `type`   | DNS record type. |  2 byte | `uint()` or `repr()`, `repr()` method supports to show record type name. (e.g. convert `5` to `CNAME`) |
 | `data`   | DNS record data. |  N/A     | `repr()` method supports string reconstruction with label. |
 
 
@@ -123,16 +123,15 @@ Example of how to handle `DNS.answer` parameter.
 
 ```cpp
 void callback(const pm::Property& p) {
-  if (!p.has_value("DNS.answer")) {
-    return;
-  }
-  const auto& records = p.value("DNS.answer");
-  for (size_t i = 0; i < records.size(); i++) {
-    const auto& rec = records.get(i);
-	std::cout << "Answer No." << (i + 1) << std::endl 
-        << "Name: " << rec.find("name") << std::endl
-        << "Type: " << rec.find("type") << std::endl
-        << "Data: " << rec.find("data") << std::endl << std::endl;
+  if (p.has_value("DNS.answer")) {
+    const auto& records = p.value("DNS.answer");
+    for (size_t i = 0; i < records.size(); i++) {
+      const auto& rec = records.get(i);
+  	std::cout << "Answer No." << (i + 1) << std::endl 
+          << "Name: " << rec.find("name") << std::endl
+          << "Type: " << rec.find("type") << std::endl
+          << "Data: " << rec.find("data") << std::endl << std::endl;
+    }
   }
 }
 ```
@@ -145,7 +144,7 @@ mDNS
 
 | Parameter name   | Description                                       | Expected length   | Recommended formatting |
 |:-----------------|:--------------------------------------------------|:------------------|:-----------------------|
-| `mDNS.tx_id`      | Transaction ID.                                   |  2 bytes |  `uint()` |
+| `mDNS.tx_id`      | Transaction ID.                                   |  2 byte |  `uint()` |
 | `mDNS.is_query`   | If QUERY flag is on.                              |  1 byte |  `uint()` |
 | `mDNS.question`   | mDNS question section. (Type: `pm::value::Array`)  | N/A | see [DNS](parameters.md#how-to-dns-section) | 
 | `mDNS.answer`     | mDNS answer section (Type: `pm::value::Array`)     | N/A | see [DNS](parameters.md#how-to-dns-section) | 
@@ -156,6 +155,29 @@ mDNS
 DHCP
 ---------
 
-to be written.
+| Parameter name          | Description             | Expected length   | Recommended formatting |
+|:------------------------|:------------------------|:------------------|:-----------------------|
+| `DHCP.msg_type`         | Message opcode          | 1 byte | `uint()` | 
+| `DHCP.hw_type`          | Hardware type           | 1 byte | `uint()` | 
+| `DHCP.hw_addr_len`      | Hardware address length | 1 byte | `uint()` | 
+| `DHCP.hops`             | Hop count               | 1 byte | `uint()` | 
+| `DHCP.trans_id`         | Transaction ID          | 4 byte | `uint()` | 
+| `DHCP.seconds`          | Number of seconds       | 2 byte | `uint()` | 
+| `DHCP.flags`            | Flags                   | 2 byte | `uint()` | 
+| `DHCP.client_addr`      | Client IP address       | 4 byte | `uint()` | 
+| `DHCP.your_client_addr` | Your IP address         | 4 byte | `uint()` | 
+| `DHCP.next_server_addr` | Server IP address       | 4 byte | `uint()` | 
+| `DHCP.relay_agent_addr` | Gateway IP address      | 4 byte | `uint()` | 
+| `DHCP.client_hw_addr`   | Client hardware address | 16 byte | `uint()` | 
+| `DHCP.server_host_name` | Server host name        | 1 byte | `uint()` | 
+| `DHCP.boot_file_name`   | Boot filename           | 128 byte | `str()` | 
+| `DHCP.magic_cookie`     | Magic Cookie            | 4 byte | `uint()` | 
+| `DHCP.options`          | DHCP Options (Type: `pm::value::Array`, see below for key/value of each option) | N/A | N/A  | 
 
+### DHCP options
 
+| Key name | Description      | Expected length   | Recommended formatting |
+|:---------|:-----------------|:------------------|:-----------------------|
+| `type`   | DHCP option type. |  1 byte | `uint()` |
+| `length` | DHCP option length. |  1 byte  | `uint()` |
+| `data`   | DHCP option data. | depends on `length` | `hex()`, `raw()` |
