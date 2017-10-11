@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Masayoshi Mizutani <mizutani@sfc.wide.ad.jp> All
+ * Copyright (c) 2017 Masayoshi Mizutani <mizutani@sfc.wide.ad.jp> All
  * rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,83 +29,49 @@
 
 namespace pm {
 
-#ifndef ETHERTYPE_ARP
-#define ETHERTYPE_ARP 0x0806
-#endif
-#ifndef ETHERTYPE_VLAN
-#define ETHERTYPE_VLAN 0x8100
-#endif
-#ifndef ETHERTYPE_IP
-#define ETHERTYPE_IP 0x0800
-#endif
-#ifndef ETHERTYPE_IPV6
-#define ETHERTYPE_IPV6 0x86dd
-#endif
-#ifndef ETHERTYPE_LOOPBACK
-#define ETHERTYPE_LOOPBACK 0x9000
-#endif
-#ifndef ETHERTYPE_WLCCP /* Cisco Wireless LAN Context Control Protocol */
-#define ETHERTYPE_WLCCP 0x872d
-#endif
-#ifndef ETHERTYPE_802_1Q
-#define ETHERTYPE_802_1Q 0x8100
-#endif
-#ifndef ETHERTYPE_PPPOE_DISC
-#define ETHERTYPE_PPPOE_DISC 0x8863
-#endif
-#ifndef ETHERTYPE_PPPOE_SSN
-#define ETHERTYPE_PPPOE_SSN 0x8864
-#endif
-#ifndef ETHERTYPE_NETWARE /* Netware IPX/SPX */
-#define ETHERTYPE_NETWARE 0x8137
-#endif
+const uint16_t ETHERTYPE_IP = 0x0800;
 
-class Ethernet : public Module {
+class Dot1Q : public Module {
  private:
-  static const size_t ETHER_ADDR_LEN = 6;
-
-  struct ether_header {
-    uint8_t dst_[ETHER_ADDR_LEN];
-    uint8_t src_[ETHER_ADDR_LEN];
+  static const uint16_t ETHERTYPE_ARP       = 0x0806;
+  static const uint16_t ETHERTYPE_IP        = 0x0800;
+  static const uint16_t ETHERTYPE_PPPOE_SSN = 0x8864;
+  
+  struct dot1q_header {
+    uint16_t info_;
     uint16_t type_;
   } __attribute__((packed));
 
-  const ParamDef *p_type_, *p_src_, *p_dst_;
-  mod_id mod_ipv4_, mod_arp_, mod_pppoe_, mod_dot1q_;
+  const ParamDef *p_vlan_id_, *p_type_;
+  mod_id mod_ipv4_, mod_arp_, mod_pppoe_;
 
  public:
-  Ethernet() {
+  Dot1Q() {
     this->p_type_ = this->define_param("type");
-    this->p_src_  = this->define_param("src");
-    this->p_dst_  = this->define_param("dst");
-  }
-
-  ~Ethernet() {
+    this->p_vlan_id_  = this->define_param("vlan_id");
   }
 
   void setup() {
     this->mod_ipv4_ = this->lookup_module("IPv4");
     this->mod_arp_  = this->lookup_module("ARP");
     this->mod_pppoe_ = this->lookup_module("PPPoE");
-    this->mod_dot1q_ = this->lookup_module("Dot1Q");
   }
 
   mod_id decode(Payload* pd, Property* prop) {
-    auto hdr = reinterpret_cast<const struct ether_header*>
-               (pd->retain(sizeof(struct ether_header)));
+    auto hdr = reinterpret_cast<const struct dot1q_header*>
+               (pd->retain(sizeof(struct dot1q_header)));
     if (hdr == nullptr) {   // Not enough packet size.
       return Module::NONE;
     }
 
+    uint16_t vlan_id = ntohs(hdr->info_) & 0x7ff;
     prop->retain_value(this->p_type_)->set(&hdr->type_, sizeof(hdr->type_));
-    prop->retain_value(this->p_src_)->set(&hdr->src_, sizeof(hdr->src_));
-    prop->retain_value(this->p_dst_)->set(&hdr->dst_, sizeof(hdr->dst_));
+    prop->retain_value(this->p_vlan_id_)->cpy(&vlan_id, sizeof(vlan_id));
 
     mod_id next = Module::NONE;
     switch (ntohs(hdr->type_)) {
       case ETHERTYPE_ARP: next = this->mod_arp_; break;
       case ETHERTYPE_IP:  next = this->mod_ipv4_; break;
-      case ETHERTYPE_802_1Q: next = this->mod_dot1q_; break;
       case ETHERTYPE_PPPOE_SSN: next = this->mod_pppoe_; break;
     }
 
@@ -113,6 +79,6 @@ class Ethernet : public Module {
   }
 };
 
-INIT_MODULE(Ethernet);
+INIT_MODULE(Dot1Q);
 
 }   // namespace pm

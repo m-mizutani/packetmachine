@@ -38,6 +38,7 @@ void build_module_map(std::map<std::string, Module*> *mod_map) {
   }
 
   INSTALL_MOD(Ethernet);
+  INSTALL_MOD(Dot1Q);
   INSTALL_MOD(PPPoE);
   INSTALL_MOD(ARP);
   INSTALL_MOD(IPv4);

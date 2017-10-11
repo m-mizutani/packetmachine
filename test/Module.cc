@@ -34,9 +34,10 @@ TEST(Module, use_global_variable) {
   std::map<std::string, pm::Module*> mod_map;
   build_module_map(&mod_map);
 
-  EXPECT_EQ(10, mod_map.size());
+  EXPECT_EQ(11u, mod_map.size());
   EXPECT_NE(mod_map.end(), mod_map.find("Ethernet"));
   EXPECT_NE(mod_map.end(), mod_map.find("PPPoE"));
+  EXPECT_NE(mod_map.end(), mod_map.find("Dot1Q"));
   EXPECT_NE(mod_map.end(), mod_map.find("ARP"));
   EXPECT_NE(mod_map.end(), mod_map.find("IPv4"));
   EXPECT_NE(mod_map.end(), mod_map.find("UDP"));
