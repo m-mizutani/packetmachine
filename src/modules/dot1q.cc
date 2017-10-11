@@ -47,13 +47,13 @@ class Dot1Q : public Module {
 
  public:
   Dot1Q() {
-    this->p_type_ = this->define_param("type");
-    this->p_vlan_id_  = this->define_param("vlan_id");
+    this->p_type_    = this->define_param("type");
+    this->p_vlan_id_ = this->define_param("vlan_id");
   }
 
   void setup() {
-    this->mod_ipv4_ = this->lookup_module("IPv4");
-    this->mod_arp_  = this->lookup_module("ARP");
+    this->mod_ipv4_  = this->lookup_module("IPv4");
+    this->mod_arp_   = this->lookup_module("ARP");
     this->mod_pppoe_ = this->lookup_module("PPPoE");
   }
 
@@ -66,7 +66,8 @@ class Dot1Q : public Module {
 
     uint16_t vlan_id = ntohs(hdr->info_) & 0x7ff;
     prop->retain_value(this->p_type_)->set(&hdr->type_, sizeof(hdr->type_));
-    prop->retain_value(this->p_vlan_id_)->cpy(&vlan_id, sizeof(vlan_id));
+    prop->retain_value(this->p_vlan_id_)->cpy(&vlan_id, sizeof(vlan_id),
+                                              Value::LITTLE);
 
     mod_id next = Module::NONE;
     switch (ntohs(hdr->type_)) {
