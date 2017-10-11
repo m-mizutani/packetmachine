@@ -38,14 +38,13 @@ test/gtest*
 > OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-src/utils/hash.cc
+test/data4.pcap
 -----------------
 
-- Original: Chromium
-- Author: Google Inc.
-- https://chromium.googlesource.com/chromium/src/base/+/master/hash.h
-- Lisence: The BSD 3-Clause License
-
+- Original: Wireshark Sample Campture
+- Author: Wireshark
+- https://wiki.wireshark.org/SampleCaptures?action=AttachFile&do=get&target=vlan.cap.gz
+- Lisence: GNU General Public License.
 
 
 other all files
