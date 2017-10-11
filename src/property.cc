@@ -128,7 +128,6 @@ Value* Property::retain_value(const ParamDef* def) {
     }
   }
 
-  
   if (this->param_idx_[pid] < this->param_[pid]->size()) {
     obj = (*this->param_[pid])[this->param_idx_[pid]];
     obj->clear();

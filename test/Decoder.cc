@@ -182,9 +182,59 @@ TEST(Decoder, custom_module_defs) {
 
   EXPECT_EQ("ab", prop.value("Ethernet.p1").repr());
   EXPECT_EQ("cd", prop.value("Ethernet.p2").repr());
-
 }
 
+/*
+TEST(Decoder, batch_param) {
+  class DummyValue : public pm::Value {    
+   public:
+    DummyValue() = default;
+    ~DummyValue() = default;
+    static Value* new_value() { return new DummyValue(); }
+    
+  };
+  class DummyMod : public pm::Module {
+   public:
+    const pm::ParamDef* p_;
+
+    DummyMod () {
+      this->p_ = this->define_param("p", DummyValue::new_value);
+      this->p_->define_sub_param("1");
+      this->p_->define_sub_param("2");
+    }
+    void setup() {}
+    pm::mod_id decode(pm::Payload* pd, pm::Property* prop) {
+      const pm::byte_t* p = pd->retain(4);
+      prop->retain_value(this->p_)->set(p, 4);
+      return pm::Module::NONE;
+    };
+  };
+  
+  pm::ModMap mod_map;
+  pm::Packet pkt;
+  pm::Payload pd;
+  pm::Property prop;
+  auto mod = new DummyMod();
+  mod_map.insert(std::make_pair("Ethernet", mod));
+
+  std::shared_ptr<pm::Decoder> dec(new pm::Decoder(&mod_map));
+  prop.set_decoder(dec);
+
+  pm::param_id pid1 = dec->lookup_param_id("Ethernet.p.1");
+  pm::param_id pid2 = dec->lookup_param_id("Ethernet.p.2");
+  EXPECT_NE(pid1, pid2);
+  
+  std::string data("abcdefg");  
+  pkt.store(reinterpret_cast<const pm::byte_t*>(data.data()), 4);
+  pd.reset(&pkt);
+  prop.init(&pkt);
+  
+  dec->decode(&pd, &prop);
+
+  EXPECT_EQ("ab", prop.value("Ethernet.p.1").repr());
+  EXPECT_EQ("cd", prop.value("Ethernet.p.2").repr());
+}
+*/
 
 }   // namespace module_test
 
