@@ -141,5 +141,50 @@ TEST(Decoder, custom_module) {
   EXPECT_EQ(1, mod->call_count_);
 }
 
+TEST(Decoder, custom_module_defs) {
+  class DummyMod : public pm::Module {
+   public:
+    const pm::ParamDef* p1_;
+    const pm::ParamDef* p2_;
+
+    DummyMod () {
+      this->p1_ = this->define_param("p1");
+      this->p2_ = this->define_param("p2");
+      
+    }
+    void setup() {}
+    pm::mod_id decode(pm::Payload* pd, pm::Property* prop) {
+      const pm::byte_t* p = pd->retain(4);
+      EXPECT_EQ('a', p[0]);
+      prop->retain_value(this->p1_)->set(&p[0], 2);
+      prop->retain_value(this->p2_)->set(&p[2], 2);
+      
+      return pm::Module::NONE;
+    };
+  };
+  
+  pm::ModMap mod_map;
+  pm::Packet pkt;
+  pm::Payload pd;
+  pm::Property prop;
+  auto mod = new DummyMod();
+  mod_map.insert(std::make_pair("Ethernet", mod));
+
+  std::shared_ptr<pm::Decoder> dec(new pm::Decoder(&mod_map));
+  prop.set_decoder(dec);
+  std::string data("abcdefg");
+  
+  pkt.store(reinterpret_cast<const pm::byte_t*>(data.data()), 4);
+  pd.reset(&pkt);
+  prop.init(&pkt);
+  
+  dec->decode(&pd, &prop);
+
+  EXPECT_EQ("ab", prop.value("Ethernet.p1").repr());
+  EXPECT_EQ("cd", prop.value("Ethernet.p2").repr());
+
+}
+
+
 }   // namespace module_test
 
