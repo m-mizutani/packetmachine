@@ -111,5 +111,35 @@ TEST(Decoder, lookup_event) {
 }
 
 
+TEST(Decoder, custom_module) {
+  class DummyMod : public pm::Module {
+   public:
+    int call_count_;
+    DummyMod () : call_count_(0) {
+    }
+    void setup() {
+    }
+    pm::mod_id decode(pm::Payload* pd, pm::Property* prop) {
+      this->call_count_ += 1;
+      return pm::Module::NONE;
+    };
+  };
+  
+  pm::ModMap mod_map;
+  pm::Packet pkt;
+  pm::Payload pd;
+  pm::Property prop;
+  auto mod = new DummyMod();
+  mod_map.insert(std::make_pair("Ethernet", mod));
+
+  std::shared_ptr<pm::Decoder> dec(new pm::Decoder(&mod_map));
+  prop.set_decoder(dec);
+  std::string data("abcdefg");
+  pkt.store(reinterpret_cast<const pm::byte_t*>(data.data()), 4);
+  dec->decode(&pd, &prop);
+
+  EXPECT_EQ(1, mod->call_count_);
+}
+
 }   // namespace module_test
 
