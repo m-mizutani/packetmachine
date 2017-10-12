@@ -100,6 +100,16 @@ TEST(Decoder, lookup_param) {
   EXPECT_EQ(pm::Param::NONE, dec.lookup_param_id("Invalid_Param"));
 }
 
+TEST(Decoder, lookup_param_key) {
+  pm::Decoder dec;
+  const pm::ParamKey& key = dec.lookup_param_key("Ethernet.src");
+  EXPECT_NE(pm::Property::NULL_KEY, key);
+  EXPECT_NE(dec.lookup_param_key("Ethernet.dst"), key);
+  EXPECT_EQ("Ethernet.src", dec.lookup_param_name(key));
+
+  EXPECT_EQ(pm::Property::NULL_KEY, dec.lookup_param_key("Invalid_Param"));
+}
+
 TEST(Decoder, lookup_event) {
   pm::Decoder dec;
   pm::event_id eid = dec.lookup_event_id("Ethernet");

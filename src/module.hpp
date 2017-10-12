@@ -44,6 +44,7 @@ class ParamDef {
  private:
   mod_id module_id_;
   param_id id_;
+  ParamKey key_;
   std::string name_;
   std::string local_name_;
   Value*(*constructor_)();
@@ -53,13 +54,17 @@ class ParamDef {
   ~ParamDef();
 
   void set_module_id(mod_id id) { this->module_id_ = id; }
-  void set_id(param_id id) { this->id_ = id; }
+  void set_id(param_id id) {
+    this->id_ = id;
+    this->key_.set_key(id);
+  }
   void set_name(const std::string& name) { this->name_ = name; }
 
   mod_id module_id() const { return this->module_id_; }
   param_id id() const { return this->id_; }
   const std::string& name() const { return this->name_; }
   Value* new_object() const { return this->constructor_(); }
+  const ParamKey& key() const { return this->key_; }
 };
 
 class EventDef {

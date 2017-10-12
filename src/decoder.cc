@@ -151,6 +151,20 @@ const std::string& Decoder::lookup_param_name(param_id pid) const {
   }
 }
 
+const ParamKey& Decoder::lookup_param_key(const std::string& name) const {
+  const auto& it = this->param_map_.find(name);
+  if (it == this->param_map_.end()) {
+    return Property::NULL_KEY;
+  } else {
+    return it->second->key();
+  }
+}
+
+const std::string& Decoder::lookup_param_name(const ParamKey& key) const {
+  return this->params_[key.id()]->name();
+}
+
+
 event_id Decoder::lookup_event_id(const std::string& name) const {
   const auto& it = this->event_map_.find(name);
   if (it == this->event_map_.end()) {

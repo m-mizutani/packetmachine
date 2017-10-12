@@ -68,6 +68,8 @@ class Decoder {
   size_t param_size() const { return this->params_.size(); }
   param_id lookup_param_id(const std::string& name) const;
   const std::string& lookup_param_name(param_id pid) const;
+  const ParamKey& lookup_param_key(const std::string& name) const;
+  const std::string& lookup_param_name(const ParamKey& key) const;  
   size_t event_size() const { return this->events_.size(); }
   event_id lookup_event_id(const std::string& name) const;
   const std::string& lookup_event_name(event_id eid) const;

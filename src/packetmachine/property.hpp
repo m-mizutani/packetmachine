@@ -73,6 +73,29 @@ class Payload {
 };
 
 
+class ParamKey {
+ private:
+  param_id id_;
+ public:
+  ParamKey();
+  ~ParamKey();
+  inline param_id id() const { return this->id_; }
+  void set_key(param_id pid);
+  
+  bool operator==(const ParamKey& tgt) const {
+    return this->id_ == tgt.id_;
+  }
+  /*
+  bool operator==(const ParamKey& t1, const ParamKey& t2) {
+    return this->id_ == tgt.id_;
+  }
+  */
+  bool operator!=(const ParamKey& tgt) const {
+    return !((*this) == tgt);
+  }
+  
+};
+
 class Property {
  private:
   std::weak_ptr<Decoder> dec_;
@@ -83,6 +106,7 @@ class Property {
 
   const Packet* pkt_;
   static const Value null_;
+
   tb::Buffer* src_addr_;
   tb::Buffer* dst_addr_;
   uint16_t src_port_;
@@ -92,11 +116,13 @@ class Property {
   Property();
   ~Property();
 
+  // const values
+  static const ParamKey NULL_KEY;
+  
   void set_decoder(std::shared_ptr<Decoder> dec);
   void init(const Packet* pkt);
 
   // Retain data
-  Object* retain_object(const ParamDef* def);
   Value* retain_value(const ParamDef* def);
 
   // Push event
@@ -123,12 +149,17 @@ class Property {
 
   // values
   bool has_value(param_id pid) const;
+  bool has_value(const ParamKey& key) const;
   bool has_value(const std::string& name) const;
   const Value& value(param_id pid) const;
+  const Value& value(const ParamKey& key) const;
   const Value& value(const std::string& name) const;
 
   const Value& operator[](param_id pid) const {
     return this->value(pid);
+  }
+  const Value& operator[](const ParamKey& key) const {
+    return this->value(key);
   }
   const Value& operator[](const std::string& name) const {
     return this->value(name);

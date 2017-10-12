@@ -79,7 +79,22 @@ bool Payload::shrink(size_t length) {
 }
 
 
+
+ParamKey::ParamKey() : id_(Param::NONE) {  
+}
+
+ParamKey::~ParamKey() {
+}
+
+void ParamKey::set_key(param_id pid) {
+  this->id_ = pid;
+}
+
+
+
 const Value Property::null_;
+const ParamKey Property::NULL_KEY;
+
 
 Property::Property() {
   this->src_addr_ = new tb::Buffer();
@@ -108,11 +123,6 @@ void Property::init(const Packet *pkt) {
     this->param_idx_[i] = 0;
   }
   this->event_idx_ = 0;
-}
-
-
-Object* Property::retain_object(const ParamDef* def) {
-  assert(0);
 }
 
 
@@ -195,6 +205,10 @@ bool Property::has_value(param_id pid) const {
   return (this->param_idx_[pid] > 0);
 }
 
+bool Property::has_value(const ParamKey& key) const {
+  return (this->param_idx_[key.id()] > 0);
+}
+
 bool Property::has_value(const std::string& name) const {
   if (auto dec = this->dec_.lock()) {
     param_id pid = dec->lookup_param_id(name);
@@ -211,6 +225,19 @@ bool Property::has_value(const std::string& name) const {
 const Value& Property::value(param_id pid) const {
   if (this->param_idx_[pid] > 0) {
     Value* val = dynamic_cast<Value*>((*this->param_[pid])[0]);
+    if (val) {
+      return *val;
+    } else {
+      return Property::null_;
+    }
+  } else {
+    return Property::null_;
+  }
+}
+
+const Value& Property::value(const ParamKey& key) const {
+  if (this->param_idx_[key.id()] > 0) {
+    Value* val = dynamic_cast<Value*>((*this->param_[key.id()])[0]);
     if (val) {
       return *val;
     } else {
