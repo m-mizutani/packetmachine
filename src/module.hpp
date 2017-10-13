@@ -40,24 +40,28 @@ namespace pm {
 
 class Decoder;
 
+typedef std::function<void(Value*, const byte_t*)> Defer;
+
 class ParamDef {
  private:
   mod_id module_id_;
   param_id id_;
+  param_id sub_id_;
   ParamKey key_;
   std::string name_;
   std::string local_name_;
   Value*(*constructor_)();
-
+  std::map<std::string, ParamDef*> def_map_;
+  Defer defer_;
+  ParamDef* parent_;
+  
  public:
   ParamDef(const std::string& local_name, Value*(*constructor)());
   ~ParamDef();
 
   void set_module_id(mod_id id) { this->module_id_ = id; }
-  void set_id(param_id id) {
-    this->id_ = id;
-    this->key_.set_key(id);
-  }
+  void set_id(param_id id);
+  void set_sub_id(param_id id);
   void set_name(const std::string& name) { this->name_ = name; }
 
   mod_id module_id() const { return this->module_id_; }
@@ -65,7 +69,16 @@ class ParamDef {
   const std::string& name() const { return this->name_; }
   Value* new_object() const { return this->constructor_(); }
   const ParamKey& key() const { return this->key_; }
+
+  void to_child(ParamDef* parent, Defer&& func);
+  void define_sub_param(const std::string& name, Defer&& func);
+  const std::map<std::string, ParamDef*> def_map() const {
+    return this->def_map_;
+  }
+
+  static Value* no_value();  
 };
+
 
 class EventDef {
  private:
@@ -102,8 +115,8 @@ class Module {
   static Value* new_array();
   static Value* new_map();
 
-  const ParamDef* define_param(const std::string& name,
-                               Value*(*new_object)() = new_value);
+  ParamDef* define_param(const std::string& name,
+                         Value*(*new_object)() = new_value);
   mod_id lookup_module(const std::string& name);
   param_id lookup_param_id(const std::string& name);
 

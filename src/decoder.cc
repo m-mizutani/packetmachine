@@ -63,9 +63,15 @@ Decoder::Decoder(ModMap *mod_map) : mod_ethernet_(Module::NONE) {
       ParamDef *def = p.second;
       def->set_module_id(m->id());
       def->set_id(global_id);
-      def->set_name(m->name() + "." + p.first);
+      const std::string pname(m->name() + "." + p.first);
+      def->set_name(pname);
       this->params_.push_back(def);
       this->param_map_.insert(std::make_pair(def->name(), def));
+
+      for(auto &s : def->def_map()) {
+        const std::string sub_pname(pname + "." + s.first);
+        this->param_map_.insert(std::make_pair(sub_pname, s.second));
+      }
     }
 
     // Building event map.

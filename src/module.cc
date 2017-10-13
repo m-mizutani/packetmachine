@@ -53,14 +53,43 @@ void build_module_map(std::map<std::string, Module*> *mod_map) {
 
 
 ParamDef::ParamDef(const std::string& local_name, Value*(*constructor)()) :
-    local_name_(local_name), constructor_(constructor) {
+    local_name_(local_name), constructor_(constructor), parent_(nullptr) {
 }
 ParamDef::~ParamDef() {
 }
 
+void ParamDef::set_id(param_id id) {
+  this->id_ = id;
+  this->key_.set_key(id);
 
+  param_id sub_id = 0;
+  for(auto& c : this->def_map_) {
+    c.second->set_id(id);
+    c.second->set_sub_id(sub_id);
+    sub_id++;
+  }
+}
 
+void ParamDef::set_sub_id(param_id id) {
+  this->sub_id_ = id;
+}
 
+void ParamDef::define_sub_param(const std::string& name, Defer&& func) {
+  auto def = new ParamDef(name, ParamDef::no_value);
+  def->to_child(this, std::move(func));
+  assert(this->def_map_.find(name) == this->def_map_.end());
+  this->def_map_.insert(std::make_pair(name, def));
+}
+
+void ParamDef::to_child(ParamDef* parent, Defer&& func) {
+  this->parent_ = parent;
+  this->defer_ = func;
+}
+
+Value* ParamDef::no_value() {
+  assert(0); // Should not be called.
+  return nullptr;
+}
 
 Module::Module() : dec_(nullptr), id_(Module::NONE) {
 }
@@ -80,8 +109,8 @@ Object* Module::new_map() {
 }
 */
 
-const ParamDef* Module::define_param(const std::string& name,
-                                     Value*(*new_object)()) {
+ParamDef* Module::define_param(const std::string& name,
+                               Value*(*new_object)()) {
   ParamDef *def = new ParamDef(name, new_object);
   this->param_map_.insert(std::make_pair(name, def));
   return def;
