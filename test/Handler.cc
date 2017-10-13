@@ -138,7 +138,7 @@ TEST(Handler, deactivate_async) {
   m->join();
 
   EXPECT_FALSE(hdlr.is_active());
-  EXPECT_GT(624, count); 
+  EXPECT_GE(624, count); 
   delete m;
 }
 
@@ -157,7 +157,7 @@ TEST(Handler, clear_async) {
 
   EXPECT_FALSE(hdlr.is_active());
   EXPECT_FALSE(hdlr.activate());
-  EXPECT_GT(624, count); 
+  EXPECT_GE(624, count); 
   delete m;
 }
 
