@@ -201,39 +201,23 @@ const struct timeval& Property::tv() const {
   return this->pkt_->tv();
 }
 
-bool Property::has_value(param_id pid) const {
-  return (this->param_idx_[pid] > 0);
-}
-
 bool Property::has_value(const ParamKey& key) const {
   return (this->param_idx_[key.id()] > 0);
 }
 
 bool Property::has_value(const std::string& name) const {
   if (auto dec = this->dec_.lock()) {
-    param_id pid = dec->lookup_param_id(name);
-    if (pid == Param::NONE) {
+    auto& key = dec->lookup_param_key(name);
+    if (key == Property::NULL_KEY) {
       return false;
     } else {
-      return this->has_value(pid);
+      return this->has_value(key);
     }
   } else {
     throw Exception::RunTimeError("Decoder module is not available");
   }
 }
 
-const Value& Property::value(param_id pid) const {
-  if (this->param_idx_[pid] > 0) {
-    Value* val = dynamic_cast<Value*>((*this->param_[pid])[0]);
-    if (val) {
-      return *val;
-    } else {
-      return Property::null_;
-    }
-  } else {
-    return Property::null_;
-  }
-}
 
 const Value& Property::value(const ParamKey& key) const {
   if (this->param_idx_[key.id()] > 0) {
@@ -250,11 +234,11 @@ const Value& Property::value(const ParamKey& key) const {
 
 const Value& Property::value(const std::string& name) const {
   if (auto dec = this->dec_.lock()) {
-    param_id pid = dec->lookup_param_id(name);
-    if (pid == Param::NONE) {
+    auto& key = dec->lookup_param_key(name);
+    if (key == Property::NULL_KEY) {
       return Property::null_;
     } else {
-      return this->value(pid);
+      return this->value(key);
     }
   } else {
     throw Exception::RunTimeError("Decoder module is not available");

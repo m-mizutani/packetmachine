@@ -148,16 +148,11 @@ class Property {
   const struct timeval& tv() const;
 
   // values
-  bool has_value(param_id pid) const;
   bool has_value(const ParamKey& key) const;
   bool has_value(const std::string& name) const;
-  const Value& value(param_id pid) const;
   const Value& value(const ParamKey& key) const;
   const Value& value(const std::string& name) const;
 
-  const Value& operator[](param_id pid) const {
-    return this->value(pid);
-  }
   const Value& operator[](const ParamKey& key) const {
     return this->value(key);
   }

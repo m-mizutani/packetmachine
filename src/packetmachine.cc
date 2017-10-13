@@ -215,13 +215,6 @@ uint64_t Machine::recv_size() const {
 }
 
 
-param_id Machine::lookup_param_id(const std::string& name) const {
-  return this->kernel_->dec().lookup_param_id(name);
-}
-const std::string& Machine::lookup_param_name(param_id pid) const {
-  return this->kernel_->dec().lookup_param_name(pid);
-}
-
 const ParamKey& Machine::lookup_param_key(const std::string& name) const {
   return this->kernel_->dec().lookup_param_key(name);
 }

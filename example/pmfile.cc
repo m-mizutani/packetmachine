@@ -35,14 +35,14 @@ int main(int argc, char* argv[]) {
     return -1;
   }
 
-  pm::param_id ipv4_src = m.lookup_param_id("IPv4.src");
-  pm::param_id ipv4_dst = m.lookup_param_id("IPv4.dst");
-  pm::param_id tcp_src =  m.lookup_param_id("TCP.src_port");
-  pm::param_id tcp_dst =  m.lookup_param_id("TCP.dst_port");
-  pm::param_id udp_src =  m.lookup_param_id("UDP.src_port");
-  pm::param_id udp_dst =  m.lookup_param_id("UDP.dst_port");
-  pm::param_id icmp_type = m.lookup_param_id("ICMP.type");
-  pm::param_id icmp_code = m.lookup_param_id("ICMP.code");
+  auto& ipv4_src = m.lookup_param_key("IPv4.src");
+  auto& ipv4_dst = m.lookup_param_key("IPv4.dst");
+  auto& tcp_src =  m.lookup_param_key("TCP.src_port");
+  auto& tcp_dst =  m.lookup_param_key("TCP.dst_port");
+  auto& udp_src =  m.lookup_param_key("UDP.src_port");
+  auto& udp_dst =  m.lookup_param_key("UDP.dst_port");
+  auto& icmp_type = m.lookup_param_key("ICMP.type");
+  auto& icmp_code = m.lookup_param_key("ICMP.code");
 
   try {
     m.on("TCP", [&](const pm::Property& p) {

@@ -87,8 +87,6 @@ class Machine {
   uint64_t recv_pkt() const;
   uint64_t recv_size() const;
 
-  param_id lookup_param_id(const std::string& name) const;
-  const std::string& lookup_param_name(param_id pid) const;
   const ParamKey& lookup_param_key(const std::string& name) const;
   const std::string& lookup_param_name(const ParamKey& key) const;
 
