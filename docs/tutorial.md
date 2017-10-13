@@ -243,7 +243,7 @@ include <packetmachine.hpp>
 
 int main(int argc, char* argv[]) {
   pm::Machine m;
-  pm::param_id ipv4_src = m.lookup_param_id("IPv4.src");
+  const pm::ParamKey& ipv4_src = m.lookup_param_key("IPv4.src");
   m.on("IPv4", [ipv4_src](const pm::Property &p) {
     std::cout << p.value(ipv4_src).repr() << std::endl;
   });
@@ -254,4 +254,4 @@ int main(int argc, char* argv[]) {
 }
 ```
 
-The `pm::Machine::lookup_param_id()` function returns a parameter ID as `pm::param_id`. `pm::Property::value()` accepts both of `std::string` and `pm::param_id` to lookup parameter value from a captured packet. Looking up a parameter by `pm::param_id` is faster than `std::string` because conversion `std::string` to `pm::param_id` is required each time for a `std::string` argument of `pm::Property::value()`.
+The `pm::Machine::lookup_param_key()` function returns a parameter key as `const pm::ParamKey&`. `pm::Property::value()` accepts both of `std::string` and `const pm::ParamKey&` to lookup parameter value from a captured packet. Looking up a parameter by `const pm::ParamKey&` is faster than `std::string`.

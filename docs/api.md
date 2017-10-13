@@ -25,11 +25,11 @@ const struct timeval& tv() const;
 Returns arrival time of a packet that is a trigger of the event.
 
 ```cpp
-bool has_value(pm::param_id pid) const;
+bool has_value(const pm::ParamKey& key) const;
 bool has_value(const std::string& name) const;
-const pm::Value& value(pm::param_id pid) const;
+const pm::Value& value(const pm::ParamKey& key) const;
 const pm::Value& value(const std::string& name) const;
-const pm::Value& operator[](pm::param_id pid) const;
+const pm::Value& operator[](const pm::ParamKey& key) const;
 const pm::Value& operator[](const std::string& name) const;
 ```
 
@@ -37,7 +37,7 @@ const pm::Value& operator[](const std::string& name) const;
 
 `has_value()` returns true if the insntace has attribute value, and `value()` and `operator[]` returns actual `Value` instance as `const` reference. Both of `value()` and `operator[]` return same result by same argument. (e.g. `property.value("IPv4.src)` and `property["IPv4.src"]`).
 
-Value(s) can be accessed by not only parameter name `std::string` but also parameter ID `pm::param_id`. `pm::param_id` can be looked up by `pm::Machine::lookup_param_id()` beforehand. Using `pm::param_id` is faster than `std::string` because access methods for `pm::Value` with `std::string` look up `pm::param_id` by the argument every time.
+Value(s) can be accessed by not only parameter name `std::string` but also parameter ID `const pm::ParamKey&`. `const pm::ParamKey&` can be looked up by `pm::Machine::lookup_param_key()` beforehand. Using `const pm::ParamKey&` is faster than `std::string` because access methods for `pm::Value` with `std::string` look up `const pm::ParamKey&` by the argument every time.
 
 If an attribute value that is specified as argument does not exist, the method returns `static Value Property::null_`. `is_null()` method of the instance returns `true`.
 
