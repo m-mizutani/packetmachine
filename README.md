@@ -83,7 +83,9 @@ TCP: 172.20.10.2:53227 > 199.59.148.241:443
 Documents
 ------------
 
-See files in [docs](docs/) directory.
+- [Installation guide](docs/install.md)
+- [Tutorial](docs/tutorial.md)
+- [API guide](docs/api.md)
 
 License
 ------------
