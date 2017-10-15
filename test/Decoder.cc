@@ -200,15 +200,14 @@ TEST(Decoder, batch_param) {
    public:
     DummyValue() = default;
     ~DummyValue() = default;
-    static Value* new_value() { return new DummyValue(); }
-    
+    static Value* new_value() { return new DummyValue(); }    
   };
   class DummyMod : public pm::Module {
    public:
     pm::ParamDef* p_;
 
     DummyMod () {
-      this->p_ = this->define_param("p", DummyValue::new_value);
+      this->p_ = this->define_param("p", new_array);
       this->p_->define_sub_param("1", [](pm::Value* v, const pm::byte_t* ptr) {
           v->set(&ptr[0], 2);
         });
@@ -234,8 +233,9 @@ TEST(Decoder, batch_param) {
   std::shared_ptr<pm::Decoder> dec(new pm::Decoder(&mod_map));
   prop.set_decoder(dec);
 
-  const pm::ParamKey& pid1 = dec->lookup_param_key("Ethernet.p.1");
-  const pm::ParamKey& pid2 = dec->lookup_param_key("Ethernet.p.2");
+  // TODO: need to identify keys that have same parent
+  // const pm::ParamKey& pid1 = dec->lookup_param_key("Ethernet.p.1");
+  // const pm::ParamKey& pid2 = dec->lookup_param_key("Ethernet.p.2");
   // EXPECT_NE(pid1, pid2);
   
   std::string data("abcdefg");  
@@ -245,8 +245,10 @@ TEST(Decoder, batch_param) {
   
   dec->decode(&pd, &prop);
 
-  // EXPECT_EQ("ab", prop.value("Ethernet.p.1").repr());
-  // EXPECT_EQ("cd", prop.value("Ethernet.p.2").repr());
+  EXPECT_EQ("ab", prop.value("Ethernet.p.1").repr());
+  EXPECT_EQ("cd", prop.value("Ethernet.p.2").repr());
+  EXPECT_EQ("ab", prop.value("Ethernet.p.1").repr());
+  EXPECT_EQ("cd", prop.value("Ethernet.p.2").repr());
 }
 
 

@@ -76,20 +76,17 @@ class Payload {
 class ParamKey {
  private:
   param_id id_;
+  ParamDef *def_;
  public:
-  ParamKey();
+  explicit ParamKey(ParamDef* def = nullptr);
   ~ParamKey();
   inline param_id id() const { return this->id_; }
   void set_key(param_id pid);
-  
+
+  ParamDef* def() const { return this->def_; }
   bool operator==(const ParamKey& tgt) const {
-    return this->id_ == tgt.id_;
+    return (this->id_ == tgt.id_);
   }
-  /*
-  bool operator==(const ParamKey& t1, const ParamKey& t2) {
-    return this->id_ == tgt.id_;
-  }
-  */
   bool operator!=(const ParamKey& tgt) const {
     return !((*this) == tgt);
   }

@@ -68,9 +68,13 @@ Decoder::Decoder(ModMap *mod_map) : mod_ethernet_(Module::NONE) {
       this->params_.push_back(def);
       this->param_map_.insert(std::make_pair(def->name(), def));
 
+      // Sub parameters
+      param_id sub_id = 0;
       for(auto &s : def->def_map()) {
         const std::string sub_pname(pname + "." + s.first);
         this->param_map_.insert(std::make_pair(sub_pname, s.second));
+        s.second->set_sub_id(sub_id);
+        sub_id++;
       }
     }
 

@@ -66,14 +66,20 @@ class ParamDef {
 
   mod_id module_id() const { return this->module_id_; }
   param_id id() const { return this->id_; }
+  param_id sub_id() const { return this->sub_id_; }
   const std::string& name() const { return this->name_; }
   Value* new_object() const { return this->constructor_(); }
   const ParamKey& key() const { return this->key_; }
 
+  bool is_child() const { return (nullptr != this->parent_); }
   void to_child(ParamDef* parent, Defer&& func);
+  const ParamDef& parent() { return *(this->parent_); }
   void define_sub_param(const std::string& name, Defer&& func);
   const std::map<std::string, ParamDef*> def_map() const {
     return this->def_map_;
+  }
+  inline void defer(Value *value, const byte_t* ptr) {
+    this->defer_(value, ptr);
   }
 
   static Value* no_value();  

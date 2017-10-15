@@ -53,7 +53,8 @@ void build_module_map(std::map<std::string, Module*> *mod_map) {
 
 
 ParamDef::ParamDef(const std::string& local_name, Value*(*constructor)()) :
-    local_name_(local_name), constructor_(constructor), parent_(nullptr) {
+    key_(this), local_name_(local_name),
+    constructor_(constructor), parent_(nullptr) {
 }
 ParamDef::~ParamDef() {
 }
@@ -100,14 +101,15 @@ Module::~Module() {
 Value* Module::new_value() {
   return new Value();
 }
-/*
-Object* Module::new_array() {
-  return new Array();
+
+Value* Module::new_array() {
+  return new value::Array();
 }
-Object* Module::new_map() {
-  return new Map();
+
+Value* Module::new_map() {
+  return new value::Map();
 }
-*/
+
 
 ParamDef* Module::define_param(const std::string& name,
                                Value*(*new_object)()) {

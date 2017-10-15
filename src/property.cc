@@ -80,7 +80,7 @@ bool Payload::shrink(size_t length) {
 
 
 
-ParamKey::ParamKey() : id_(Param::NONE) {  
+ParamKey::ParamKey(ParamDef *def) : id_(Param::NONE), def_(def) {  
 }
 
 ParamKey::~ParamKey() {
@@ -223,7 +223,21 @@ const Value& Property::value(const ParamKey& key) const {
   if (this->param_idx_[key.id()] > 0) {
     Value* val = dynamic_cast<Value*>((*this->param_[key.id()])[0]);
     if (val) {
-      return *val;
+      ParamDef *def = key.def();
+      if (def && def->is_child()) {
+        if (val->size() == 0) {
+          for (size_t i = 0; i < def->parent().def_map().size(); i++) {
+            // TODO: free them
+            val->push(new Value());
+          }
+        }
+        
+        auto& v = val->get(static_cast<size_t>(def->sub_id()));
+        def->defer(const_cast<Value*>(&v), val->raw());
+        return v;
+      } else {
+        return *val;
+      }
     } else {
       return Property::null_;
     }
