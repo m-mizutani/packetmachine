@@ -121,6 +121,12 @@ void ValueStorage::resize(size_t s, Value*(*constructor)()) {
   }
 }
 
+const Value& ValueStorage::get(size_t idx) const {
+  assert(this->storage_.size() > idx);
+  return *(this->storage_[idx]);
+}
+
+
 // -------------------------------------
 // MajorParamDef
 //
@@ -154,6 +160,12 @@ void MajorParamDef::finalize(mod_id mid, param_id pid, const std::string& prefix
 
 Value* MajorParamDef::new_storage() {
   return new ValueStorage();
+}
+
+void MajorParamDef::copy_sub_def(std::map<std::string, ParamDef*> *def_map) {
+  for (auto& d : this->def_map_) {
+    def_map->insert(std::make_pair(d.second->name(), d.second));
+  }
 }
 
 // -------------------------------------

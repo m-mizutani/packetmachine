@@ -196,22 +196,16 @@ TEST(Decoder, custom_module_defs) {
 
 
 TEST(Decoder, batch_param) {
-  class DummyValue : public pm::Value {    
-   public:
-    DummyValue() = default;
-    ~DummyValue() = default;
-    static Value* new_value() { return new DummyValue(); }    
-  };
   class DummyMod : public pm::Module {
    public:
-    pm::ParamDef* p_;
+    pm::MajorParamDef* p_;
 
     DummyMod () {
-      this->p_ = this->define_param("p", new_array);
-      this->p_->define_sub_param("1", [](pm::Value* v, const pm::byte_t* ptr) {
+      this->p_ = this->define_major_param("p");
+      this->p_->define_minor("1", [](pm::Value* v, const pm::byte_t* ptr) {
           v->set(&ptr[0], 2);
         });
-      this->p_->define_sub_param("2", [](pm::Value* v, const pm::byte_t* ptr) {
+      this->p_->define_minor("2", [](pm::Value* v, const pm::byte_t* ptr) {
           v->set(&ptr[2], 2);
         });
     }

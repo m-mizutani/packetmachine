@@ -224,15 +224,18 @@ const Value& Property::value(const ParamKey& key) const {
     Value* val = dynamic_cast<Value*>((*this->param_[key.id()])[0]);
     if (val) {
       ParamDef *def = key.def();
-      if (def && def->is_child()) {
-        if (val->size() == 0) {
-          for (size_t i = 0; i < def->parent().def_map().size(); i++) {
-            // TODO: free them
-            val->push(new Value());
-          }
+      assert(def);
+      if (def->is_minor()) {
+        auto mdef = dynamic_cast<MinorParamDef*>(def);
+        auto sval = dynamic_cast<ValueStorage*>(val);
+        assert(mdef && sval);
+        if (sval->size() == 0) {
+          sval->resize(mdef->parent().minor_size(),
+                       mdef->constructor());
         }
-        
-        auto& v = val->get(static_cast<size_t>(def->sub_id()));
+
+        auto& v = val->get(static_cast<size_t>(mdef->minor_id()));
+        // TODO: cache a result of defer evaluation
         def->defer(const_cast<Value*>(&v), val->raw());
         return v;
       } else {

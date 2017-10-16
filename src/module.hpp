@@ -74,6 +74,8 @@ class ParamDef {
   Value* new_object() const { return this->constructor_(); }
   const ParamKey& key() const { return this->key_; }
   virtual bool is_minor() const { return false; }
+  Value* (*constructor())() { return this->constructor_; }
+  virtual void copy_sub_def(std::map<std::string, ParamDef*> *def_map) {}
   
   // will be obsoleted
   inline virtual void defer(Value *value, const byte_t* ptr) {
@@ -97,6 +99,8 @@ class ValueStorage : public Value {
   ValueStorage();
   ~ValueStorage();
   void resize(size_t s, Value*(*constructor)());
+  size_t size() const { return this->storage_.size(); }
+  virtual const Value& get(size_t idx) const;
 };
 
 class MinorParamDef;
@@ -115,6 +119,7 @@ class MajorParamDef : public ParamDef {
   void finalize(mod_id mid, param_id pid, const std::string& prefix);
   size_t minor_size() const { return this->def_map_.size(); }
   static Value* new_storage();
+  void copy_sub_def(std::map<std::string, ParamDef*> *def_map);
 };
 
 
@@ -133,6 +138,7 @@ class MinorParamDef : public ParamDef {
     this->defer_(value, ptr);
   }
   virtual bool is_minor() const { return true; }
+  param_id minor_id() const { return this->minor_id_; }
 };
 
 
