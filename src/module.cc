@@ -53,8 +53,8 @@ void build_module_map(std::map<std::string, Module*> *mod_map) {
 
 
 ParamDef::ParamDef(const std::string& local_name, Value*(*constructor)()) :
-    key_(this), local_name_(local_name),
-    constructor_(constructor), parent_(nullptr) {
+    local_name_(local_name), parent_(nullptr), 
+    key_(this), constructor_(constructor) {
 }
 ParamDef::~ParamDef() {
 }
@@ -198,6 +198,14 @@ ParamDef* Module::define_param(const std::string& name,
   this->param_map_.insert(std::make_pair(name, def));
   return def;
 }
+
+MajorParamDef* Module::define_major_param(const std::string& name,
+                                          Value*(*new_object)()) {
+  MajorParamDef *def = new MajorParamDef(name, new_object);
+  this->param_map_.insert(std::make_pair(name, def));
+  return def;
+}
+
 
 const EventDef* Module::define_event(const std::string& name) {
   EventDef *def = new EventDef(name);

@@ -73,12 +73,12 @@ class ParamDef {
   const std::string& name() const { return this->name_; }
   Value* new_object() const { return this->constructor_(); }
   const ParamKey& key() const { return this->key_; }
-
+  virtual bool is_minor() const { return false; }
+  
+  // will be obsoleted
   inline virtual void defer(Value *value, const byte_t* ptr) {
     this->defer_(value, ptr);
   }
-
-  
   bool is_child() const { return (nullptr != this->parent_); }
   void to_child(ParamDef* parent, Defer&& func);
   const ParamDef& parent() { return *(this->parent_); }
@@ -86,7 +86,6 @@ class ParamDef {
   const std::map<std::string, ParamDef*> def_map() const {
     return this->def_map_;
   }
-
   static Value* no_value();  
 };
 
@@ -114,6 +113,7 @@ class MajorParamDef : public ParamDef {
   }
   void define_minor(const std::string& minor_name, Defer&& defer);
   void finalize(mod_id mid, param_id pid, const std::string& prefix);
+  size_t minor_size() const { return this->def_map_.size(); }
   static Value* new_storage();
 };
 
@@ -128,9 +128,11 @@ class MinorParamDef : public ParamDef {
                 const std::string& local_name, Value*(*constructor)());
   ~MinorParamDef();
   void set_minor_id(param_id pid);
+  const MajorParamDef& parent() const { return *this->parent_; }
   inline virtual void defer(Value *value, const byte_t* ptr) {
     this->defer_(value, ptr);
   }
+  virtual bool is_minor() const { return true; }
 };
 
 
@@ -173,6 +175,8 @@ class Module {
 
   ParamDef* define_param(const std::string& name,
                          Value*(*new_object)() = new_value);
+  MajorParamDef* define_major_param(const std::string& name,
+                                    Value*(*new_object)() = new_value);
   mod_id lookup_module(const std::string& name);
   param_id lookup_param_id(const std::string& name);
 
