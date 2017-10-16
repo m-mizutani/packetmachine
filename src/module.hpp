@@ -47,23 +47,26 @@ class ParamDef {
   mod_id module_id_;
   param_id id_;
   param_id sub_id_;
-  ParamKey key_;
   std::string name_;
   std::string local_name_;
-  Value*(*constructor_)();
   std::map<std::string, ParamDef*> def_map_;
   Defer defer_;
   ParamDef* parent_;
   
+ protected:
+  ParamKey key_;
+  Value*(*constructor_)();
+  
  public:
   ParamDef(const std::string& local_name, Value*(*constructor)());
-  ~ParamDef();
+  virtual ~ParamDef();
 
-  void set_module_id(mod_id id) { this->module_id_ = id; }
-  void set_id(param_id id);
+  // void set_module_id(mod_id id) { this->module_id_ = id; }
+  // void set_id(param_id id);
   void set_sub_id(param_id id);
-  void set_name(const std::string& name) { this->name_ = name; }
+  // void set_name(const std::string& name) { this->name_ = name; }
 
+  virtual void finalize(mod_id mid, param_id pid, const std::string& prefix);
   mod_id module_id() const { return this->module_id_; }
   param_id id() const { return this->id_; }
   param_id sub_id() const { return this->sub_id_; }
@@ -71,6 +74,11 @@ class ParamDef {
   Value* new_object() const { return this->constructor_(); }
   const ParamKey& key() const { return this->key_; }
 
+  inline virtual void defer(Value *value, const byte_t* ptr) {
+    this->defer_(value, ptr);
+  }
+
+  
   bool is_child() const { return (nullptr != this->parent_); }
   void to_child(ParamDef* parent, Defer&& func);
   const ParamDef& parent() { return *(this->parent_); }
@@ -78,12 +86,54 @@ class ParamDef {
   const std::map<std::string, ParamDef*> def_map() const {
     return this->def_map_;
   }
-  inline void defer(Value *value, const byte_t* ptr) {
-    this->defer_(value, ptr);
-  }
 
   static Value* no_value();  
 };
+
+
+class ValueStorage : public Value {
+ private:
+  std::vector<Value*> storage_;
+ public:
+  ValueStorage();
+  ~ValueStorage();
+  void resize(size_t s, Value*(*constructor)());
+};
+
+class MinorParamDef;
+class MajorParamDef : public ParamDef {
+ private:
+  std::map<std::string, MinorParamDef*> def_map_;
+  Value*(*minor_constructor_)();
+  
+ public:
+  MajorParamDef(const std::string& local_name, Value*(*constructor)());
+  ~MajorParamDef();
+  inline const std::map<std::string, MinorParamDef*> def_map() const {
+    return this->def_map_;
+  }
+  void define_minor(const std::string& minor_name, Defer&& defer);
+  void finalize(mod_id mid, param_id pid, const std::string& prefix);
+  static Value* new_storage();
+};
+
+
+class MinorParamDef : public ParamDef {
+ private:
+  param_id minor_id_;
+  Defer defer_;
+  MajorParamDef* parent_;
+ public:
+  MinorParamDef(MajorParamDef* parent, Defer&& defer,
+                const std::string& local_name, Value*(*constructor)());
+  ~MinorParamDef();
+  void set_minor_id(param_id pid);
+  inline virtual void defer(Value *value, const byte_t* ptr) {
+    this->defer_(value, ptr);
+  }
+};
+
+
 
 
 class EventDef {

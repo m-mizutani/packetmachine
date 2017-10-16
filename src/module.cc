@@ -59,16 +59,21 @@ ParamDef::ParamDef(const std::string& local_name, Value*(*constructor)()) :
 ParamDef::~ParamDef() {
 }
 
-void ParamDef::set_id(param_id id) {
-  this->id_ = id;
-  this->key_.set_key(id);
+
+void ParamDef::finalize(mod_id module_id, param_id pid,
+                        const std::string &prefix) {
+  this->module_id_ = module_id;
+  this->name_ = prefix + "." + this->local_name_;
+
+  this->id_ = pid;
+  this->key_.set_key(pid);
 
   param_id sub_id = 0;
   for(auto& c : this->def_map_) {
-    c.second->set_id(id);
+    c.second->finalize(module_id, pid, this->name_);
     c.second->set_sub_id(sub_id);
     sub_id++;
-  }
+  }  
 }
 
 void ParamDef::set_sub_id(param_id id) {
@@ -91,6 +96,82 @@ Value* ParamDef::no_value() {
   assert(0); // Should not be called.
   return nullptr;
 }
+
+
+// -------------------------------------
+// ValueStorage
+//
+
+ValueStorage::ValueStorage() {
+  
+}
+ValueStorage::~ValueStorage() {
+  for(auto ptr : this->storage_) {
+    delete ptr;
+  }
+}
+
+void ValueStorage::resize(size_t s, Value*(*constructor)()) {
+  size_t current = this->storage_.size();
+  if (s > current) {
+    this->storage_.resize(s);
+    for (size_t idx = current; idx < this->storage_.size(); idx++) {
+      this->storage_[idx] = constructor();
+    }
+  }
+}
+
+// -------------------------------------
+// MajorParamDef
+//
+
+MajorParamDef::MajorParamDef(const std::string& local_name, Value*(*constructor)()) :
+    ParamDef(local_name, new_storage), minor_constructor_(constructor) {
+}
+MajorParamDef::~MajorParamDef() {
+  for (auto& m : this->def_map_) {
+    delete m.second;
+  }
+}
+
+void MajorParamDef::define_minor(const std::string& minor_name, Defer&& defer) {
+  auto def = new MinorParamDef(this, std::move(defer), minor_name,
+                               this->minor_constructor_);  
+  assert(this->def_map_.find(minor_name) == this->def_map_.end());
+  this->def_map_.insert(std::make_pair(minor_name, def));
+}
+
+void MajorParamDef::finalize(mod_id mid, param_id pid, const std::string& prefix) {
+  this->ParamDef::finalize(mid, pid, prefix);
+  
+  param_id minor_id = 0;
+  for (auto& m : this->def_map_) {
+    m.second->finalize(mid, pid, this->name());
+    m.second->set_minor_id(minor_id);
+    minor_id++;
+  }
+}
+
+Value* MajorParamDef::new_storage() {
+  return new ValueStorage();
+}
+
+// -------------------------------------
+// MinorParamDef
+//
+
+MinorParamDef::MinorParamDef(MajorParamDef* parent, Defer&& defer,
+                             const std::string& local_name, Value*(*constructor)()) :
+    ParamDef(local_name, constructor),
+    minor_id_(Param::NONE), defer_(defer), parent_(parent) {
+}
+MinorParamDef::~MinorParamDef() {
+}
+
+void MinorParamDef::set_minor_id(param_id pid) {
+  this->minor_id_ = pid;
+}
+
 
 Module::Module() : dec_(nullptr), id_(Module::NONE) {
 }

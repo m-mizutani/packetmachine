@@ -61,10 +61,10 @@ Decoder::Decoder(ModMap *mod_map) : mod_ethernet_(Module::NONE) {
     for (auto& p : *(m->param_map())) {
       const param_id global_id = this->params_.size();
       ParamDef *def = p.second;
-      def->set_module_id(m->id());
-      def->set_id(global_id);
       const std::string pname(m->name() + "." + p.first);
-      def->set_name(pname);
+
+      def->finalize(m->id(), global_id, m->name());
+      
       this->params_.push_back(def);
       this->param_map_.insert(std::make_pair(def->name(), def));
 
