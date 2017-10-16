@@ -67,35 +67,8 @@ void ParamDef::finalize(mod_id module_id, param_id pid,
 
   this->id_ = pid;
   this->key_.set_key(pid);
-
-  param_id sub_id = 0;
-  for(auto& c : this->def_map_) {
-    c.second->finalize(module_id, pid, this->name_);
-    c.second->set_sub_id(sub_id);
-    sub_id++;
-  }  
 }
 
-void ParamDef::set_sub_id(param_id id) {
-  this->sub_id_ = id;
-}
-
-void ParamDef::define_sub_param(const std::string& name, Defer&& func) {
-  auto def = new ParamDef(name, ParamDef::no_value);
-  def->to_child(this, std::move(func));
-  assert(this->def_map_.find(name) == this->def_map_.end());
-  this->def_map_.insert(std::make_pair(name, def));
-}
-
-void ParamDef::to_child(ParamDef* parent, Defer&& func) {
-  this->parent_ = parent;
-  this->defer_ = func;
-}
-
-Value* ParamDef::no_value() {
-  assert(0); // Should not be called.
-  return nullptr;
-}
 
 
 // -------------------------------------

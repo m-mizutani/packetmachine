@@ -61,11 +61,6 @@ class ParamDef {
   ParamDef(const std::string& local_name, Value*(*constructor)());
   virtual ~ParamDef();
 
-  // void set_module_id(mod_id id) { this->module_id_ = id; }
-  // void set_id(param_id id);
-  void set_sub_id(param_id id);
-  // void set_name(const std::string& name) { this->name_ = name; }
-
   virtual void finalize(mod_id mid, param_id pid, const std::string& prefix);
   mod_id module_id() const { return this->module_id_; }
   param_id id() const { return this->id_; }
@@ -75,20 +70,7 @@ class ParamDef {
   const ParamKey& key() const { return this->key_; }
   virtual bool is_minor() const { return false; }
   Value* (*constructor())() { return this->constructor_; }
-  virtual void copy_sub_def(std::map<std::string, ParamDef*> *def_map) {}
-  
-  // will be obsoleted
-  inline virtual void defer(Value *value, const byte_t* ptr) {
-    this->defer_(value, ptr);
-  }
-  bool is_child() const { return (nullptr != this->parent_); }
-  void to_child(ParamDef* parent, Defer&& func);
-  const ParamDef& parent() { return *(this->parent_); }
-  void define_sub_param(const std::string& name, Defer&& func);
-  const std::map<std::string, ParamDef*> def_map() const {
-    return this->def_map_;
-  }
-  static Value* no_value();  
+  virtual void copy_sub_def(std::map<std::string, ParamDef*> *def_map) {}  
 };
 
 

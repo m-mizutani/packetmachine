@@ -236,7 +236,7 @@ const Value& Property::value(const ParamKey& key) const {
 
         auto& v = val->get(static_cast<size_t>(mdef->minor_id()));
         // TODO: cache a result of defer evaluation
-        def->defer(const_cast<Value*>(&v), val->raw());
+        mdef->defer(const_cast<Value*>(&v), val->raw());
         return v;
       } else {
         return *val;
