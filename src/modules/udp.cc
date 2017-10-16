@@ -26,6 +26,8 @@
 
 #include <arpa/inet.h>
 #include "../module.hpp"
+#include "../debug.hpp"
+
 
 namespace pm {
 
@@ -42,6 +44,7 @@ class UDP : public Module {
   const ParamDef* p_dst_port_;
   const ParamDef* p_length_;
   const ParamDef* p_chksum_;
+  MajorParamDef* p_hdr_;
 
   mod_id mod_dns_;
   mod_id mod_mdns_;
@@ -50,11 +53,25 @@ class UDP : public Module {
  public:
   UDP() {
     this->p_src_port_ = this->define_param("src_port",
-                                        value::PortNumber::new_value);
+                                           value::PortNumber::new_value);
     this->p_dst_port_ = this->define_param("dst_port",
-                                        value::PortNumber::new_value);
+                                           value::PortNumber::new_value);
+    this->p_hdr_ = this->define_major_param("hdr");
+
+#define SET_VAL(PARAM) {                                          \
+      auto hdr = reinterpret_cast<const struct udp_header*>(ptr); \
+      v->set(&(PARAM), sizeof(PARAM));                            \
+    }      
+    
+    this->p_hdr_->define_minor("length", [](pm::Value* v, const pm::byte_t* ptr) {
+        SET_VAL(hdr->length_);
+      });
+    this->p_hdr_->define_minor("chksum", [](pm::Value* v, const pm::byte_t* ptr) {
+        SET_VAL(hdr->chksum_);
+      });
     this->p_length_   = this->define_param("length");
     this->p_chksum_   = this->define_param("chksum");
+
   }
 
   void setup() {
@@ -75,7 +92,7 @@ class UDP : public Module {
 
     prop->set_src_port(ntohs(hdr->src_port_));
     prop->set_dst_port(ntohs(hdr->dst_port_));
-
+    prop->retain_value(this->p_hdr_)->set(hdr, sizeof(struct udp_header));
     SET_PROP(this->p_src_port_, hdr->src_port_);
     SET_PROP(this->p_dst_port_, hdr->dst_port_);
     SET_PROP(this->p_length_,   hdr->length_);
