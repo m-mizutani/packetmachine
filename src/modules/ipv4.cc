@@ -53,15 +53,8 @@ class IPv4 : public Module {
     uint32_t dst_;        /* destination ip address */
   } __attribute__((packed));
 
-  const ParamDef* p_hdr_len_;
-  const ParamDef* p_ver_;
-  const ParamDef* p_tos_;
-  const ParamDef* p_total_len_;
-  const ParamDef* p_id_;
-  const ParamDef* p_offset_;
-  const ParamDef* p_ttl_;
-  const ParamDef* p_proto_;
-  const ParamDef* p_chksum_;
+  MajorParamDef *p_hdr_;
+  
   const ParamDef* p_src_;
   const ParamDef* p_dst_;
   const ParamDef* p_opt_;
@@ -70,19 +63,46 @@ class IPv4 : public Module {
 
  public:
   IPv4() {
-    this->p_hdr_len_   = this->define_param("hdr_len");
-    this->p_ver_       = this->define_param("ver");
-    this->p_tos_       = this->define_param("tos");
-    this->p_total_len_ = this->define_param("total_len");
-    this->p_id_        = this->define_param("id");
-    this->p_offset_    = this->define_param("offset");
-    this->p_ttl_       = this->define_param("ttl");
-    this->p_proto_     = this->define_param("proto");
-    this->p_chksum_    = this->define_param("chksum");
-    this->p_src_       = this->define_param("src",
-                                          value::IPv4Addr::new_value);
-    this->p_dst_       = this->define_param("dst",
-                                          value::IPv4Addr::new_value);
+
+#define DEFINE_HDR(NAME)                                                \
+    this->p_hdr_->define_minor(                                         \
+        #NAME, [](pm::Value* v, const pm::byte_t* ptr) {                \
+          auto hdr = reinterpret_cast<const struct ipv4_header*>(ptr);  \
+          v->set(&(hdr->NAME ## _), sizeof(hdr-> NAME ## _));           \
+        });
+
+    // Header parameters
+    this->p_hdr_ = this->define_major_param("hdr");
+    
+    DEFINE_HDR(tos);
+    DEFINE_HDR(total_len);
+    DEFINE_HDR(id);
+    DEFINE_HDR(offset);
+    DEFINE_HDR(ttl);
+    DEFINE_HDR(proto);
+    DEFINE_HDR(chksum);
+
+    this->p_hdr_->define_minor(
+        "hdr_len", [](pm::Value* v, const pm::byte_t* ptr) {
+          auto hdr = reinterpret_cast<const struct ipv4_header*>(ptr); 
+          uint8_t hdrlen  = hdr->hdrlen_ << 2;
+          v->cpy(&hdrlen, sizeof(hdrlen));
+        });
+
+    this->p_hdr_->define_minor(
+        "ver", [](pm::Value* v, const pm::byte_t* ptr) {
+          auto hdr = reinterpret_cast<const struct ipv4_header*>(ptr); 
+          uint8_t version = hdr->ver_;
+          v->cpy(&version, sizeof(version));
+        });
+
+    // IP addresses
+    this->p_src_
+        = this->define_param("src", value::IPv4Addr::new_value);
+    this->p_dst_
+        = this->define_param("dst", value::IPv4Addr::new_value);
+
+    // Option and data 
     this->p_opt_       = this->define_param("opt");
     this->p_data_      = this->define_param("data");
   }
@@ -104,7 +124,6 @@ class IPv4 : public Module {
     }
 
     uint8_t hdrlen  = hdr->hdrlen_ << 2;
-    uint8_t version = hdr->ver_;
     unsigned int total_len = ntohs(hdr->total_len_);
     unsigned int hdr_len   = hdrlen;
 
@@ -112,22 +131,14 @@ class IPv4 : public Module {
       return Module::NONE;
     }
 
+    prop->retain_value(this->p_hdr_)->set(hdr, sizeof(struct ipv4_header));
+    
     assert(total_len >= hdr_len);
     uint16_t data_len = total_len - hdr_len;
 
     // Set values
     prop->set_src_addr(&hdr->src_, sizeof(hdr->src_));
     prop->set_dst_addr(&hdr->dst_, sizeof(hdr->dst_));
-    prop->retain_value(this->p_hdr_len_)->cpy(&hdrlen, sizeof(hdrlen));
-    prop->retain_value(this->p_ver_)->cpy(&version, sizeof(version));
-
-    SET_PROP(this->p_tos_,       hdr->tos_);
-    SET_PROP(this->p_total_len_, hdr->total_len_);
-    SET_PROP(this->p_id_,        hdr->id_);
-    SET_PROP(this->p_offset_,    hdr->offset_);
-    SET_PROP(this->p_ttl_,       hdr->ttl_);
-    SET_PROP(this->p_proto_,     hdr->proto_);
-    SET_PROP(this->p_chksum_,    hdr->chksum_);
     SET_PROP(this->p_src_,       hdr->src_);
     SET_PROP(this->p_dst_,       hdr->dst_);
 

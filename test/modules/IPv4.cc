@@ -41,15 +41,15 @@ TEST_F(ModuleTesterData1, IPv4_packet) {
   const pm::Property* p;
   p = get_property();   // # packet #1
 
-  EXPECT_EQ(4u,      p->value("IPv4.ver").uint());
-  EXPECT_EQ(20u,     p->value("IPv4.hdr_len").uint());
-  EXPECT_EQ(0u,      p->value("IPv4.tos").uint());
-  EXPECT_EQ(40u,     p->value("IPv4.total_len").uint());
-  EXPECT_EQ(0x4d45u, p->value("IPv4.id").uint());
-  EXPECT_EQ(0u,      p->value("IPv4.offset").uint());
-  EXPECT_EQ(64u,     p->value("IPv4.ttl").uint());
-  EXPECT_EQ(6u,      p->value("IPv4.proto").uint());
-  EXPECT_EQ(0x05deu, p->value("IPv4.chksum").uint());
+  EXPECT_EQ(4u,      p->value("IPv4.hdr.ver").uint());
+  EXPECT_EQ(20u,     p->value("IPv4.hdr.hdr_len").uint());
+  EXPECT_EQ(0u,      p->value("IPv4.hdr.tos").uint());
+  EXPECT_EQ(40u,     p->value("IPv4.hdr.total_len").uint());
+  EXPECT_EQ(0x4d45u, p->value("IPv4.hdr.id").uint());
+  EXPECT_EQ(0u,      p->value("IPv4.hdr.offset").uint());
+  EXPECT_EQ(64u,     p->value("IPv4.hdr.ttl").uint());
+  EXPECT_EQ(6u,      p->value("IPv4.hdr.proto").uint());
+  EXPECT_EQ(0x05deu, p->value("IPv4.hdr.chksum").uint());
   EXPECT_EQ("10.139.96.169", p->value("IPv4.src").ip4());
   EXPECT_EQ("192.30.252.90", p->value("IPv4.dst").ip4());
 }
@@ -58,7 +58,7 @@ TEST_F(ModuleTesterData2, IPv4_option) {
   const pm::Property* p;
   p = get_property(450);   // # packet #451
 
-  EXPECT_EQ(24u, p->value("IPv4.hdr_len").uint());
+  EXPECT_EQ(24u, p->value("IPv4.hdr.hdr_len").uint());
 
   size_t opt_len;
   auto opt = p->value("IPv4.opt").raw(&opt_len);

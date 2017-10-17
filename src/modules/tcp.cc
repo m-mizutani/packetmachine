@@ -508,9 +508,9 @@ class TCP : public Module {
     
     auto DEFINE_FLAG = [&](const std::string& name, uint8_t flag) {
       this->p_hdr_->define_minor(
-          name, [&](pm::Value* v, const pm::byte_t* ptr) {
+          name, [=](pm::Value* v, const pm::byte_t* ptr) {
             auto hdr = reinterpret_cast<const struct tcp_header*>(ptr);
-            byte_t f = ((hdr->flags_ & (flag)) > 0); 
+            byte_t f = ((hdr->flags_ & (flag)) > 0);
             v->cpy(&f, sizeof(f));
           });
     };
