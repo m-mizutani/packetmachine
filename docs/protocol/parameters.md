@@ -31,15 +31,15 @@ IPv4
 
 | Parameter name           | Description                                 | Expected length               | Recommended formatting |
 |:-------------------------|:--------------------------------------------|:------------------------------|:-----------------------|
-| `IPv4.hdr_len`           | IPv4 Header length. In IPv4 header, the header length field should be bit shift. PacketMachine must shift the bits before a user access. |  1 byte (originally 4 bits) |  `uint()` |
-| `IPv4.ver`               | IPv4 version                                |  1 byte (originally 4 bits) |  `uint()` |
-| `IPv4.tos`               | Type of services.                           |  1 byte |  `uint()` |
-| `IPv4.total_len`         | Total length of IP header and data.         |  2 byte |  `uint()` |
-| `IPv4.id`                | ID of IP packet.                            |  2 byte |  `uint()` |
-| `IPv4.offset`            | Offset of IP fragmentation.                 |  2 byte |  `uint()` |
-| `IPv4.ttl`               | Time to Live.                               |  1 byte |  `uint()` |
-| `IPv4.proto`             | Protocol number of next layer.              |  1 byte |  `uint()` |
-| `IPv4.chksum`            | Checksum of IP header.                      |  2 byte |  `hex()`, `raw()` or `uint()` |
+| `IPv4.hdr.hdr_len`       | IPv4 Header length. In IPv4 header, the header length field should be bit shift. PacketMachine must shift the bits before a user access. |  1 byte (originally 4 bits) |  `uint()` |
+| `IPv4.hdr.ver`           | IPv4 version                                |  1 byte (originally 4 bits) |  `uint()` |
+| `IPv4.hdr.tos`           | Type of services.                           |  1 byte |  `uint()` |
+| `IPv4.hdr.total_len`     | Total length of IP header and data.         |  2 byte |  `uint()` |
+| `IPv4.hdr.id`            | ID of IP packet.                            |  2 byte |  `uint()` |
+| `IPv4.hdr.offset`        | Offset of IP fragmentation.                 |  2 byte |  `uint()` |
+| `IPv4.hdr.ttl`           | Time to Live.                               |  1 byte |  `uint()` |
+| `IPv4.hdr.proto`         | Protocol number of next layer.              |  1 byte |  `uint()` |
+| `IPv4.hdr.chksum`        | Checksum of IP header.                      |  2 byte |  `hex()`, `raw()` or `uint()` |
 | `IPv4.src`               | Source IP address.                          |  4 byte |  `ip4()`  |
 | `IPv4.dst`               | Destination IP address.                     |  4 byte |  `ip4()`  |
 
@@ -47,40 +47,40 @@ IPv4
 UDP
 ---------
 
-| Parameter name | Description                  | Expected length   | Recommended formatting |
-|:---------------|:-----------------------------|:------------------|:-----------------------|
-| `UDP.src_port` | UDP source port number.      |  2 byte           |  `uint()` |
-| `UDP.dst_port` | UDP destination port number. |  2 byte           |  `uint()` |
-| `UDP.length`   | UDP header and data length.  |  2 byte           |  `uint()` |
-| `UDP.chksum`   | Checksum.                    |  2 byte           |  `uint()` or `hex()` | 
+| Parameter name   | Description                  | Expected length   | Recommended formatting |
+|:-----------------|:-----------------------------|:------------------|:-----------------------|
+| `UDP.src_port`   | UDP source port number.      |  2 byte           |  `uint()` |
+| `UDP.dst_port`   | UDP destination port number. |  2 byte           |  `uint()` |
+| `UDP.hdr.length` | UDP header and data length.  |  2 byte           |  `uint()` |
+| `UDP.hdr.chksum` | Checksum.                    |  2 byte           |  `uint()` or `hex()` | 
 
 
 TCP
 ---------
 
-| Parameter name  | Description                          | Expected length   | Recommended formatting |
-|:----------------|:-------------------------------------|:------------------|:-----------------------|
-| `TCP.src_port`  | TCP source port number.              |  2 byte |  `uint()` |
-| `TCP.dst_port`  | TCP destination port number.         |  2 byte |  `uint()` |
-| `TCP.seq`       | Sequence number of TCP stream.       |  4 byte |  `uint()` |
-| `TCP.ack`       | Acknowledgment number of TCP stream. |  4 byte |  `uint()` |
-| `TCP.offset`    | Data offset.                         |  1 byte |  `uint()` | 
-| `TCP.window`    | Window size.                         |  2 byte |  `uint()` |
-| `TCP.chksum`    | Checksum.                            |  2 byte |  `uint()` or `hex()` |
-| `TCP.urgptr`    | Urgent Pointer.                      |  2 byte |  `uint()` |
-| `TCP.flags`     | TCP flag section. See also `TCP.flag_{fin,syn,rst,push,ack,usrg,ece,cwr}`     |  1 byte |  `uint()` |
-| `TCP.flag_fin`  | FIN flag status. If the flag is on, the parameter should be `1`. If not, `0`. |  1 byte |  `uint()` |
-| `TCP.flag_syn`  | SYN flag status. If the flag is on, the parameter should be `1`. If not, `0`. |  1 byte |  `uint()` |
-| `TCP.flag_rst`  | RST(Reset the connection) flag status. If the flag is on, the parameter should be `1`. If not, `0`.             |  1 byte |  `uint()` |
-| `TCP.flag_push` | PSH(Push Function) flag status. If the flag is on, the parameter should be `1`. If not, `0`.                    |  1 byte |  `uint()` |
-| `TCP.flag_ack`  | ACK(Acknowledgment field significant) flag status. If the flag is on, the parameter should be `1`. If not, `0`. |  1 byte |  `uint()` |
-| `TCP.flag_urg`  | URG(Urgent Pointer field significant) flag status. If the flag is on, the parameter should be `1`. If not, `0`. |  1 byte |  `uint()` |
-| `TCP.flag_ece`  | ECE(ECN Echo) flag status. If the flag is on, the parameter should be `1`. If not, `0`.                         |  1 byte |  `uint()` |
-| `TCP.flag_cwr`  | CWR(Congestion window reduced) flag status. If the flag is on, the parameter should be `1`. If not, `0`.        |  1 byte |  `uint()` |
-| `TCP.optdata`   | TCP option field.                         |  `TCP.offset` - 28 byte (fixed TCP header length) |  `hex()` or `raw()` |
-| `TCP.segment`   | TCP data segment field. (Not reassembled) |  N/A | `hex()` or `raw()` |
-| `TCP.data`      | TCP data segment that is reassembled.     |  N/A | `hex()` or `raw()` |
-| `TCP.ssn_id`    | TBW | TBW | TBW |
+| Parameter name     | Description                          | Expected length   | Recommended formatting |
+|:-------------------|:-------------------------------------|:------------------|:-----------------------|
+| `TCP.src_port`     | TCP source port number.              |  2 byte |  `uint()` |
+| `TCP.dst_port`     | TCP destination port number.         |  2 byte |  `uint()` |
+| `TCP.hdr.seq`      | Sequence number of TCP stream.       |  4 byte |  `uint()` |
+| `TCP.hdr.ack`      | Acknowledgment number of TCP stream. |  4 byte |  `uint()` |
+| `TCP.hdr.offset`   | Data offset.                         |  1 byte |  `uint()` | 
+| `TCP.hdr.window`   | Window size.                         |  2 byte |  `uint()` |
+| `TCP.hdr.chksum`   | Checksum.                            |  2 byte |  `uint()` or `hex()` |
+| `TCP.hdr.urgptr`   | Urgent Pointer.                      |  2 byte |  `uint()` |
+| `TCP.hdr.flags`    | TCP flag section. See also `TCP.hdr.flag_{fin,syn,rst,push,ack,usrg,ece,cwr}`     |  1 byte |  `uint()` |
+| `TCP.hdr.flag_fin` | FIN flag status. If the flag is on, the parameter should be `1`. If not, `0`. |  1 byte |  `uint()` |
+| `TCP.hdr.flag_syn` | SYN flag status. If the flag is on, the parameter should be `1`. If not, `0`. |  1 byte |  `uint()` |
+| `TCP.hdr.flag_rst` | RST(Reset the connection) flag status. If the flag is on, the parameter should be `1`. If not, `0`.             |  1 byte |  `uint()` |
+| `TCP.hdr.flag_push`| PSH(Push Function) flag status. If the flag is on, the parameter should be `1`. If not, `0`.                    |  1 byte |  `uint()` |
+| `TCP.hdr.flag_ack` | ACK(Acknowledgment field significant) flag status. If the flag is on, the parameter should be `1`. If not, `0`. |  1 byte |  `uint()` |
+| `TCP.hdr.flag_urg` | URG(Urgent Pointer field significant) flag status. If the flag is on, the parameter should be `1`. If not, `0`. |  1 byte |  `uint()` |
+| `TCP.hdr.flag_ece` | ECE(ECN Echo) flag status. If the flag is on, the parameter should be `1`. If not, `0`.                         |  1 byte |  `uint()` |
+| `TCP.hdr.flag_cwr` | CWR(Congestion window reduced) flag status. If the flag is on, the parameter should be `1`. If not, `0`.        |  1 byte |  `uint()` |
+| `TCP.optdata`      | TCP option field.                         |  `TCP.offset` - 28 byte (fixed TCP header length) |  `hex()` or `raw()` |
+| `TCP.segment`      | TCP data segment field. (Not reassembled) |  N/A | `hex()` or `raw()` |
+| `TCP.data`         | TCP data segment that is reassembled.     |  N/A | `hex()` or `raw()` |
+| `TCP.ssn_id`       | TBW | TBW | TBW |
 
 
 ICMP
