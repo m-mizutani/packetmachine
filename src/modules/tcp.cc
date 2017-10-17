@@ -61,8 +61,11 @@ class TCP : public Module {
     return s;
   }
 
+  MajorParamDef* p_hdr_;  
   const ParamDef* p_src_port_;
   const ParamDef* p_dst_port_;
+
+  /*
   const ParamDef* p_seq_;
   const ParamDef* p_ack_;
   const ParamDef* p_offset_;
@@ -80,7 +83,7 @@ class TCP : public Module {
   const ParamDef* p_flag_urg_;
   const ParamDef* p_flag_ece_;
   const ParamDef* p_flag_cwr_;
-
+  */
   const ParamDef* p_optdata_;
   const ParamDef* p_segment_;
   const ParamDef* p_ssn_id_;;
@@ -474,33 +477,56 @@ class TCP : public Module {
 
  public:
   TCP() : ssn_count_(0), curr_ts_(0), init_ts_(false),
-    ssn_table_(3600, 0xffff) {
+          ssn_table_(3600, 0xffff) {
     this->p_src_port_ = this->define_param("src_port",
-                                        value::PortNumber::new_value);
+                                           value::PortNumber::new_value);
     this->p_dst_port_ = this->define_param("dst_port",
-                                        value::PortNumber::new_value);
+                                           value::PortNumber::new_value);
+    this->p_hdr_ = this->define_major_param("hdr");
+    this->p_hdr_->define_minor(
+        "offset", [](pm::Value*v, const pm::byte_t* ptr) {
+          auto hdr = reinterpret_cast<const struct tcp_header*>(ptr);
+          const uint8_t offset = (hdr->offset_ & 0xf0) >> 2;
+          v->cpy(&offset, sizeof(offset));
+        });
 
-#define DEFINE_PARAM(name) \
-    this->p_ ## name ## _ = this->define_param(#name);
+#define DEFINE_HDR(NAME, ELEM)                                  \
+    this->p_hdr_->define_minor(                                 \
+    NAME, [](pm::Value* v, const pm::byte_t* ptr) {             \
+    auto hdr = reinterpret_cast<const struct tcp_header*>(ptr); \
+    v->set(&(ELEM), sizeof(ELEM));                              \
+  });
+  
+    DEFINE_HDR("seq", hdr->seq_);
+    DEFINE_HDR("ack", hdr->ack_);
+    DEFINE_HDR("flags", hdr->flags_);
+    DEFINE_HDR("window", hdr->window_);
+    DEFINE_HDR("chksum", hdr->chksum_);
+    DEFINE_HDR("urgptr", hdr->urgptr_);
 
-    DEFINE_PARAM(seq);
-    DEFINE_PARAM(ack);
-    DEFINE_PARAM(offset);
-    DEFINE_PARAM(flags);
-    DEFINE_PARAM(window);
-    DEFINE_PARAM(chksum);
-    DEFINE_PARAM(urgptr);
-
-    // Flags
-    DEFINE_PARAM(flag_fin);
-    DEFINE_PARAM(flag_syn);
-    DEFINE_PARAM(flag_rst);
-    DEFINE_PARAM(flag_push);
-    DEFINE_PARAM(flag_ack);
-    DEFINE_PARAM(flag_urg);
-    DEFINE_PARAM(flag_ece);
-    DEFINE_PARAM(flag_cwr);
-
+#undef DEFINE_HDR
+    
+    auto DEFINE_FLAG = [&](const std::string& name, uint8_t flag) {
+      this->p_hdr_->define_minor(
+          name, [&](pm::Value* v, const pm::byte_t* ptr) {
+            auto hdr = reinterpret_cast<const struct tcp_header*>(ptr);
+            byte_t f = ((hdr->flags_ & (flag)) > 0); 
+            v->cpy(&f, sizeof(f));
+          });
+    };
+      
+    DEFINE_FLAG("flag_fin",  FIN);
+    DEFINE_FLAG("flag_syn",  SYN);
+    DEFINE_FLAG("flag_rst",  RST);
+    DEFINE_FLAG("flag_push", PUSH);
+    DEFINE_FLAG("flag_ack",  ACK);
+    DEFINE_FLAG("flag_urg",  URG);
+    DEFINE_FLAG("flag_ece",  ECE);
+    DEFINE_FLAG("flag_cwr",  CWR);
+    
+#define DEFINE_PARAM(name)                                      \
+      this->p_ ## name ## _ = this->define_param(#name);
+        
     // Option
     DEFINE_PARAM(optdata);
 
@@ -511,6 +537,8 @@ class TCP : public Module {
     DEFINE_PARAM(tx_server);
     DEFINE_PARAM(tx_client);
 
+#undef DEFINE_PARAM
+    
     this->p_ssn_id_ = this->define_param("id");
     this->ev_new_ = this->define_event("new_session");
     this->ev_estb_ = this->define_event("established");
@@ -546,42 +574,18 @@ class TCP : public Module {
   
   bool set_properties(Property* prop, const struct tcp_header* hdr,
                       Payload* pd) {
+    // TCP port number
     prop->set_src_port(ntohs(hdr->src_port_));
     prop->set_dst_port(ntohs(hdr->dst_port_));
+    prop->retain_value(this->p_src_port_)->set(&(hdr->src_port_),
+                                               sizeof(hdr->src_port_));
+    prop->retain_value(this->p_dst_port_)->set(&(hdr->dst_port_),
+                                               sizeof(hdr->dst_port_));
 
-#define SET_PROP_FROM_HDR(NAME)                                         \
-    prop->retain_value(this->p_ ## NAME)->set(&(hdr->NAME), sizeof(hdr->NAME));
-
-    SET_PROP_FROM_HDR(src_port_);
-    SET_PROP_FROM_HDR(dst_port_);
-    SET_PROP_FROM_HDR(seq_);
-    SET_PROP_FROM_HDR(ack_);
-
-    const uint8_t offset = (hdr->offset_ & 0xf0) >> 2;
-    prop->retain_value(this->p_offset_)->cpy(&offset, sizeof(offset));
-
-    SET_PROP_FROM_HDR(offset_);
-    SET_PROP_FROM_HDR(flags_);
-    SET_PROP_FROM_HDR(window_);
-    SET_PROP_FROM_HDR(chksum_);
-    SET_PROP_FROM_HDR(urgptr_);
-
-#define SET_FLAGS(FNAME, PNAME)                                         \
-    {                                                                   \
-      byte_t f = ((hdr->flags_ & (FNAME)) > 0);                         \
-      prop->retain_value(this->p_flag_ ## PNAME ## _)->cpy(&f, sizeof(f)); \
-    }
-
-    SET_FLAGS(FIN, fin);
-    SET_FLAGS(SYN, syn);
-    SET_FLAGS(RST, rst);
-    SET_FLAGS(PUSH, push);
-    SET_FLAGS(ACK, ack);
-    SET_FLAGS(URG, urg);
-    SET_FLAGS(ECE, ece);
-    SET_FLAGS(CWR, cwr);
-
+    prop->retain_value(this->p_hdr_)->set(hdr, sizeof(struct tcp_header));
+    
     // Set option data.
+    const uint8_t offset = (hdr->offset_ & 0xf0) >> 2;
     const size_t optlen = offset - sizeof(tcp_header);
     if (optlen > 0) {
       const byte_t* opt = pd->retain(optlen);
