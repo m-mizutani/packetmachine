@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Masayoshi Mizutani <mizutani@sfc.wide.ad.jp> All
+ * Copyright (c) 2017 Masayoshi Mizutani <mizutani@sfc.wide.ad.jp> All
  * rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,65 +24,47 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __PACKETMACHINE_EXCEPTION_HPP
-#define __PACKETMACHINE_EXCEPTION_HPP
+#ifndef __PACKETMACHINE_CONFIG_HPP__
+#define __PACKETMACHINE_CONFIG_HPP__
 
-#include <exception>
-#include <sstream>
+#include "./exception.hpp"
 #include <string>
+#include <map>
 
 namespace pm {
-namespace Exception {
 
-// Exception::Error is base exception of packetmachine.
-// Exception classes of packetmachine should inherit Exception::Error
-// if there is no special reason.
-
-class Error : public std::exception {
+class ConfigValue {
  private:
-  std::string errmsg_;
  public:
-  explicit Error(const std::string &errmsg) : errmsg_(errmsg) {}
-  virtual ~Error() throw() {}
-  virtual const char* what() const throw() {
-    return this->errmsg_.c_str();
-  }
-};
-
-// ConfigError for invalid preparation.
-
-class ConfigError : public Error {
- public:
-  explicit ConfigError(const std::string &errmsg) : Error(errmsg) {}
-};
-
-class TypeError : public Error {
- public:
-  explicit TypeError(const std::string &errmsg) : Error(errmsg) {}
-};
-
-class KeyError : public Error {
- public:
-  explicit KeyError(const std::string &errmsg) : Error(errmsg) {}
+  ConfigValue() {}
+  virtual ~ConfigValue () {}
+  virtual bool as_bool() const;
+  virtual int as_int() const;
+  virtual const std::string& as_str() const;
 };
 
 
-class IndexError : public Error {
+
+class Config {
+ private:
+  typedef std::map<std::string, ConfigValue*> ConfMap;
+  ConfMap kv_map_;
+  static ConfMap::iterator fetch(const std::string& key, ConfMap* kv_map);
+
  public:
-  explicit IndexError(const std::string &errmsg) : Error(errmsg) {}
+  Config();
+  ~Config();
+  Config& set(const std::string& key, int val);
+  Config& set(const std::string& key, const std::string& val);
+  Config& set_true(const std::string& key);
+  Config& set_false(const std::string& key);
+
+  bool has(const std::string& key) const;
+  const ConfigValue& get(const std::string& key) const;
 };
 
-class NoDataError : public Error {
- public:
-  explicit NoDataError(const std::string &errmsg) : Error(errmsg) {}
-};
 
-class RunTimeError : public Error {
- public:
-  explicit RunTimeError(const std::string &errmsg) : Error(errmsg) {}
-};
 
-}   // namespace Exception
 }   // namespace pm
 
-#endif    // __PACKETMACHINE_EXCEPTION_HPP
+#endif   // __PACKETMACHINE_OBJECT_HPP__

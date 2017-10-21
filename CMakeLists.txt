@@ -38,6 +38,7 @@ FILE(GLOB BASESRCS
 	"src/packetmachine.cc"
 	"src/property.cc"
 	"src/object.cc"
+	"src/config.cc"
 
 	# Internal code
 	"src/capture.cc"  "src/capture.hpp"
@@ -57,14 +58,13 @@ FILE(GLOB BASESRCS
 	"src/modules/udp.cc"
 	"src/modules/tcp.cc"
 	"src/modules/icmp.cc"
-  "src/modules/dns.cc"
-  "src/modules/mdns.cc"
-  "src/modules/dhcp.cc"
+	"src/modules/dns.cc"
+	"src/modules/mdns.cc"
+	"src/modules/dhcp.cc"
 	# Decoder utilities
-  "src/modules/utils.cc" "src/modules/utils.hpp"
+	"src/modules/utils.cc" "src/modules/utils.hpp"
 
 	# Decoding utilities
-
 	"./external/cpp-toolbox/src/buffer.cc"
 	"./external/cpp-toolbox/src/buffer.hpp"
 	"./external/cpp-toolbox/src/cache.hpp"
@@ -79,6 +79,7 @@ FILE(GLOB HEADERS
   "src/packetmachine/object.hpp"
   "src/packetmachine/exception.hpp"
   "src/packetmachine/property.hpp"
+  "src/packetmachine/config.hpp"
 )
 FILE(GLOB TESTSRCS
   "test/gtest/gtest-all.cc"	
