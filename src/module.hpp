@@ -150,16 +150,24 @@ class ConfigDef {
   std::string name_;
   std::string local_name_;
  public:
-  
+  explicit ConfigDef(const std::string& local_name) : local_name_(local_name) {}
+  ~ConfigDef() {}
+  void finalize(const std::string& global_name) {
+    this->name_ = global_name;
+  }
+  const std::string& name() const { return this->name_; }
+  const std::string& local_name() const { return this->local_name_; }
 };
 
 typedef std::map<std::string, ParamDef*> ParamMap;
 typedef std::map<std::string, EventDef*> EventMap;
+typedef std::map<std::string, ConfigDef*> ConfigMap;
 
 class Module {
  private:
   ParamMap param_map_;
   EventMap event_map_;
+  ConfigMap config_map_;
   Decoder *dec_;
   mod_id id_;
   std::string name_;
@@ -173,6 +181,7 @@ class Module {
                          Value*(*new_object)() = new_value);
   MajorParamDef* define_major_param(const std::string& name,
                                     Value*(*new_object)() = new_value);
+  void define_config(const std::string& name);
   mod_id lookup_module(const std::string& name);
   param_id lookup_param_id(const std::string& name);
 
@@ -191,6 +200,7 @@ class Module {
 
   ParamMap* param_map() { return &(this->param_map_); }
   EventMap* event_map() { return &(this->event_map_); }
+  ConfigMap* config_map() { return &(this->config_map_); }
   void set_decoder(Decoder* dec);
   void set_mod_id(mod_id id);
   void set_name(const std::string& name);

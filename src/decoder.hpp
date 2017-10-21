@@ -54,6 +54,7 @@ class Decoder {
   std::map<std::string, mod_id> mod_map_;
   std::map<std::string, ParamDef*> param_map_;
   std::map<std::string, EventDef*> event_map_;
+  ConfigMap config_map_;
   std::vector<ParamDef*> params_;
   std::vector<EventDef*> events_;
   std::vector<Module*> modules_;

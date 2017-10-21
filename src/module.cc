@@ -186,6 +186,7 @@ ParamDef* Module::define_param(const std::string& name,
 MajorParamDef* Module::define_major_param(const std::string& name,
                                           Value*(*new_object)()) {
   MajorParamDef *def = new MajorParamDef(name, new_object);
+  assert(this->param_map_.find(name) == this->param_map_.end());
   this->param_map_.insert(std::make_pair(name, def));
   return def;
 }
@@ -193,10 +194,16 @@ MajorParamDef* Module::define_major_param(const std::string& name,
 
 const EventDef* Module::define_event(const std::string& name) {
   EventDef *def = new EventDef(name);
+  assert(this->event_map_.find(name) == this->event_map_.end());
   this->event_map_.insert(std::make_pair(name, def));
   return def;
 }
 
+void Module::define_config(const std::string& name) {
+  ConfigDef *def = new ConfigDef(name);
+  assert(this->config_map_.find(name) == this->config_map_.end());
+  this->config_map_.insert(std::make_pair(name, def));  
+}
 
 mod_id Module::lookup_module(const std::string& name) {
   // lookup_module must not be called before set decoder.
