@@ -32,7 +32,18 @@
 
 namespace pm {
 
-Decoder::Decoder(ModMap *mod_map) : mod_ethernet_(Module::NONE) {
+Decoder::Decoder(ModMap *mod_map) :
+    mod_ethernet_(Module::NONE) {
+  Config config;
+  this->init(config, mod_map);
+}
+
+Decoder::Decoder(const Config& config, ModMap *mod_map) :
+    mod_ethernet_(Module::NONE) {
+  this->init(config, mod_map);
+}
+
+void Decoder::init(const Config& config, ModMap* mod_map) {
   std::map<std::string, Module*> mod_map_local;
   if (!mod_map) {
     mod_map = &mod_map_local;
@@ -93,7 +104,7 @@ Decoder::Decoder(ModMap *mod_map) : mod_ethernet_(Module::NONE) {
 
   // Setup modules.
   for (auto &m : this->modules_) {
-    m->setup();
+    m->setup(config);
   }
   assert(this->mod_ethernet_ != Module::NONE);
   assert(this->mod_event_.size() == this->modules_.size());

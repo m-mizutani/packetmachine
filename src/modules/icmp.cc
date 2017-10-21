@@ -133,7 +133,7 @@ class ICMP : public Module {
     this->p_chksum_ = this->define_param("chksum");
   }
 
-  void setup() {
+  void setup(const Config& config) {
   }
 
 #define SET_PROP(PARAM, DATA) \

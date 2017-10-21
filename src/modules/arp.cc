@@ -84,7 +84,7 @@ class ARP : public Module {
   ~ARP() {
   }
 
-  void setup() {
+  void setup(const Config& config) {
     // pass
   }
 

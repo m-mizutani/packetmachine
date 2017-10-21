@@ -68,6 +68,7 @@ class Machine {
 
  public:
   Machine();
+  explicit Machine(const Config& config);
   ~Machine();
 
   // Configure data source.
@@ -77,7 +78,7 @@ class Machine {
   // Run capture & packet decodeing and wait
   void loop();
 
-  //
+  // Run as background thread
   void start();
   bool join(struct timespec* timeout = nullptr);
   void halt();

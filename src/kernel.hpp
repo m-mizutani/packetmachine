@@ -110,7 +110,7 @@ class Kernel : public Thread {
   std::atomic<bool> running_;
 
  public:
-  Kernel();
+  Kernel(const Config& config);
   ~Kernel();
 
   static void* thread(void* obj);

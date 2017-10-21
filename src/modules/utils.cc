@@ -79,7 +79,7 @@ NameService::NameService(const std::string& base_name)
 NameService::~NameService() {
 }
 
-void NameService::setup() {
+void NameService::setup(const Config& config) {
 }
 
 mod_id NameService::decode(Payload* pd, Property* prop) {

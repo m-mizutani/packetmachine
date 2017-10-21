@@ -57,7 +57,7 @@ class NameService : public Module {
  public:
   explicit NameService(const std::string& base_name);
   virtual ~NameService();
-  void setup();
+  void setup(const Config& config);
   mod_id decode(Payload* pd, Property* prop);
   bool ns_decode(Payload* pd, Property* prop);
   static const byte_t * parse_label(const byte_t * p, size_t remain,

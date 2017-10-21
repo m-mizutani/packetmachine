@@ -33,6 +33,7 @@
 
 #include "./module.hpp"
 #include "./packetmachine/property.hpp"
+#include "./packetmachine/config.hpp"
 
 namespace pm {
 
@@ -60,8 +61,10 @@ class Decoder {
   mod_id mod_ethernet_;
 
  public:
+  Decoder(const Config& config, ModMap *mod_map = nullptr);
   Decoder(ModMap *mod_map = nullptr);
   ~Decoder();
+  void init(const Config& config, ModMap *mod_map);
   void decode(Payload* pd, Property* prop);
   mod_id lookup_module(const std::string& name) const;
 

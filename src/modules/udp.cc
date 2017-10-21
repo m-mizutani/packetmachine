@@ -74,7 +74,7 @@ class UDP : public Module {
 
   }
 
-  void setup() {
+  void setup(const Config& config) {
     this->mod_dns_  = this->lookup_module("DNS");
     this->mod_mdns_ = this->lookup_module("MDNS");
     this->mod_dhcp_ = this->lookup_module("DHCP");

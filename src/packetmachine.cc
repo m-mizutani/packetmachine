@@ -123,7 +123,14 @@ bool Handler::destroy() {
 
 
 Machine::Machine() :
-    cap_(nullptr), input_(nullptr), kernel_(new Kernel) {
+    cap_(nullptr), input_(nullptr) {
+  Config config;
+  this->kernel_ = std::shared_ptr<Kernel>(new Kernel(config));
+}
+
+Machine::Machine(const Config& config) :
+    cap_(nullptr), input_(nullptr) {
+  this->kernel_ = std::shared_ptr<Kernel>(new Kernel(config));
 }
 
 Machine::~Machine() {

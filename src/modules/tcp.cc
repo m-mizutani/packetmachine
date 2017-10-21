@@ -553,9 +553,9 @@ class TCP : public Module {
     }
   }
 
-  mod_id mod_tcpssn_;
-  void setup() {
-    this->mod_tcpssn_ = this->lookup_module("TCPSession");
+  // mod_id mod_tcpssn_;
+  void setup(const Config& config) {
+    // this->mod_tcpssn_ = this->lookup_module("TCPSession");
   }
 
   // ------------------------------------------

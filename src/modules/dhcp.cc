@@ -134,7 +134,7 @@ class DHCP : public Module {
     this->p_opt_data_   = this->define_param("_opt_data");
   }
 
-  void setup() {
+  void setup(const Config& config) {
   }
 
   mod_id decode(Payload* pd, Property* prop) {

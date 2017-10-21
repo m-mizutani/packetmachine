@@ -56,7 +56,6 @@ TEST(Config, overwrite) {
   
   conf.set_true("test.bool");
   conf.set_false("test.bool");
-  EXPECT_EQ(false, conf.get("test.bool").as_bool());
-  
+  EXPECT_EQ(false, conf.get("test.bool").as_bool());  
 }
 

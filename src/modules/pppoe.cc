@@ -58,7 +58,7 @@ class PPPoE : public Module {
   ~PPPoE() {
   }
 
-  void setup() {
+  void setup(const Config& config) {
     this->mod_ipv4_ = this->lookup_module("IPv4");
   }
 

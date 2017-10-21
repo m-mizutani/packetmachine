@@ -79,10 +79,10 @@ bool DeleteHandler::change(Kernel* kernel) {
 // --------------------------------------------------------
 // Kenrel: main process of PacketMachine
 
-Kernel::Kernel() :
+Kernel::Kernel(const Config& config) :
     pkt_channel_(new RingBuffer<Packet>),
     msg_channel_(new MsgQueue<ChangeRequest*>),
-    dec_(new Decoder),
+    dec_(new Decoder(config)),
     recv_pkt_(0), recv_size_(0), global_hdlr_id_(0), running_(false) {
   this->handlers_.resize(this->dec_->event_size());
 }

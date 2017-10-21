@@ -127,7 +127,7 @@ TEST(Decoder, custom_module) {
     int call_count_;
     DummyMod () : call_count_(0) {
     }
-    void setup() {
+    void setup(const pm::Config& config) {
     }
     pm::mod_id decode(pm::Payload* pd, pm::Property* prop) {
       this->call_count_ += 1;
@@ -162,7 +162,7 @@ TEST(Decoder, custom_module_defs) {
       this->p2_ = this->define_param("p2");
       
     }
-    void setup() {}
+    void setup(const pm::Config& config) {}
     pm::mod_id decode(pm::Payload* pd, pm::Property* prop) {
       const pm::byte_t* p = pd->retain(4);
       EXPECT_EQ('a', p[0]);
@@ -209,7 +209,7 @@ TEST(Decoder, batch_param) {
           v->set(&ptr[2], 2);
         });
     }
-    void setup() {}
+    void setup(const pm::Config& config) {}
     pm::mod_id decode(pm::Payload* pd, pm::Property* prop) {
       const pm::byte_t* p = pd->retain(4);
       prop->retain_value(this->p_)->set(p, 4);

@@ -107,7 +107,7 @@ class IPv4 : public Module {
     this->p_data_      = this->define_param("data");
   }
 
-  void setup() {
+  void setup(const Config& config) {
     this->mod_tcp_  = this->lookup_module("TCP");
     this->mod_udp_  = this->lookup_module("UDP");
     this->mod_icmp_ = this->lookup_module("ICMP");

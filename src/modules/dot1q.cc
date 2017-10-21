@@ -49,7 +49,7 @@ class Dot1Q : public Module {
     this->p_vlan_id_ = this->define_param("vlan_id");
   }
 
-  void setup() {
+  void setup(const Config& config) {
     this->mod_ipv4_  = this->lookup_module("IPv4");
     this->mod_arp_   = this->lookup_module("ARP");
     this->mod_pppoe_ = this->lookup_module("PPPoE");

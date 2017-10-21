@@ -34,6 +34,7 @@
 
 #include "./packetmachine/object.hpp"
 #include "./packetmachine/property.hpp"
+#include "./packetmachine/config.hpp"
 #include "./debug.hpp"
 
 namespace pm {
@@ -172,7 +173,7 @@ class Module {
 
   Module();
   virtual ~Module();
-  virtual void setup() = 0;
+  virtual void setup(const Config& config) = 0;
   virtual mod_id decode(Payload* pd, Property* prop) = 0;
 
   mod_id id() const { return this->id_; }
