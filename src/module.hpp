@@ -145,6 +145,14 @@ class EventDef {
   const std::string& name() const { return this->name_; }
 };
 
+class ConfigDef {
+ private:
+  std::string name_;
+  std::string local_name_;
+ public:
+  
+};
+
 typedef std::map<std::string, ParamDef*> ParamMap;
 typedef std::map<std::string, EventDef*> EventMap;
 

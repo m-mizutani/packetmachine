@@ -35,8 +35,10 @@ namespace pm {
 
 class ConfigValue {
  private:
+  std::string key_;
  public:
-  ConfigValue() {}
+  explicit ConfigValue(const std::string& key) : key_(key) {}
+  const std::string& key() const { return this->key_; }
   virtual ~ConfigValue () {}
   virtual bool as_bool() const;
   virtual int as_int() const;

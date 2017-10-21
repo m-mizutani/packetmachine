@@ -46,7 +46,8 @@ class Int : public ConfigValue {
  private:
   int val_;
  public:
-  explicit Int(int val) : val_(val) {}
+  explicit Int(const std::string&key, int val)
+      : ConfigValue(key), val_(val) {}
   int as_int() const { return this->val_; }
 };
 
@@ -54,7 +55,8 @@ class Str : public ConfigValue {
  private:
   std::string val_;
  public:
-  explicit Str(const std::string& val) : val_(val) {}
+  explicit Str(const std::string&key, const std::string& val)
+      : ConfigValue(key), val_(val) {}
   const std::string& as_str() const { return this->val_; }
 };
 
@@ -62,7 +64,8 @@ class Bool : public ConfigValue {
  private:
   bool val_;
  public:
-  explicit Bool(bool val) : val_(val) {}
+  explicit Bool(const std::string&key, bool val)
+      : ConfigValue(key), val_(val) {}
   bool as_bool() const { return this->val_; }
 };
 
@@ -93,28 +96,28 @@ Config::~Config() {
 
 Config& Config::set(const std::string& key, int val) {
   auto it = fetch(key, &this->kv_map_);
-  auto v = new config::Int(val);
+  auto v = new config::Int(key, val);
   it->second = v;
   return *this;
 }
 
 Config& Config::set(const std::string& key, const std::string& val) {
   auto it = fetch(key, &this->kv_map_);
-  auto v = new config::Str(val);
+  auto v = new config::Str(key, val);
   it->second = v;
   return *this;
 }
 
 Config& Config::set_true(const std::string& key) {
   auto it = fetch(key, &this->kv_map_);
-  auto v = new config::Bool(true);
+  auto v = new config::Bool(key, true);
   it->second = v;
   return *this;
 }
 
 Config& Config::set_false(const std::string& key) {
   auto it = fetch(key, &this->kv_map_);
-  auto v = new config::Bool(false);
+  auto v = new config::Bool(key, false);
   it->second = v;
   return *this;
 }
