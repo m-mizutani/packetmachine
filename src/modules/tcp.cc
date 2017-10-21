@@ -477,7 +477,7 @@ class TCP : public Module {
 
  public:
   TCP() : ssn_count_(0), curr_ts_(0), init_ts_(false),
-          ssn_table_(3600, 0xffff) {
+          ssn_table_(3600, 65521) {
     this->p_src_port_ = this->define_param("src_port",
                                            value::PortNumber::new_value);
     this->p_dst_port_ = this->define_param("dst_port",
