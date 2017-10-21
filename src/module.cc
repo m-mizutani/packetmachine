@@ -53,8 +53,7 @@ void build_module_map(std::map<std::string, Module*> *mod_map) {
 
 
 ParamDef::ParamDef(const std::string& local_name, Value*(*constructor)()) :
-    local_name_(local_name), parent_(nullptr), 
-    key_(this), constructor_(constructor) {
+    local_name_(local_name), key_(this), constructor_(constructor) {    
 }
 ParamDef::~ParamDef() {
 }

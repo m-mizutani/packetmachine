@@ -29,8 +29,6 @@
 
 namespace pm {
 
-const uint16_t ETHERTYPE_IP = 0x0800;
-
 class Dot1Q : public Module {
  private:
   static const uint16_t ETHERTYPE_ARP       = 0x0806;

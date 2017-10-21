@@ -51,7 +51,6 @@ class ParamDef {
   std::string local_name_;
   std::map<std::string, ParamDef*> def_map_;
   Defer defer_;
-  ParamDef* parent_;
   
  protected:
   ParamKey key_;
