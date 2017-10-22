@@ -65,25 +65,6 @@ class TCP : public Module {
   const ParamDef* p_src_port_;
   const ParamDef* p_dst_port_;
 
-  /*
-  const ParamDef* p_seq_;
-  const ParamDef* p_ack_;
-  const ParamDef* p_offset_;
-  const ParamDef* p_flags_;
-  const ParamDef* p_window_;
-  const ParamDef* p_chksum_;
-  const ParamDef* p_urgptr_;
-
-  // Flags
-  const ParamDef* p_flag_fin_;
-  const ParamDef* p_flag_syn_;
-  const ParamDef* p_flag_rst_;
-  const ParamDef* p_flag_push_;
-  const ParamDef* p_flag_ack_;
-  const ParamDef* p_flag_urg_;
-  const ParamDef* p_flag_ece_;
-  const ParamDef* p_flag_cwr_;
-  */
   const ParamDef* p_optdata_;
   const ParamDef* p_segment_;
   const ParamDef* p_ssn_id_;;
@@ -108,11 +89,12 @@ class TCP : public Module {
   static const bool DBG_STAT    = false;
   static const bool DBG_REASS   = false;
 
-  static const time_t TIMEOUT = 300;
   uint64_t ssn_count_;
   time_t curr_ts_;
   bool init_ts_;
-  tb::LruHash<Session*> ssn_table_;
+  tb::LruHash<Session*>* ssn_table_;
+  bool enable_ssn_mgmt_;
+  time_t ssn_timeout_;
 
   class Session {
    public:
@@ -476,12 +458,14 @@ class TCP : public Module {
 
 
  public:
-  TCP() : ssn_count_(0), curr_ts_(0), init_ts_(false),
-          ssn_table_(3600, 65521) {
+  TCP() : ssn_count_(0), curr_ts_(0), init_ts_(false), ssn_table_(nullptr) {
+    // -------------------------------
+    // Define parameters    
     this->p_src_port_ = this->define_param("src_port",
                                            value::PortNumber::new_value);
     this->p_dst_port_ = this->define_param("dst_port",
                                            value::PortNumber::new_value);
+    this->p_ssn_id_ = this->define_param("id");
     this->p_hdr_ = this->define_major_param("hdr");
     this->p_hdr_->define_minor(
         "offset", [](pm::Value*v, const pm::byte_t* ptr) {
@@ -538,24 +522,38 @@ class TCP : public Module {
     DEFINE_PARAM(tx_client);
 
 #undef DEFINE_PARAM
-    
-    this->p_ssn_id_ = this->define_param("id");
+
+    // -------------------------------
+    // Define events
     this->ev_new_ = this->define_event("new_session");
     this->ev_estb_ = this->define_event("established");
     this->ev_close_ = this->define_event("closed");
+    
+    // -------------------------------
+    // Define configs
+    this->define_config("enable_session_mgmt", true);
+    this->define_config("session_table_size", 65521);
+    this->define_config("session_timeout", 300);
   }
 
   ~TCP() {
-    this->ssn_table_.wipe();
-    while (this->ssn_table_.has_expired()) {
-      auto ssn = this->ssn_table_.pop_expired();
+    this->ssn_table_->wipe();
+    while (this->ssn_table_->has_expired()) {
+      auto ssn = this->ssn_table_->pop_expired();
       delete ssn;
     }
   }
 
   // mod_id mod_tcpssn_;
   void setup(const Config& config) {
-    // this->mod_tcpssn_ = this->lookup_module("TCPSession");
+    size_t ssn_table_size =
+        static_cast<size_t>(config.get("session_table_size").as_int());
+    this->ssn_table_ = new tb::LruHash<Session*>(3600, ssn_table_size);
+    
+    this->enable_ssn_mgmt_ = config.get("enable_session_mgmt").as_bool();
+
+    this->ssn_timeout_ =
+        static_cast<time_t>(config.get("session_timeout").as_int());
   }
 
   // ------------------------------------------
@@ -568,6 +566,7 @@ class TCP : public Module {
   const ParamDef* p_tx_client() const { return this->p_tx_client_; }
   const EventDef* ev_close() const    { return this->ev_close_; }
 
+  inline time_t ssn_timeout() const { return this->ssn_timeout_; }
 
   // ------------------------------------------
   // Set header properties
@@ -609,7 +608,7 @@ class TCP : public Module {
     if (node.is_null()) {
       mod->ssn_count_++;
       ssn = new Session(*prop, mod, mod->ssn_count_);
-      ssn_table->put(300, key, ssn);
+      ssn_table->put(mod->ssn_timeout(), key, ssn);
       prop->push_event(mod->ev_new_);
     } else {
       ssn = node.data();
@@ -643,41 +642,43 @@ class TCP : public Module {
 
     // ----------------------------------------
     // TCP session management
-    static tb::HashKey key;
+    if (this->enable_ssn_mgmt_) {
+      static tb::HashKey key;
 
-    time_t ts = prop->ts();
-    if (this->curr_ts_ < ts) {
-      time_t diff = ts - this->curr_ts_;
-      this->curr_ts_ = ts;
-      if (this->init_ts_) {
-        this->ssn_table_.step(diff);
-      } else {
-        this->init_ts_ = true;
+      time_t ts = prop->ts();
+      if (this->curr_ts_ < ts) {
+        time_t diff = ts - this->curr_ts_;
+        this->curr_ts_ = ts;
+        if (this->init_ts_) {
+          this->ssn_table_->step(diff);
+        } else {
+          this->init_ts_ = true;
+        }
+      }
+
+      while (this->ssn_table_->has_expired()) {
+        Session* old_ssn = this->ssn_table_->pop_expired();
+        delete old_ssn;
+      }
+
+
+      Session::make_key(*prop, &key);
+      Session* ssn = this->search_session(prop, this->ssn_table_, key, this);
+    
+      if (ssn) {
+        uint8_t flags = (hdr->flags_ & (FIN | SYN | RST | ACK));
+        flags &= (SYN|ACK|FIN|RST);
+        uint32_t seq = ntohl(hdr->seq_);
+        uint32_t ack = ntohl(hdr->ack_);
+        uint16_t win = ntohs(hdr->window_);
+      
+        debug(DBG, "ssn = %p", ssn);
+        const uint64_t ssn_id = ssn->id();
+        prop->retain_value(this->p_ssn_id_)->cpy(&ssn_id, sizeof(ssn_id));
+        ssn->decode(prop, flags, seq, ack, seg_len, seg_ptr, win);
       }
     }
-
-    while (this->ssn_table_.has_expired()) {
-      Session* old_ssn = this->ssn_table_.pop_expired();
-      delete old_ssn;
-    }
-
-
-    Session::make_key(*prop, &key);
-    Session* ssn = this->search_session(prop, &(this->ssn_table_), key, this);
     
-    if (ssn) {
-      uint8_t flags = (hdr->flags_ & (FIN | SYN | RST | ACK));
-      flags &= (SYN|ACK|FIN|RST);
-      uint32_t seq = ntohl(hdr->seq_);
-      uint32_t ack = ntohl(hdr->ack_);
-      uint16_t win = ntohs(hdr->window_);
-      
-      debug(DBG, "ssn = %p", ssn);
-      const uint64_t ssn_id = ssn->id();
-      prop->retain_value(this->p_ssn_id_)->cpy(&ssn_id, sizeof(ssn_id));
-      ssn->decode(prop, flags, seq, ack, seg_len, seg_ptr, win);
-    }
-
     return Module::NONE;
   }
 };
