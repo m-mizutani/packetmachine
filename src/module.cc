@@ -157,6 +157,20 @@ void MinorParamDef::set_minor_id(param_id pid) {
 }
 
 
+// -------------------------------------
+// ConfigDef
+//
+
+void ConfigDef::finalize(mod_id module_id, const std::string& prefix) {
+  this->module_id_ = module_id;
+  this->name_ = prefix + "." + this->local_name_;
+}
+
+
+// -------------------------------------
+// Module
+//
+
 Module::Module() : dec_(nullptr), id_(Module::NONE) {
 }
 

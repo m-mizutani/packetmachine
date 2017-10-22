@@ -33,6 +33,7 @@
 
 namespace pm {
 
+
 class ConfigValue {
  private:
   std::string key_;
@@ -45,13 +46,13 @@ class ConfigValue {
   virtual const std::string& as_str() const;
 };
 
+typedef std::shared_ptr<ConfigValue> ConfigPtr;
 
 
 class Config {
  private:
-  typedef std::map<std::string, ConfigValue*> ConfMap;
+  typedef std::map<std::string, ConfigPtr> ConfMap;
   ConfMap kv_map_;
-  static ConfMap::iterator fetch(const std::string& key, ConfMap* kv_map);
 
  public:
   Config();
@@ -60,9 +61,12 @@ class Config {
   Config& set(const std::string& key, const std::string& val);
   Config& set_true(const std::string& key);
   Config& set_false(const std::string& key);
+  Config& set(const std::string& key, ConfigPtr val);
 
+  const ConfMap& map() const { return this->kv_map_; }
   bool has(const std::string& key) const;
   const ConfigValue& get(const std::string& key) const;
+  ConfigPtr ptr(const std::string& key) const;
 };
 
 

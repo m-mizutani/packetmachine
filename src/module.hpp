@@ -147,14 +147,15 @@ class EventDef {
 
 class ConfigDef {
  private:
+  mod_id module_id_;
   std::string name_;
   std::string local_name_;
  public:
-  explicit ConfigDef(const std::string& local_name) : local_name_(local_name) {}
+  explicit ConfigDef(const std::string& local_name)
+      : local_name_(local_name) {}
   ~ConfigDef() {}
-  void finalize(const std::string& global_name) {
-    this->name_ = global_name;
-  }
+  void finalize(mod_id module_id, const std::string& prefix);
+  mod_id module_id() const { return this->module_id_; }
   const std::string& name() const { return this->name_; }
   const std::string& local_name() const { return this->local_name_; }
 };

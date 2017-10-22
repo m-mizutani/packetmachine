@@ -72,53 +72,40 @@ class Bool : public ConfigValue {
 }   // namespace config
 
 
-Config::ConfMap::iterator Config::fetch(const std::string& key,
-                                        Config::ConfMap* kv_map) {
-  auto it = kv_map->find(key);
-  if (it == kv_map->end()) {
-    kv_map->insert(std::make_pair(key, nullptr));
-    return kv_map->find(key);
-  } else {
-    delete it->second;
-    return it;
-  }  
-}
-
-
 Config::Config() {
 };
 
 Config::~Config() {
-  for (auto& it : this->kv_map_) {
-    delete it.second;
-  }
 }
 
 Config& Config::set(const std::string& key, int val) {
-  auto it = fetch(key, &this->kv_map_);
-  auto v = new config::Int(key, val);
-  it->second = v;
+  this->set(key, ConfigPtr(new config::Int(key, val)));
   return *this;
 }
 
 Config& Config::set(const std::string& key, const std::string& val) {
-  auto it = fetch(key, &this->kv_map_);
-  auto v = new config::Str(key, val);
-  it->second = v;
+  this->set(key, ConfigPtr(new config::Str(key, val)));
   return *this;
 }
 
 Config& Config::set_true(const std::string& key) {
-  auto it = fetch(key, &this->kv_map_);
-  auto v = new config::Bool(key, true);
-  it->second = v;
+  this->set(key, ConfigPtr(new config::Bool(key, true)));
   return *this;
 }
 
 Config& Config::set_false(const std::string& key) {
-  auto it = fetch(key, &this->kv_map_);
-  auto v = new config::Bool(key, false);
-  it->second = v;
+  this->set(key, ConfigPtr(new config::Bool(key, false)));
+  return *this;
+}
+
+Config& Config::set(const std::string& key, ConfigPtr val) {
+  auto it = this->kv_map_.find(key);
+  if (it == this->kv_map_.end()) {    
+    this->kv_map_.insert(std::make_pair(key, val));
+  } else {
+    it->second = val;
+  }  
+
   return *this;
 }
 
@@ -133,7 +120,17 @@ const ConfigValue& Config::get(const std::string& key) const {
     throw Exception::KeyError(key + " does not exist");
   }
 
-  return *(it->second);  
+  return *(it->second.get());
 }
+
+ConfigPtr Config::ptr(const std::string& key) const {
+  auto it = this->kv_map_.find(key);
+  if (it == this->kv_map_.end()) {
+    throw Exception::KeyError(key + " does not exist");
+  }
+
+  return it->second;  
+}
+
 
 }   // namespace pm

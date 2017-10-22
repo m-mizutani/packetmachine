@@ -33,13 +33,13 @@
 namespace pm {
 
 Decoder::Decoder(ModMap *mod_map) :
-    mod_ethernet_(Module::NONE) {
+    mod_ethernet_(Module::NONE), initialized_(false) {
   Config config;
   this->init(config, mod_map);
 }
 
 Decoder::Decoder(const Config& config, ModMap *mod_map) :
-    mod_ethernet_(Module::NONE) {
+    mod_ethernet_(Module::NONE), initialized_(false) {
   this->init(config, mod_map);
 }
 
@@ -67,14 +67,14 @@ void Decoder::init(const Config& config, ModMap* mod_map) {
     }
   }
 
-  for (auto& m : this->modules_) {
+  for (auto& mod : this->modules_) {
     // Building parameter map.
-    for (auto& p : *(m->param_map())) {
+    for (auto& p : *(mod->param_map())) {
       const param_id global_id = this->params_.size();
       ParamDef *def = p.second;
-      const std::string pname(m->name() + "." + p.first);
+      const std::string pname(mod->name() + "." + p.first);
 
-      def->finalize(m->id(), global_id, m->name());
+      def->finalize(mod->id(), global_id, mod->name());
       
       this->params_.push_back(def);
       this->param_map_.insert(std::make_pair(def->name(), def));
@@ -87,27 +87,54 @@ void Decoder::init(const Config& config, ModMap* mod_map) {
     }
 
     // Building event map.
-    for (auto& ev : *(m->event_map())) {
+    for (auto& ev : *(mod->event_map())) {
       const event_id global_id = this->events_.size();
       EventDef *def = ev.second;
-      def->set_module_id(m->id());
+      def->set_module_id(mod->id());
       def->set_id(global_id);
       if (ev.first.length() > 0) {
-        def->set_name(m->name() + "." + ev.first);
+        def->set_name(mod->name() + "." + ev.first);
       } else {
-        def->set_name(m->name());
+        def->set_name(mod->name());
       }
       this->events_.push_back(def);
       this->event_map_.insert(std::make_pair(def->name(), def));
     }
+
+    // Building config key map
+    for (auto& cit : *(mod->config_map())) {
+      cit.second->finalize(mod->id(), mod->name());
+      this->config_map_.insert(std::make_pair(cit.second->name(),
+                                              cit.second));
+    }
   }
 
+  // Check config keys
+  for (const auto &conf : config.map()) {
+    if (this->config_map_.find(conf.first) == this->config_map_.end()) {
+      std::stringstream errmsg;
+      errmsg << "'" << conf.first << "' is not valid config key";
+      throw Exception::ConfigError(errmsg.str());
+    }
+  }
+  
   // Setup modules.
-  for (auto &m : this->modules_) {
-    m->setup(config);
+  for (auto &mod : this->modules_) {
+    Config local_config;
+    for (const auto& cit : *(mod->config_map())) {
+      auto conf_def = cit.second;
+      if (config.has(conf_def->name())) {
+        local_config.set(conf_def->local_name(),
+                         config.ptr(conf_def->name()));
+      }
+    }
+    
+    mod->setup(local_config);
   }
   assert(this->mod_ethernet_ != Module::NONE);
   assert(this->mod_event_.size() == this->modules_.size());
+
+  this->initialized_ = true;
 }
 
 

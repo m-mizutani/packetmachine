@@ -54,13 +54,15 @@ class Decoder {
   std::map<std::string, mod_id> mod_map_;
   std::map<std::string, ParamDef*> param_map_;
   std::map<std::string, EventDef*> event_map_;
-  ConfigMap config_map_;
+  // ConfigMap config_map_;
+  std::map<std::string, ConfigDef*> config_map_;
   std::vector<ParamDef*> params_;
   std::vector<EventDef*> events_;
   std::vector<Module*> modules_;
   std::vector<const EventDef*> mod_event_;
   mod_id mod_ethernet_;
-
+  bool initialized_;
+  
  public:
   Decoder(const Config& config, ModMap *mod_map = nullptr);
   Decoder(ModMap *mod_map = nullptr);
