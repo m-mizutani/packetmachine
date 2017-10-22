@@ -309,5 +309,38 @@ TEST(Decoder, config_test) {
   
 }
 
+TEST(Decoder, config_default) {
+  class DummyMod : public pm::Module {
+   public:
+    DummyMod () {
+      this->define_config("t1", true);
+      this->define_config("t2", 32);
+      this->define_config("t3", std::string("akito"));
+      this->define_config("t4", std::string("otika"));
+    }
+    
+    void setup(const pm::Config& config) {
+      EXPECT_EQ(true, config.has("t1"));
+      EXPECT_EQ(true, config.has("t2"));
+      EXPECT_EQ(true, config.has("t3"));
+      EXPECT_EQ(true, config.has("t4"));
+      
+      EXPECT_EQ(true, config.get("t1").as_bool());   // Default
+      EXPECT_EQ(32,   config.get("t2").as_int());    // Default
+      EXPECT_EQ("akito", config.get("t3").as_str()); // Default
+      EXPECT_EQ("r", config.get("t4").as_str());     // Overwritten
+    }
+    pm::mod_id decode(pm::Payload* pd, pm::Property* prop) {
+      return pm::Module::NONE;
+    };
+  };
+
+  pm::Config config;
+  config.set("Ethernet.t4", "r");
+  pm::ModMap mod_map;
+  mod_map.insert(std::make_pair("Ethernet", new DummyMod));
+  pm::Decoder dec(config, &mod_map);
+}
+
 }   // namespace module_test
 

@@ -150,10 +150,14 @@ class ConfigDef {
   mod_id module_id_;
   std::string name_;
   std::string local_name_;
+  ConfigPtr default_value_;
+  
  public:
   explicit ConfigDef(const std::string& local_name)
       : local_name_(local_name) {}
   ~ConfigDef() {}
+  void set_default(ConfigPtr default_value);
+  ConfigPtr default_value() const { return this->default_value_; }
   void finalize(mod_id module_id, const std::string& prefix);
   mod_id module_id() const { return this->module_id_; }
   const std::string& name() const { return this->name_; }
@@ -183,6 +187,9 @@ class Module {
   MajorParamDef* define_major_param(const std::string& name,
                                     Value*(*new_object)() = new_value);
   void define_config(const std::string& name);
+  void define_config(const std::string& name, int dflt_val);
+  void define_config(const std::string& name, bool dflt_val);
+  void define_config(const std::string& name, const std::string& dflt_val);
   mod_id lookup_module(const std::string& name);
   param_id lookup_param_id(const std::string& name);
 

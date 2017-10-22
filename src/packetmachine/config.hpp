@@ -45,6 +45,7 @@ class ConfigValue {
   virtual bool as_bool() const;
   virtual int as_int() const;
   virtual const std::string& as_str() const;
+  void rename(const std::string& new_name);
 };
 
 typedef std::shared_ptr<ConfigValue> ConfigPtr;

@@ -43,6 +43,11 @@ const std::string& ConfigValue::as_str() const {
                              " does not allow str type");
 }
 
+void ConfigValue::rename(const std::string& new_name) {
+  this->key_ = new_name;
+}
+
+
 namespace config {
 
 class Int : public ConfigValue {

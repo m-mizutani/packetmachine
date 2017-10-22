@@ -27,6 +27,7 @@
 #include <assert.h>
 #include "./module.hpp"
 #include "./decoder.hpp"
+#include "./packetmachine/config.hpp"
 
 namespace pm {
 
@@ -161,6 +162,10 @@ void MinorParamDef::set_minor_id(param_id pid) {
 // ConfigDef
 //
 
+void ConfigDef::set_default(ConfigPtr default_value) {
+  this->default_value_ = default_value;
+}
+
 void ConfigDef::finalize(mod_id module_id, const std::string& prefix) {
   this->module_id_ = module_id;
   this->name_ = prefix + "." + this->local_name_;
@@ -213,8 +218,31 @@ const EventDef* Module::define_event(const std::string& name) {
   return def;
 }
 
+
 void Module::define_config(const std::string& name) {
   ConfigDef *def = new ConfigDef(name);
+  assert(this->config_map_.find(name) == this->config_map_.end());
+  this->config_map_.insert(std::make_pair(name, def));  
+}
+
+void Module::define_config(const std::string& name, int dflt_val) {
+  ConfigDef *def = new ConfigDef(name);
+  def->set_default(Config::make_value(name, dflt_val));
+  assert(this->config_map_.find(name) == this->config_map_.end());
+  this->config_map_.insert(std::make_pair(name, def));  
+}
+
+void Module::define_config(const std::string& name, bool dflt_val) {
+  ConfigDef *def = new ConfigDef(name);
+  def->set_default(Config::make_value(name, dflt_val));
+  assert(this->config_map_.find(name) == this->config_map_.end());
+  this->config_map_.insert(std::make_pair(name, def));  
+}
+
+void Module::define_config(const std::string& name,
+                           const std::string& dflt_val) {
+  ConfigDef *def = new ConfigDef(name);
+  def->set_default(Config::make_value(name, dflt_val));
   assert(this->config_map_.find(name) == this->config_map_.end());
   this->config_map_.insert(std::make_pair(name, def));  
 }

@@ -123,9 +123,17 @@ void Decoder::init(const Config& config, ModMap* mod_map) {
     Config local_config;
     for (const auto& cit : *(mod->config_map())) {
       auto conf_def = cit.second;
+      
       if (config.has(conf_def->name())) {
+        // Use config value that user put
         local_config.set(conf_def->local_name(),
                          config.ptr(conf_def->name()));
+      } else {
+        // Use default value if definition has
+        auto dflt = conf_def->default_value();
+        if (dflt.use_count() > 0 && dflt.get() != nullptr) {
+          local_config.set(conf_def->local_name(), dflt);
+        }
       }
     }
     
