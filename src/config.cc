@@ -82,22 +82,22 @@ Config::~Config() {
 }
 
 Config& Config::set(const std::string& key, int val) {
-  this->set(key, ConfigPtr(new config::Int(key, val)));
+  this->set(key, make_value(key, val));
   return *this;
 }
 
 Config& Config::set(const std::string& key, const std::string& val) {
-  this->set(key, ConfigPtr(new config::Str(key, val)));
+  this->set(key, make_value(key, val));
   return *this;
 }
 
 Config& Config::set_true(const std::string& key) {
-  this->set(key, ConfigPtr(new config::Bool(key, true)));
+  this->set(key, make_value(key, true));
   return *this;
 }
 
 Config& Config::set_false(const std::string& key) {
-  this->set(key, ConfigPtr(new config::Bool(key, false)));
+  this->set(key, make_value(key, false));
   return *this;
 }
 
@@ -111,6 +111,21 @@ Config& Config::set(const std::string& key, ConfigPtr val) {
 
   return *this;
 }
+
+
+ConfigPtr Config::make_value(const std::string& key, int val) {
+  return ConfigPtr(new config::Int(key, val));
+}
+
+ConfigPtr Config::make_value(const std::string& key, bool val) {
+  return ConfigPtr(new config::Bool(key, val));
+}
+
+ConfigPtr Config::make_value(const std::string& key, const std::string& val) {
+  return ConfigPtr(new config::Str(key, val));
+}
+
+
 
 
 bool Config::has(const std::string& key) const {

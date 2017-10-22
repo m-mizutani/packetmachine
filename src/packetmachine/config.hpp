@@ -64,6 +64,10 @@ class Config {
   Config& set_false(const std::string& key);
   Config& set(const std::string& key, ConfigPtr val);
 
+  static ConfigPtr make_value(const std::string& key, int val);
+  static ConfigPtr make_value(const std::string& key, bool val);
+  static ConfigPtr make_value(const std::string& key, const std::string& val);
+  
   const ConfMap& map() const { return this->kv_map_; }
   bool has(const std::string& key) const;
   const ConfigValue& get(const std::string& key) const;
