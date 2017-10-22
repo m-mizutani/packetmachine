@@ -30,6 +30,7 @@
 #include "./exception.hpp"
 #include <string>
 #include <map>
+#include <memory>
 
 namespace pm {
 
