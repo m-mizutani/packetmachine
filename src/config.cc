@@ -31,13 +31,16 @@
 namespace pm {
 
 bool ConfigValue::as_bool() const {
-  throw Exception::TypeError("bool is not supported");
+  throw Exception::TypeError("config: " + this->key_ +
+                             " does not allow bool type");
 }
 int ConfigValue::as_int() const {
-  throw Exception::TypeError("int is not supported");
+  throw Exception::TypeError("config: " + this->key_ +
+                             " does not allow int type");
 }
 const std::string& ConfigValue::as_str() const {
-  throw Exception::TypeError("string is not supported");
+  throw Exception::TypeError("config: " + this->key_ +
+                             " does not allow str type");
 }
 
 namespace config {

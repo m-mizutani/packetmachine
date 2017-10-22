@@ -245,6 +245,69 @@ TEST(Decoder, batch_param) {
   EXPECT_EQ("cd", prop.value("Ethernet.p.2").repr());
 }
 
+TEST(Decoder, config_test) {
+  class DummyMod1 : public pm::Module {
+   public:
+    DummyMod1 () {
+      this->define_config("t1");
+    }
+    void setup(const pm::Config& config) {
+      EXPECT_EQ(true, config.has("t1"));
+      EXPECT_EQ(false, config.has("t2"));
+      EXPECT_EQ("v", config.get("t1").as_str());
+    }
+    pm::mod_id decode(pm::Payload* pd, pm::Property* prop) {
+      return pm::Module::NONE;
+    };
+  };
+
+  class DummyMod2 : public pm::Module {
+   public:
+    DummyMod2 () {
+      this->define_config("t2");
+    }
+    void setup(const pm::Config& config) {
+      EXPECT_EQ(false, config.has("t1"));
+      EXPECT_EQ(true, config.has("t2"));
+      EXPECT_EQ("x", config.get("t2").as_str());
+    }
+    pm::mod_id decode(pm::Payload* pd, pm::Property* prop) {
+      return pm::Module::NONE;
+    };
+  };
+
+  // test normal set
+  EXPECT_NO_THROW({
+      pm::ModMap mod_map;
+      mod_map.insert(std::make_pair("Ethernet", new DummyMod1));
+      mod_map.insert(std::make_pair("Blue", new DummyMod2));
+      pm::Config config;
+      config.set("Ethernet.t1", "v");
+      config.set("Blue.t2", "x");
+      pm::Decoder dec(config, &mod_map);
+    });
+
+  // Test invalid config key
+  EXPECT_THROW({
+      pm::ModMap mod_map;
+      mod_map.insert(std::make_pair("Ethernet", new DummyMod1));
+      mod_map.insert(std::make_pair("Blue", new DummyMod2));
+      pm::Config config;
+      config.set("Ethernet.t2", "v");
+      pm::Decoder dec(config, &mod_map);
+    }, pm::Exception::ConfigError);
+
+  // Test type error
+  EXPECT_THROW({
+      pm::ModMap mod_map;
+      mod_map.insert(std::make_pair("Ethernet", new DummyMod1));
+      mod_map.insert(std::make_pair("Blue", new DummyMod2));
+      pm::Config config;
+      config.set("Blue.t2", 1);
+      pm::Decoder dec(config, &mod_map);
+    }, pm::Exception::TypeError);
+  
+}
 
 }   // namespace module_test
 
