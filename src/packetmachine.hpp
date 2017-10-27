@@ -34,7 +34,7 @@
 #include "./packetmachine/common.hpp"
 #include "./packetmachine/exception.hpp"
 #include "./packetmachine/property.hpp"
-#include "./packetmachine/object.hpp"
+#include "./packetmachine/value.hpp"
 #include "./packetmachine/config.hpp"
 
 namespace pm {

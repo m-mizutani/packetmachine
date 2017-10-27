@@ -25,7 +25,7 @@
  */
 
 #include "./gtest/gtest.h"
-#include "../src/packetmachine/object.hpp"
+#include "../src/packetmachine/value.hpp"
 
 namespace machine_test {
 
