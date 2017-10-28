@@ -22,6 +22,16 @@ int main(int argc, char* argv[]) {
 }
 ```
 
+**PacketMachine is ...**
+
+- High performance packet decoding library
+- Able to capture network traffic via existing mechanism (e.g. libpcap)
+
+**PacketMachine is not ...**
+
+- Packet capturing mechanism with higher performance than netmap, DPDK, etc.
+- Packet crafting library.
+
 Features
 ------------
 
