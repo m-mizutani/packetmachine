@@ -24,7 +24,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "./packetmachine/object.hpp"
+#include "./packetmachine/value.hpp"
 
 #include <string.h>
 #include <ctype.h>

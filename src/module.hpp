@@ -32,7 +32,7 @@
 #include <vector>
 #include <string>
 
-#include "./packetmachine/object.hpp"
+#include "./packetmachine/value.hpp"
 #include "./packetmachine/property.hpp"
 #include "./packetmachine/config.hpp"
 #include "./debug.hpp"

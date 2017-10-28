@@ -37,7 +37,7 @@ FILE(GLOB BASESRCS
 	# Exposed code
 	"src/packetmachine.cc"
 	"src/property.cc"
-	"src/object.cc"
+	"src/value.cc"
 	"src/config.cc"
 
 	# Internal code
@@ -76,7 +76,7 @@ FILE(GLOB BASESRCS
 FILE(GLOB HEADERS
   "src/packetmachine.hpp"
   "src/packetmachine/common.hpp"
-  "src/packetmachine/object.hpp"
+  "src/packetmachine/value.hpp"
   "src/packetmachine/exception.hpp"
   "src/packetmachine/property.hpp"
   "src/packetmachine/config.hpp"
