@@ -55,6 +55,7 @@ FILE(GLOB BASESRCS
 	"src/modules/pppoe.cc"
 	"src/modules/arp.cc"
 	"src/modules/ipv4.cc"
+	"src/modules/ipv6.cc"
 	"src/modules/udp.cc"
 	"src/modules/tcp.cc"
 	"src/modules/icmp.cc"

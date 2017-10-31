@@ -43,6 +43,7 @@ void build_module_map(std::map<std::string, Module*> *mod_map) {
   INSTALL_MOD(PPPoE);
   INSTALL_MOD(ARP);
   INSTALL_MOD(IPv4);
+  INSTALL_MOD(IPv6);
   INSTALL_MOD(ICMP);
   INSTALL_MOD(UDP);
   INSTALL_MOD(TCP);
