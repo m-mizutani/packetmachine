@@ -219,6 +219,14 @@ class IPv4Addr : public Value {
   static Value* new_value() { return new IPv4Addr(); }
 };
 
+class IPv6Addr : public Value {
+ public:
+  IPv6Addr() = default;
+  ~IPv6Addr() = default;
+  void repr(std::ostream &os) const { this->ip6(os); }
+  static Value* new_value() { return new IPv6Addr(); }
+};
+
 class PortNumber : public Value {
  public:
   PortNumber() = default;
