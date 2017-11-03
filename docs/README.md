@@ -6,14 +6,12 @@ PacketMachine Developers Document
 - Fast decoding Ethernet and TCP/IP
     - Multi threading
     - Less data copy
-- High extensibility, basic support protocols
-    - Ethernet
+- Extensibility, basic support protocols
+    - Ethernet, PPPoE
     - ARP
-    - PPPoE
-    - IP
-    - TCP/UDP/ICMP
-    - DNS
-    - mDNS
+    - IPv4
+    - TCP, UDP, ICMP
+    - DNS, mDNS
     - DHCP
 - Based on C++14
 
@@ -23,4 +21,7 @@ Table of Contents
 
 - [Install](install.md)
 - [Tutorial](tutorial.md)
+- [Benchmark](benchmark.md)
 - [API guide](api.md)
+- [Parameter List](parameters.md)
+- [Event List](events.md)
