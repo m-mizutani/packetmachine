@@ -23,5 +23,7 @@ Table of Contents
 - [Tutorial](tutorial.md)
 - [Benchmark](benchmark.md)
 - [API guide](api.md)
-- [Parameter List](parameters.md)
-- [Event List](events.md)
+- References
+    - [Parameter List](parameters.md)
+    - [Event List](events.md)
+    - [Config List](configs.md)
