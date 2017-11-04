@@ -18,11 +18,11 @@ Data set
 
 Refer [Public PCAP files for download](http://www.netresec.com/?page=PcapFiles) that is provided by [NETRESEC](https://www.netresec.com/).
 
-| Name                                   | Data Size  | Packet count | Average Packet Length |
-|:---------------------------------------|-----------:|-------------:|----------------------:|
-| `net-2009-11-17-10:32.pcap`            | 289.12 MB  | 332,045      | 854.72 Byte |
-| `maccdc2010_00000_20100310205651.pcap` | 925.33 MB  | 10,000,000   | 765.33 Byte |
-| `maccdc2012_00000.pcap`                | 1073.67 MB | 8,635,943    | 108.32 Byte |
+| Name                                   | Data File Size  | Packet count | Average Packet Length |
+|:---------------------------------------|----------------:|-------------:|----------------------:|
+| `net-2009-11-17-10:32.pcap`            | 289.12 MB       | 332,045      | 854.72 Byte |
+| `maccdc2010_00000_20100310205651.pcap` | 925.33 MB       | 10,000,000   |  76.33 Byte |
+| `maccdc2012_00000.pcap`                | 1073.67 MB      | 8,635,943    | 108.32 Byte |
 
 Results
 -----------
