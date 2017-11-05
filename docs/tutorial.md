@@ -109,7 +109,9 @@ int main(int argc, char* argv[]) {
 
 `pm::Machine::start()` starts threads in the background for capturing packets, decoding packets and call functions registered as callback. If you need to wait exiting input after `pm::Machine::start()`, `pm::Machine::join()` allowsthe main thread to join to the background threads.
 
-Please note the callback functions should be called in the background thread and you need lock like `pthread_mutex_lock` to share variable(s) among threads in order to avoid race condition.
+![architecture](./images/architecture_overview.png)
+
+The above diagram describes thread mechanism of PacketMachine. If you call `Machine::loop()`, the function just call both of `Machine::start()` and `Machine::join()`. Please note the callback functions should be called in the background thread (Decoder thread in the diagram) and you need lock like `pthread_mutex_lock` to share variable(s) among threads in order to avoid race condition.
 
 
 ### [Enable/disable/destroy handler](#manage-handler)
