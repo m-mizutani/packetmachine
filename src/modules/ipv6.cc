@@ -39,17 +39,17 @@ class IPv6 : public Module {
   static const uint8_t PROTO_ICMP6 = 58;
 
   struct ipv6_header {
-    u_int32_t flags_;      // version, traffic class, flow label
-    u_int16_t data_len_;   // dat length
-    u_int8_t  next_hdr_;   // next header
-    u_int8_t  hop_limit_;  // hop limit
-    u_int32_t src_[4];     // source address
-    u_int32_t dst_[4];     // dest address
+    uint32_t flags_;      // version, traffic class, flow label
+    uint16_t data_len_;   // dat length
+    uint8_t  next_hdr_;   // next header
+    uint8_t  hop_limit_;  // hop limit
+    uint32_t src_[4];     // source address
+    uint32_t dst_[4];     // dest address
   } __attribute__((packed));
 
   struct ipv6_option {
-    u_int8_t next_hdr_;
-    u_int8_t hdr_len_;
+    uint8_t next_hdr_;
+    uint8_t hdr_len_;
   } __attribute__((packed));
   
   MajorParamDef *p_hdr_;
