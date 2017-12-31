@@ -89,21 +89,45 @@ Kernel::Kernel(const Config& config) :
 Kernel::~Kernel() {
 }
 
+#define	timespecsub(tsp, usp, vsp)                      \
+  do {                                                  \
+    (vsp)->tv_sec = (tsp)->tv_sec - (usp)->tv_sec;      \
+    (vsp)->tv_nsec = (tsp)->tv_nsec - (usp)->tv_nsec;	\
+    if ((vsp)->tv_nsec < 0) {				\
+      (vsp)->tv_sec--;                                  \
+      (vsp)->tv_nsec += 1000000000L;			\
+    }							\
+  } while (0)
+
 void Kernel::thread_main() {
   Packet* pkt;
   Payload pd;
   Property prop;
+  struct timespec prev_ts, curr_ts, diff_ts;
   
+  const clockid_t clk = CLOCK_REALTIME;
+  // clockid_t clk = CLOCK_REALTIME_COARSE;
+
+  uint32_t timeout = 0xfffff;
+  clock_gettime(clk, &prev_ts);
   this->running_ = true;
   
   prop.set_decoder(this->dec_);
   
   for (;;) {
-    if (nullptr == (pkt = this->pkt_channel_->pull())) {
+    pkt = this->pkt_channel_->pull(timeout);
+
+    clock_gettime(clk, &curr_ts);
+    timespecsub(&curr_ts, &prev_ts, &diff_ts);
+    if (diff_ts.tv_sec > 0) {
+      // fire!
+      ::memcpy(&prev_ts, &curr_ts, sizeof(prev_ts));
+    }
+    
+    if (nullptr == pkt) {
       if (this->pkt_channel_->closed()) {
         break;
       } else {
-        // timer action
         continue;
       }
     }

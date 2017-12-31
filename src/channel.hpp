@@ -115,6 +115,7 @@ class RingBuffer {
            static_cast<uint32_t>(this->pull_idx_));
 
     uint32_t wait = 1;
+    uint32_t waited = 0;
     while (n == this->next(this->push_idx_)) {
       if (this->closed()) {
         debug(DEBUG, "closed");
@@ -123,7 +124,7 @@ class RingBuffer {
 
       this->pull_wait_ += 1;
 
-      if (timeout > 0 && wait > timeout) {
+      if (timeout > 0 && waited > timeout) {
         // timeout
         return nullptr;
       }
@@ -132,6 +133,7 @@ class RingBuffer {
         wait = wait << 1;
       }
       usleep(wait);
+      waited += wait;
     }
 
     T* pkt = this->ring_[n];
