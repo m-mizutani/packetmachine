@@ -107,7 +107,7 @@ class RingBuffer {
 
 
   // for data processing thread.
-  T* pull() {
+  T* pull(uint32_t timeout=0) {
     uint32_t n = this->next(this->pull_idx_);
 
     debug(DEBUG, "push:%u, pull:%u",
@@ -123,6 +123,11 @@ class RingBuffer {
 
       this->pull_wait_ += 1;
 
+      if (timeout > 0 && wait > timeout) {
+        // timeout
+        return nullptr;
+      }
+      
       if ((wait & 0xfffff) != 0) {
         wait = wait << 1;
       }

@@ -98,7 +98,16 @@ void Kernel::thread_main() {
   
   prop.set_decoder(this->dec_);
   
-  while (nullptr != (pkt = this->pkt_channel_->pull())) {
+  for (;;) {
+    if (nullptr == (pkt = this->pkt_channel_->pull())) {
+      if (this->pkt_channel_->closed()) {
+        break;
+      } else {
+        // timer action
+        continue;
+      }
+    }
+    
     this->recv_pkt_  += 1;
     this->recv_size_ += pkt->cap_len();
 

@@ -65,8 +65,12 @@ class Prop {
   int seq_mismatch_;
   int recv_count_;
 
+  uint32_t timeout_;
+  int timeout_count_;
+  
   Prop(): ch_(nullptr), send_load_(0), recv_load_(0),
-          send_count_(0), seq_mismatch_(0), recv_count_(0) {
+          send_count_(0), seq_mismatch_(0), recv_count_(0),
+          timeout_(0), timeout_count_(0) {
   }
   ~Prop() = default;
 };
@@ -105,7 +109,16 @@ void* consumer(void* obj) {
 
   int prev_idx = 0;
 
-  while (nullptr != (d = ch->pull())) {
+  for(;;) {
+    if (nullptr == (d = ch->pull(p->timeout_))) {
+      if (ch->closed()) {
+        break;
+      } else {
+        p->timeout_count_++;
+        continue;
+      }
+    }
+    
     if (p->recv_load_ > 0) {
       d->prime_ = prime(d->data_ % p->recv_load_);
     }
@@ -120,6 +133,7 @@ void* consumer(void* obj) {
 
   return nullptr;
 }
+
 
 TEST(RingBuffer, ok) {
   Prop p;
@@ -181,6 +195,29 @@ TEST(RingBuffer, ok_slow_consumer) {
   delete p.ch_;
 }
 
+TEST(RingBuffer, ok_slow_provider_and_timeout) {
+  Prop p;
+  const int count = 10000;
+  p.ch_ = new pm::RingBuffer<Data>();
+  p.send_count_ = count;
+  p.send_load_ = 0xffff;
+  p.timeout_ = 1;
+
+  pthread_t t1, t2;
+  pthread_create(&t1, nullptr, provider, &p);
+  pthread_create(&t2, nullptr, consumer, &p);
+
+  pthread_join(t1, nullptr);
+  pthread_join(t2, nullptr);
+
+  EXPECT_EQ(p.seq_mismatch_, 0);
+  EXPECT_EQ(p.recv_count_, count);
+  EXPECT_GT(p.timeout_count_, 0);
+
+  // printf("push_wait: %llu, pull_wait: %llu\n",
+  // p.ch_->push_wait(), p.ch_->pull_wait());
+  delete p.ch_;
+}
 
 }    // namespace ring_buffer
 
