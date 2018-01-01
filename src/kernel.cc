@@ -26,6 +26,7 @@
 
 #include <algorithm>
 #include <unistd.h>
+#include <string.h>
 
 #include "./kernel.hpp"
 #include "./packetmachine/property.hpp"
