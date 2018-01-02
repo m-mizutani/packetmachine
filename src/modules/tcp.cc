@@ -542,6 +542,7 @@ class TCP : public Module {
       auto ssn = this->ssn_table_->pop_expired();
       delete ssn;
     }
+    delete this->ssn_table_;
   }
 
   // mod_id mod_tcpssn_;
