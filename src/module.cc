@@ -181,6 +181,9 @@ Module::Module() : dec_(nullptr), id_(Module::NONE) {
 }
 
 Module::~Module() {
+  for (auto it : this->config_map_) {
+    delete it.second;
+  }
 }
 
 Value* Module::new_value() {
