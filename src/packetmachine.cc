@@ -168,6 +168,22 @@ void Machine::add_pcapfile(const std::string &file_path) {
   this->cap_ = cap;
 }
 
+
+void Machine::add_blocker(long nano_sec) {
+  if (this->cap_) {
+    throw Exception::ConfigError("data source has been configured");
+  }
+
+  Capture *cap = new Blocker(nano_sec);
+  if (!cap->ready()) {
+    const std::string msg = cap->error();
+    delete cap;
+    throw Exception::ConfigError(msg);
+  }
+
+  this->cap_ = cap;
+}
+
 void Machine::loop() {
   this->start();
   this->join();

@@ -162,4 +162,20 @@ Capture::Result PcapFile::read(Packet* pkt) {
 }
 
 
+
+Blocker::Blocker(long nano_sec) : nano_sec_(nano_sec) {
+  this->set_ready(true);
+}
+Blocker::~Blocker() {
+}
+
+Capture::Result Blocker::read(Packet *pkt) {
+  struct timespec ts;
+  ts.tv_sec = this->nano_sec_ / 1000000000;
+  ts.tv_nsec = this->nano_sec_ % 1000000000;
+  nanosleep(&ts, nullptr);
+  this->set_ready(false);
+  return EXIT;
+}
+
 }  // namespace pm

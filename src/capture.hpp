@@ -98,6 +98,19 @@ class PcapFile : public Capture {
   Result read(Packet *pkt);
 };
 
+// For test
+class Blocker : public Capture {
+ private:
+  long nano_sec_;
+  
+ public:
+  explicit Blocker(long nano_sec);
+  ~Blocker();
+
+  Result read(Packet *pkt);
+};
+
+
 }   // namespace pm
 
 #endif   // __PACKETMACHINE_CAPTURE_HPP__
