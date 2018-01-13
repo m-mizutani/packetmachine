@@ -165,6 +165,7 @@ class Property {
 };
 
 typedef std::function<void(const Property&)> Callback;
+typedef std::function<void()> TimerCallback;
 
 }    // namespace pm
 

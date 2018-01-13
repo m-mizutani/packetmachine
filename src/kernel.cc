@@ -76,6 +76,9 @@ bool DeleteHandler::change(Kernel* kernel) {
   return kernel->delete_handler(this->ptr_);
 }
 
+bool AddTimer::change(Kernel *kernel) {
+  return kernel->add_timer(this->ptr_);
+}
 
 // --------------------------------------------------------
 // Kenrel: main process of PacketMachine
@@ -84,22 +87,13 @@ Kernel::Kernel(const Config& config) :
     pkt_channel_(new RingBuffer<Packet>),
     msg_channel_(new MsgQueue<ChangeRequest*>),
     dec_(new Decoder(config)),
-    recv_pkt_(0), recv_size_(0), global_hdlr_id_(0), running_(false) {
+    recv_pkt_(0), recv_size_(0), global_hdlr_id_(0),
+    elapsed_msec_(0), running_(false) {
   this->handlers_.resize(this->dec_->event_size());
 }
 Kernel::~Kernel() {
 }
-/*
-#define	timespecsub(tsp, usp, vsp)                      \
-  do {                                                  \
-    (vsp)->tv_sec = (tsp)->tv_sec - (usp)->tv_sec;      \
-    (vsp)->tv_nsec = (tsp)->tv_nsec - (usp)->tv_nsec;	\
-    if ((vsp)->tv_nsec < 0) {				\
-      (vsp)->tv_sec--;                                  \
-      (vsp)->tv_nsec += 1000000000L;			\
-    }							\
-  } while (0)
-*/
+
 
 inline void timespecsub(const struct timespec& tsp, const struct timespec& usp,
   struct timespec* vsp) {
@@ -108,19 +102,21 @@ inline void timespecsub(const struct timespec& tsp, const struct timespec& usp,
   if ((vsp)->tv_nsec < 0) {
     (vsp)->tv_sec--;
     (vsp)->tv_nsec += 1000000000L;
-  }  
+  }
 }
+
 
 void Kernel::thread_main() {
   Packet* pkt;
   Payload pd;
   Property prop;
-  struct timespec prev_ts, curr_ts, diff_ts;
+  struct timespec elapsed_ts, prev_ts, curr_ts, diff_ts;
   
   const clockid_t clk = CLOCK_REALTIME;
   // clockid_t clk = CLOCK_REALTIME_COARSE;
 
-  uint32_t timeout = 0xfffff;
+  uint32_t timeout = 0xffff;
+  clock_gettime(clk, &this->base_ts);
   clock_gettime(clk, &prev_ts);
   this->running_ = true;
   
@@ -129,14 +125,37 @@ void Kernel::thread_main() {
   for (;;) {
     pkt = this->pkt_channel_->pull(timeout);
 
+    //
+    // Timer processing.
+    //
     clock_gettime(clk, &curr_ts);
     timespecsub(curr_ts, prev_ts, &diff_ts);
-    if (diff_ts.tv_sec > 0) {
+    uint64_t diff_ms = diff_ts.tv_nsec / 1000000L;
+    if (diff_ms > 0) {
       // fire!
+      timespecsub(this->base_ts, prev_ts, &elapsed_ts);
+      this->elapsed_msec_ = elapsed_ts.tv_nsec / 1000000L;
+      while (1) {
+        auto it = this->timer_.begin();
+        if (it == this->timer_.end() || it->first <= this->elapsed_msec_) {
+          break;
+        }
+
+        (it->second)->exec();
+        if (!(it->second)->timeout()) {
+          // re-insert
+          auto p = std::make_pair(this->elapsed_msec_ + (it->second)->milli_sec(),
+                                  it->second);
+          this->timer_.insert(p); 
+        }
+        this->timer_.erase(it);
+      }
       ::memcpy(&prev_ts, &curr_ts, sizeof(prev_ts));
     }
 
-    
+    //
+    // Exit if channel is closed.
+    //
     if (nullptr == pkt) {
       if (this->pkt_channel_->closed()) {
         break;
@@ -145,6 +164,9 @@ void Kernel::thread_main() {
       }
     }
     
+    //
+    // Packet processing.
+    //    
     this->recv_pkt_  += 1;
     this->recv_size_ += pkt->cap_len();
 
@@ -197,6 +219,8 @@ HandlerPtr Kernel::on(const std::string& event_name, Callback&& cb) {
   return entry;
 }
 
+
+
 bool Kernel::clear(hdlr_id hid) {
   auto it = this->handler_map_.find(hid);
   if (it == this->handler_map_.end()) {
@@ -229,6 +253,43 @@ bool Kernel::clear(HandlerPtr ptr) {
 }
 
 
+TimerPtr Kernel::set_interval(TimerCallback&& timer_cb, uint64_t milli_sec) {
+  hdlr_id hid = ++(this->global_hdlr_id_);
+  TimerPtr entry(new Timer(hid, timer_cb, milli_sec, false));
+
+  auto *req = new AddTimer(entry);
+  
+  if (this->running_) {
+    this->msg_channel_->push(req);
+  } else {
+    req->change(this);
+    delete req;
+  }
+  
+  return entry;
+}
+
+TimerPtr Kernel::set_timeout(TimerCallback&& timer_cb, uint64_t milli_sec) {
+  hdlr_id hid = ++(this->global_hdlr_id_);
+  TimerPtr entry(new Timer(hid, timer_cb, milli_sec, true));
+
+  auto *req = new AddTimer(entry);
+  
+  if (this->running_) {
+    this->msg_channel_->push(req);
+  } else {
+    req->change(this);
+    delete req;
+  }
+  
+  return entry;
+}
+
+
+
+
+
+
 bool Kernel::add_handler(HandlerPtr ptr) {
   this->handler_map_.insert(std::make_pair(ptr->id(), ptr));
   this->handlers_[ptr->ev_id()].push_back(ptr);
@@ -247,6 +308,17 @@ bool Kernel::delete_handler(HandlerPtr ptr) {
   arr.erase(tgt);
 
   return true;
+}
+
+bool Kernel::add_timer(TimerPtr ptr) {
+  uint64_t p = this->elapsed_msec_ + ptr->milli_sec();
+  this->timer_.insert(std::make_pair(p, ptr));
+  return true;
+}
+
+bool Kernel::delete_timer(TimerPtr ptr) {
+  assert(0);
+  return false;
 }
 
 

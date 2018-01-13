@@ -53,7 +53,7 @@ class HandlerEntity {
   
  public:
   HandlerEntity(hdlr_id id, Callback cb, event_id ev_id);
-  ~HandlerEntity();
+  virtual ~HandlerEntity();
   inline hdlr_id id() const { return this->id_; }
   inline event_id ev_id() const { return this->ev_id_; }
   inline Callback& callback() { return this->cb_; }
@@ -62,6 +62,24 @@ class HandlerEntity {
   bool deactivate();
   bool destroy();
 };
+
+class Timer {
+ private:
+  hdlr_id id_;
+  TimerCallback cb_;
+  uint64_t milli_sec_;
+  bool timeout_;
+  
+ public:
+  Timer(hdlr_id id, TimerCallback cb, uint64_t milli_sec, bool timeout) :
+      id_(id), cb_(cb), milli_sec_(milli_sec), timeout_(timeout) {}
+  virtual ~Timer() = default;
+  inline hdlr_id id() const { return this->id_; }
+  inline void exec() { return this->cb_(); }
+  inline uint64_t milli_sec() const { return this->milli_sec_; }
+  inline bool timeout() const { return this->timeout_; }
+};
+
 
 class ChangeRequest {
  public:
@@ -74,6 +92,7 @@ class ChangeRequest {
 typedef std::shared_ptr<HandlerEntity> HandlerPtr;
 typedef std::shared_ptr<RingBuffer<Packet> > PktChannel;
 typedef std::shared_ptr<MsgQueue<ChangeRequest*> > MsgChannel;
+typedef std::shared_ptr<Timer> TimerPtr;
 
 
 
@@ -93,20 +112,33 @@ class DeleteHandler : public ChangeRequest {
   bool change(Kernel *kernel);
 };
 
+class AddTimer : public ChangeRequest {
+ private:
+  TimerPtr ptr_;
+ public:
+  AddTimer(TimerPtr ptr) : ptr_(ptr) {}
+  bool change(Kernel *kernel);
+};
 
 
 class Kernel : public Thread {
  private:
   PktChannel pkt_channel_;
   MsgChannel msg_channel_;
-  // Channel<Packet> pkt_channel_;
-  // Channel<Property> prop_channel_;
+  
   std::shared_ptr<Decoder> dec_;
   uint64_t recv_pkt_;
   uint64_t recv_size_;
+  
   std::vector< std::vector<HandlerPtr > > handlers_;
   std::map<hdlr_id, HandlerPtr > handler_map_;
   hdlr_id global_hdlr_id_;
+
+  struct timespec base_ts;
+  uint64_t elapsed_msec_;
+  std::multimap<uint64_t, TimerPtr> timer_;
+  std::map<hdlr_id, TimerPtr> timer_map_;
+  
   std::atomic<bool> running_;
 
  public:
@@ -118,10 +150,13 @@ class Kernel : public Thread {
   HandlerPtr on(const std::string& event_name, Callback&& ev_callback);
   bool clear(hdlr_id hid);
   bool clear(HandlerPtr ptr);
-
+  TimerPtr set_interval(TimerCallback&& timer_cb, uint64_t milli_sec);
+  TimerPtr set_timeout(TimerCallback&& timer_cb, uint64_t milli_sec);
+  
   bool add_handler(HandlerPtr ptr);
   bool delete_handler(HandlerPtr ptr);
-
+  bool add_timer(TimerPtr ptr);
+  bool delete_timer(TimerPtr ptr);
   
   PktChannel pkt_channel() { return this->pkt_channel_; }
   
