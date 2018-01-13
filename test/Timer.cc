@@ -60,4 +60,22 @@ TEST(Timer, set_interval) {
   delete m;
 }
 
+TEST(Timer, set_two_interval) {
+  pm::Machine *m = new pm::Machine();
+  int count1 = 0;
+  int count2 = 0;
+
+  m->set_interval([&]() { count1++; }, 1);
+  m->set_interval([&]() { count2++; }, 2);
+
+  m->add_blocker(TIMER_BLOCKING_DURATION);
+  m->loop();
+
+  EXPECT_GT(count1, 1);
+  EXPECT_GT(count2, 1);
+  EXPECT_GE(count1, count2);
+
+  delete m;
+}
+
 }   // namespace machine_test
