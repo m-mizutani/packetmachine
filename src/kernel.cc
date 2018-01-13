@@ -115,7 +115,7 @@ void Kernel::thread_main() {
   const clockid_t clk = CLOCK_REALTIME;
   // clockid_t clk = CLOCK_REALTIME_COARSE;
 
-  uint32_t timeout = 0xffff;
+  uint32_t timeout = 50000;
   clock_gettime(clk, &this->base_ts);
   clock_gettime(clk, &prev_ts);
   this->running_ = true;
@@ -133,23 +133,24 @@ void Kernel::thread_main() {
     uint64_t diff_ms = diff_ts.tv_nsec / 1000000L;
     if (diff_ms > 0) {
       // fire!
-      timespecsub(this->base_ts, prev_ts, &elapsed_ts);
+      timespecsub(curr_ts, this->base_ts, &elapsed_ts);
       this->elapsed_msec_ = elapsed_ts.tv_nsec / 1000000L;
-      while (1) {
+      
+      for (;;) {
         auto it = this->timer_.begin();
-        if (it == this->timer_.end() || it->first <= this->elapsed_msec_) {
+        if (it == this->timer_.end() || it->first > this->elapsed_msec_) {
           break;
         }
 
         (it->second)->exec();
         if (!(it->second)->timeout()) {
           // re-insert
-          auto p = std::make_pair(this->elapsed_msec_ + (it->second)->milli_sec(),
-                                  it->second);
-          this->timer_.insert(p); 
+          auto next_tick = this->elapsed_msec_ + (it->second)->milli_sec();
+          this->timer_.insert(std::make_pair(next_tick, it->second));
         }
         this->timer_.erase(it);
       }
+      
       ::memcpy(&prev_ts, &curr_ts, sizeof(prev_ts));
     }
 

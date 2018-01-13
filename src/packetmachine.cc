@@ -227,6 +227,16 @@ Handler Machine::on(const std::string& event_name,
   return hdlr;
 }
 
+void Machine::set_timeout(std::function<void()>&& callback, uint64_t milli_sec) {
+  assert(this->kernel_);
+  this->kernel_->set_timeout(std::move(callback), milli_sec);
+}
+
+void Machine::set_interval(std::function<void()>&& callback, uint64_t milli_sec) {
+  assert(this->kernel_);
+  this->kernel_->set_interval(std::move(callback), milli_sec);
+}
+
 uint64_t Machine::recv_pkt() const {
   assert(this->kernel_);
   return this->kernel_->recv_pkt();

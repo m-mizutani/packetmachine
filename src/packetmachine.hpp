@@ -86,7 +86,8 @@ class Machine {
 
   Handler on(const std::string& event_name,
              std::function<void(const Property&)>&& callback);
-
+  void set_timeout(std::function<void()>&& callback, uint64_t milli_sec);
+  void set_interval(std::function<void()>&& callback, uint64_t milli_sec);
   uint64_t recv_pkt() const;
   uint64_t recv_size() const;
 
