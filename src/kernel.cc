@@ -89,7 +89,7 @@ Kernel::Kernel(const Config& config) :
 }
 Kernel::~Kernel() {
 }
-
+/*
 #define	timespecsub(tsp, usp, vsp)                      \
   do {                                                  \
     (vsp)->tv_sec = (tsp)->tv_sec - (usp)->tv_sec;      \
@@ -99,6 +99,17 @@ Kernel::~Kernel() {
       (vsp)->tv_nsec += 1000000000L;			\
     }							\
   } while (0)
+*/
+
+inline void timespecsub(const struct timespec& tsp, const struct timespec& usp,
+  struct timespec* vsp) {
+  (vsp)->tv_sec  = tsp.tv_sec  - usp.tv_sec;
+  (vsp)->tv_nsec = tsp.tv_nsec - usp.tv_nsec;
+  if ((vsp)->tv_nsec < 0) {
+    (vsp)->tv_sec--;
+    (vsp)->tv_nsec += 1000000000L;
+  }  
+}
 
 void Kernel::thread_main() {
   Packet* pkt;
@@ -119,11 +130,12 @@ void Kernel::thread_main() {
     pkt = this->pkt_channel_->pull(timeout);
 
     clock_gettime(clk, &curr_ts);
-    timespecsub(&curr_ts, &prev_ts, &diff_ts);
+    timespecsub(curr_ts, prev_ts, &diff_ts);
     if (diff_ts.tv_sec > 0) {
       // fire!
       ::memcpy(&prev_ts, &curr_ts, sizeof(prev_ts));
     }
+
     
     if (nullptr == pkt) {
       if (this->pkt_channel_->closed()) {
