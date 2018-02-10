@@ -65,7 +65,7 @@ class Capture {
   virtual ~Capture();
 
   virtual Result read(Packet *pkt) = 0;
-
+  virtual const std::string& src_name() const = 0;
   bool ready() const { return this->ready_; }
   const std::string& error() const { return this->error_; }
 };
@@ -83,6 +83,7 @@ class PcapDev : public Capture {
   ~PcapDev();
 
   Result read(Packet *pkt);
+  const std::string& src_name() const { return this->dev_name_; }
 };
 
 
@@ -96,6 +97,7 @@ class PcapFile : public Capture {
   ~PcapFile();
 
   Result read(Packet *pkt);
+  const std::string& src_name() const { return this->file_path_; }
 };
 
 }   // namespace pm

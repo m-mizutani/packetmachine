@@ -74,6 +74,7 @@ class Machine {
   // Configure data source.
   void add_pcapdev(const std::string& dev_name);
   void add_pcapfile(const std::string& file_path);
+  const std::string& data_source_name() const;
 
   // Run capture & packet decodeing and wait
   void loop();

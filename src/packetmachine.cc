@@ -168,6 +168,16 @@ void Machine::add_pcapfile(const std::string &file_path) {
   this->cap_ = cap;
 }
 
+const std::string& Machine::data_source_name() const {
+  static const std::string none("");
+  
+  if (this->cap_) {
+    return this->cap_->src_name();
+  } else {
+    return none;
+  }
+}
+
 void Machine::loop() {
   this->start();
   this->join();
